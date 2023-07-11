@@ -105,7 +105,7 @@ function arch()
         
         if [[ ! -f $folder/proc/fakethings/vmstat ]]; then
 			cat <<- EOF > $folder/proc/fakethings/vmstat
-							nr_free_pages 15717
+				nr_free_pages 15717
 				nr_zone_inactive_anon 87325
 				nr_zone_active_anon 259521
 				nr_zone_inactive_file 95508
