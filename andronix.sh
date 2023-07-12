@@ -25,8 +25,10 @@ distros=(
     "void"
 )
 
+# Handle Arch Linux Installations.
 function arch()
 {
+    # Dekstop Envrironment Installation.
     function archDekstopEnvironment()
     {
         case $1 in
@@ -36,6 +38,8 @@ function arch()
             *) ;;
         esac
     }
+    
+    # Window Manager Installation.
     function archWindowManager()
     {
         case $1 in
@@ -45,6 +49,8 @@ function arch()
             *) ;;
         esac
     }
+    
+    # CLI Only Installation.
     function archCliOnly()
     {
         target=$install/arch/cli
@@ -70,11 +76,18 @@ function arch()
                 mv $tarball $target
             fi
             mkdir -p $folder
-            proot --link2symlink tar -xf ${targer}/${tarbal} -C $folder
+            proot --link2symlink tar -xf ${target}/${tarbal} -C $folder
         fi
         
-        mkdir -p $target/arch-binds
-        mkdir -p $folder/proc/fakethings
+        chmod 777 $folder/proc
+        
+        if [[ ! -d $target/arch-binds ]]; then
+            mkdir -p $target/arch-binds
+        fi
+        
+        if [[ ! -d $folder/proc/fakethings ]]; then
+            mkdir -p $folder/proc/fakethings
+        fi
         
         if [[ ! -f $folder/proc/fakethings/stat ]]; then
 			cat <<- EOF > $folder/proc/fakethings/stat 
@@ -263,7 +276,28 @@ function arch()
 				    \$command -c "\$com"
 				fi
 			EOM
+            termux-fix-shebang $target/$binary
+            chmod +x $target/$binary
         fi
+        
+        if [[ ! -f $folder/root/additional.sh ]]; then
+        	
+        	# Downloading additional components for first time.
+        	wget https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/resolv.conf -P $folder/root
+        	wget https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/additional.sh -P $folder/root
+        	
+        	# Remove default bash profile.
+        	rm -rf $folder/root/.bash_profile
+        	
+        	# Re-create default bash profile.
+        	cat > $folder/root/.bash_profile <<- EOF
+				#!/usr/bin/env bash
+				bash /root/additional.sh
+			EOF
+        fi
+        
+        # Removing image for some spaces.
+        rm $target/$tarball
         
     }
     archCliOnly
