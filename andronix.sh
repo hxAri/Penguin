@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 
+# Application name.
+appname=Andronix
+
+# Application author.
+author="Ari Setiawan (hxAri)"
+author_email="hxari@proton.me"
+
 # Application version.
 version=1.0.0
+
+# Application repository.
+github=https://github.com/hxAri/$appname
+issues=https://github.com/hxAri/$appname/issues
 
 # Termux directory.
 termux=/data/data/com.termux/
@@ -34,58 +45,81 @@ function joins()
 	echo $(IFS="|" ; echo "$*" )
 }
 
-# Prints available distro distributions.
-function printsDistro()
+function puts()
 {
-	clear
-	echo -e ""
-	echo -e "    1. Alpine"
-	echo -e "       Alpine Linux Development Team"
-	echo -e "    2. Arch"
-	echo -e "       Lavente Polyak and others"
-	echo -e "    3. Debian"
-	echo -e "       The Debian"
-	echo -e "    4. Fedora"
-	echo -e "       Fedora Project"
-	echo -e "    5. Kali"
-	echo -e "       Offensive Security"
-	echo -e "    6. Manjaro"
-	echo -e "       Manjaro GmbH & Co. KG"
-	echo -e "    7. Parrot"
-	echo -e "       Lorenzo \"Palinuro\" Faletra, Parrot Dev Team"
-	echo -e "    8. Ubuntu"
-	echo -e "       Canonical"
-	echo -e "    9. Void"
-	echo -e "       Void Linux Team"
-	echo -e ""
+	echo -e "\e[1;38;5;112m${appname,,}\e[1;38;5;214m: \e[1;38;5;229m$*\e[0m"
+}
+
+function stdin() {
+	echo -e "$(stdio stdin $@)\x20\e[1;38;5;229m\c"
+}
+
+function stdio()
+{
+	prints=
+	if [[ $1 != "" ]]; then
+		prints="\e[1;32m$1"
+		if [[ $2 != "" ]]; then
+			prints+="\e[1;38;5;70m<"
+			prints+="\e[1;38;5;112m$2"
+			prints+="\e[1;38;5;70m>"
+			if [[ $3 != "" ]]; then
+				prints="\e[1;32m$1"
+				prints+="\e[1;38;5;70m<"
+				prints+="\e[1;38;5;112m$2"
+				prints+="\e[1;38;5;70m<"
+				prints+="\e[1;38;5;190m$3"
+				if [[ $4 != "" ]]; then
+					prints+="\e[1;38;5;214m:"
+					prints+="\e[1;38;5;70m="
+					prints+="\e[1;38;5;120m$4"
+				fi
+				prints+="\e[1;38;5;70m>>"
+			fi
+		fi
+		echo -e "\x20\x20$prints\e[1;38;5;255m"
+	fi
 }
 
 # Readline, get input from user.
 # readline [prefix] [label] [default]
 function readline()
 {
+	stdin $@
 	if [[ $1 != "" ]]; then
 		if [[ $2 != "" ]]; then
-			if [[ $3 != "" ]]; then
-				echo -e "\x20\x20stdin<$1<$2:=$3>>\x20\c"
-			else
-				echo -e "\x20\x20stdin<$1<$2>>\x20\c"
-			fi
 			read input
 			if [[ $input == "" ]]; then
 				input=$3
 			fi
 			eval "input${2^}=$input"
-			echo -e "\x20\x20stdin<$2<$input>>"
+			echo -e "\x20\x20\c"
+			echo -e "\e[1;32mstdin\c"
+			echo -e "\e[1;38;5;70m<\c"
+			echo -e "\e[1;38;5;112m$2\c"
+			echo -e "\e[1;38;5;70m<\c"
+			echo -e "\e[1;38;5;120m$input\c"
+			echo -e "\e[1;38;5;70m>>"
 		else
-			echo -e "\x20\x20stdin<$1>\x20\c"
 			read input
-			echo -e "\x20\x20stdin<$1<$input>>"
+			echo -e "\x20\x20\c"
+			echo -e "\e[1;32mstdin\c"
+			echo -e "\e[1;38;5;70m<\c"
+			echo -e "\e[1;38;5;112m$1\c"
+			echo -e "\e[1;38;5;70m<\c"
+			echo -e "\e[1;38;5;120m$input\c"
+			echo -e "\e[1;38;5;70m>>\c"
 		fi
 	else
-		echo -e "\x20\x20stdio<in>\x20\c"
 		read input
-		echo -e "\x20\x20stdio<in:=$input>"
+		echo -e "\x20\x20\c"
+		echo -e "\e[1;32mstdio\c"
+		echo -e "\e[1;38;5;70m<"
+		echo -e "\e[1;38;5;112min\c"
+		echo -e "\e[1;38;5;214m:\c"
+		echo -e "\e[1;38;5;70m=\c"
+		echo -e "\e[1;38;5;20m$input\c"
+		echo -e "\e[1;38;5;70m>"
 	fi
 }
 
@@ -105,9 +139,9 @@ function readInputAction()
 				readline $1 "dekstop" "XFCE"
 				inputDekstop=${inputDekstop^^}
 				case $inputDekstop in
-					1|XFCE) inputDekstop=XFCE ;;
-					2|LXQT) inputDekstop=LXQT ;;
-					3|LXDE) inputDekstop=LXDE ;;
+					1|XFCE) inputDekstop=xfce ;;
+					2|LXQT) inputDekstop=lxqt ;;
+					3|LXDE) inputDekstop=lxde ;;
 					*)
 						inputDekstop=
 					;;
@@ -123,8 +157,8 @@ function readInputAction()
 				readline $1 "window" "Awesome"
 				inputWindow=${inputWindow,,}
 				case $inputWindow in
-					1|awesome) inputWindow=Awesome ;;
-					2|openbox) inputWindow=Openbox ;;
+					1|awesome) inputWindow=awesome ;;
+					2|openbox) inputWindow=openbox ;;
 					3|i3) inputWindow=i3 ;;
 					*)
 						inputDekstop=
@@ -173,6 +207,12 @@ function readInputAction()
 		fi
 	}
 	
+	echo -e "\x20\x20\c"
+	echo -e "\e[1;32mstdin\c"
+	echo -e "\e[1;38;5;70m<\c"
+	echo -e "\e[1;38;5;112m$1\c"
+	echo -e "\e[1;38;5;70m>\c"
+	echo -e "\x20\e[1;38;5;229m"
 	while [[ $inputAction == "" ]]; do
 		readline $1 "action" $2
 		case ${inputAction,,} in
@@ -206,76 +246,96 @@ function readInputAction()
 			dekstop=$inputDekstop
 		fi
 	fi
-	
-	# Handle action.
-	case $action in
-		cancel) main
-		;;
-		remove)
-			case ${1,,} in
-				alpine) ;;
-				arch) ;;
-				debian) ;;
-				fedora) ;;
-				kali) ;;
-				manjaro) ;;
-				parrot) ;;
-				ubuntu) ;;
-				void) ;;
-				*)
-					echo "$1: unsupported distro distribution"
-					exit 1
-				;;
-			esac
-		;;
-		import)
-			case ${1,,} in
-				alpine) ;;
-				arch) ;;
-				debian) ;;
-				fedora) ;;
-				kali) ;;
-				manjaro) ;;
-				parrot) ;;
-				ubuntu) ;;
-				void) ;;
-				*)
-					echo "$1: unsupported distro distribution"
-					exit 1
-				;;
-			esac
-		;;
-		install)
-			case ${1,,} in
-				alpine) ;;
-				arch) ;;
-				debian) ;;
-				fedora) ;;
-				kali) ;;
-				manjaro) ;;
-				parrot) ;;
-				ubuntu) ;;
-				void) ;;
-				*)
-					echo "$1: unsupported distro distribution"
-					exit 1
-				;;
-			esac
-		;;
-	esac
 }
 
-# Handle Alpine Installation.
+# Handle Alpine Actions.
 function alpine()
 {
 	# Prints informations.
 	clear
 	echo -e
-	echo -e "  stdout<alpine>"
+	echo -e "$(stdio stdout alpine)"
 	echo -e "  $sint Distro Alpine"
 	echo -e "  $sint Developer Alpine Linux Development Team"
 	echo -e "  $sint Available Versions"
-	echo -e "      [+]  v"
+	echo -e "      [+] Alpine v3.10"
+	echo -e "  $sint Available Install"
+	echo -e "      [+] CLI Only"
+	echo -e "      [+] Desktop Environment"
+	echo -e "          [+] XFCE"
+	echo -e "  $sint Actions"
+	echo -e "      [1] Install"
+	echo -e "      [2] Import"
+	echo -e "      [3] Remove"
+	echo -e "      [4] Cancel"
+	echo -e
+	
+	# Handle input action for alpine.
+	readInputAction "alpine" "install"
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
+}
+
+# Handle Arch Actions.
+function arch()
+{
+	# Prints informations.
+	clear
+	echo -e
+	echo -e "$(stdio stdout arch)"
+	echo -e "  $sint Distro Arch Linux"
+	echo -e "  $sint Developer Lavente Polyak and others"
+	echo -e "  $sint Available Versions"
+	echo -e "      [+] Arch Linux v2021.07.01"
+	echo -e "  $sint Available Install"
+	echo -e "      [+] CLI Only"
+	echo -e "      [+] Window Manager"
+	echo -e "          [+] Awesome"
+	echo -e "          [+] Openbox"
+	echo -e "          [+] i3"
+	echo -e "      [+] Desktop Environment"
+	echo -e "          [+] XFCE"
+	echo -e "          [+] LXDE"
+	echo -e "  $sint Actions"
+	echo -e "      [1] Install"
+	echo -e "      [2] Import"
+	echo -e "      [3] Remove"
+	echo -e "      [4] Cancel"
+	echo -e
+	
+	# Handle input action for .
+	readInputAction "arch" "install"
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
+}
+
+# Handle Debian Actions.
+function debian()
+{
+	# Prints informations.
+	clear
+	echo -e
+	echo -e "$(stdio stdout debian)"
+	echo -e "  $sint Distro Debian"
+	echo -e "  $sint Developer The Debian"
+	echo -e "  $sint Available Versions"
+	echo -e "      [+] Debian v10.00"
 	echo -e "  $sint Available Install"
 	echo -e "      [+] CLI Only"
 	echo -e "      [+] Window Manager"
@@ -291,50 +351,156 @@ function alpine()
 	echo -e "      [2] Import"
 	echo -e "      [3] Remove"
 	echo -e "      [4] Cancel"
-	echo -e ""
-	echo -e "  stdin<alpine>"
+	echo -e
 	
-	# Handle actions
-	readInputAction "" "install"
+	# Handle input action for .
+	readInputAction "debian" "install"
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
 }
 
-# Handle Arch Installation.
-function arch()
-{
-	echo 0
-}
-
-# Handle Debian Installation.
-function debian()
-{
-	echo 0
-}
-
-# Handle Fedora Installation.
+# Handle Fedora Actions.
 function fedora()
 {
-	echo 0
+	# Prints informations.
+	clear
+	echo -e
+	echo -e "$(stdio stdout fedora)"
+	echo -e "  $sint Distro Fedora"
+	echo -e "  $sint Developer Fedora Project"
+	echo -e "  $sint Available Versions"
+	echo -e "      [+] Fedora v33"
+	echo -e "  $sint Available Install"
+	echo -e "      [+] CLI Only"
+	echo -e "      [+] Window Manager"
+	echo -e "          [+] Awesome"
+	echo -e "          [+] Openbox"
+	echo -e "          [+] i3"
+	echo -e "      [+] Desktop Environment"
+	echo -e "          [+] XFCE"
+	echo -e "          [+] LXQT"
+	echo -e "          [+] LXDE"
+	echo -e "  $sint Actions"
+	echo -e "      [1] Install"
+	echo -e "      [2] Import"
+	echo -e "      [3] Remove"
+	echo -e "      [4] Cancel"
+	echo -e
+	
+	# Handle input action for .
+	readInputAction "fedora" "install"
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
 }
 
-# Handle Kali Installation.
+# Handle Kali Actions.
 function kali()
 {
-	echo 0
+	# Prints informations.
+	clear
+	echo -e
+	echo -e "$(stdio stdout kali)"
+	echo -e "  $sint Distro Kali Linux"
+	echo -e "  $sint Developer Offensive Security"
+	echo -e "  $sint Available Versions"
+	echo -e "      [+] Kali Linux v21.2"
+	echo -e "  $sint Available Install"
+	echo -e "      [+] CLI Only"
+	echo -e "      [+] Window Manager"
+	echo -e "          [+] Awesome"
+	echo -e "          [+] Openbox"
+	echo -e "          [+] i3"
+	echo -e "      [+] Desktop Environment"
+	echo -e "          [+] XFCE"
+	echo -e "          [+] LXQT"
+	echo -e "          [+] LXDE"
+	echo -e "  $sint Actions"
+	echo -e "      [1] Install"
+	echo -e "      [2] Import"
+	echo -e "      [3] Remove"
+	echo -e "      [4] Cancel"
+	echo -e
+	
+	# Handle input action for .
+	readInputAction "kali" "install"
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
 }
 
-# Handle Manjaro Installation.
+# Handle Manjaro Actions.
 function manjaro()
 {
-	echo 0
+	# Prints informations.
+	clear
+	echo -e
+	echo -e "$(stdio stdout manjaro)"
+	echo -e "  $sint Distro Manjaro"
+	echo -e "  $sint Developer Manjaro GmbH & Co. KG"
+	echo -e "  $sint Available Versions"
+	echo -e "      [+] Manjaro v21"
+	echo -e "  $sint Available Install"
+	echo -e "      [+] CLI Only"
+	echo -e "      [+] Window Manager"
+	echo -e "          [+] Awesome"
+	echo -e "          [+] Openbox"
+	echo -e "          [+] i3"
+	echo -e "      [+] Desktop Environment"
+	echo -e "          [+] XFCE"
+	echo -e "          [+] LXQT"
+	echo -e "          [+] LXDE"
+	echo -e "  $sint Actions"
+	echo -e "      [1] Install"
+	echo -e "      [2] Import"
+	echo -e "      [3] Remove"
+	echo -e "      [4] Cancel"
+	echo -e
+	
+	# Handle input action for .
+	readInputAction "manjaro" "install"
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
 }
 
-# Handle Parrot Installation.
+# Handle Parrot Actions.
 function parrot()
 {
+	# This functionality does not implemented at this time.
 	echo 0
 }
 
-# Handle Ubuntu Installation.
+# Handle Ubuntu Actions.
 function ubuntu()
 {
 	# Default Ubuntu Mode for install.
@@ -363,7 +529,7 @@ function ubuntu()
 	# Prints Ubuntu informations.
 	clear
 	echo -e
-	echo -e "  stdout<ubuntu>"
+	echo -e "$(stdio stdout ubuntu)"
 	echo -e "  $sint Distro Ubuntu"
 	echo -e "  $sint Developer Canonical"
 	echo -e "  $sint Available Versions"
@@ -385,45 +551,115 @@ function ubuntu()
 	echo -e "      [2] Import"
 	echo -e "      [3] Remove"
 	echo -e "      [4] Cancel"
-	echo -e ""
-	echo -e "  stdin<ubuntu>"
+	echo -e
 	
-	# Handle actions
+	# Get input action for ubuntu.
 	readInputAction "ubuntu" "install" $version
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
 }
 
-# Handle Void Installation.
+# Handle Void Actions.
 function voidx()
 {
-	echo 0
+	# Prints informations.
+	clear
+	echo -e
+	echo -e "$(stdio stdout void)"
+	echo -e "  $sint Distro Void"
+	echo -e "  $sint Developer Void Linux Team"
+	echo -e "  $sint Available Versions"
+	echo -e "      [+] Void Rolling Release"
+	echo -e "  $sint Available Install"
+	echo -e "      [+] CLI Only"
+	echo -e "      [+] Window Manager"
+	echo -e "          [+] Awesome"
+	echo -e "          [+] Openbox"
+	echo -e "          [+] i3"
+	echo -e "      [+] Desktop Environment"
+	echo -e "          [+] XFCE"
+	echo -e "          [+] LXQT"
+	echo -e "          [+] LXDE"
+	echo -e "  $sint Actions"
+	echo -e "      [1] Install"
+	echo -e "      [2] Import"
+	echo -e "      [3] Remove"
+	echo -e "      [4] Cancel"
+	echo -e
+	
+	# Handle input action for void.
+	readInputAction "void" "install"
+	case $action in
+		cancel) main
+		;;
+		remove)
+		;;
+		import)
+		;;
+		install)
+		;;
+	esac
 }
 
+# Main Program.
 function main()
 {
-	local input=
-	printsDistro
-	while true; do
-		if [[ $input != "" ]]; then
-			case $input in
-				1|alpine) alpine; break ;;
-				2|arch) arch; break ;;
-				3|debian) debian; break ;;
-				4|fedora) fedora; break ;;
-				5|kali) kali; break ;;
-				6|manjaro) manjaro; break ;;
-				7|parrot) parrot; break ;;
-				8|ubuntu) ubuntu; break ;;
-				9|void) voidx; break ;;
-				0|cancel) main; break ;;
-				*)
-					input=
-					continue
-				;;
-			esac
-		fi
-		readline "distro"
+	clear
+	local inputDistro=
+	
+	echo -e
+	echo -e "$(stdio stdout main)"
+	echo -e "  $sint $appname v$version"
+	echo -e "  [i] Author $author"
+	echo -e "  [i] E-Mail $author_email"
+	echo -e "  [s] Github $github"
+	echo -e "  [!] Issues $issues"
+	echo -e "  [+] Distro"
+	echo -e "      [1] Alpine"
+	echo -e "      [2] Arch Linux"
+	echo -e "      [3] Debian"
+	echo -e "      [4] Fedora"
+	echo -e "      [5] Kali Linux"
+	echo -e "      [6] Manjaro"
+	echo -e "      [7] Parrot OS"
+	echo -e "      [8] Ubuntu"
+	echo -e "      [9] Void"
+	echo -e ""
+	echo -e "\x20\x20\c"
+	echo -e "\e[1;32mstdin\c"
+	echo -e "\e[1;38;5;70m<\c"
+	echo -e "\e[1;38;5;112mmain\c"
+	echo -e "\e[1;38;5;70m>\c"
+	echo -e "\x20\e[1;38;5;229m"
+	
+	while [[ $inputDistro == "" ]]; do
+		readline "main" "distro"
+		case ${inputDistro,,} in
+			1|alpine) alpine; break ;;
+			2|arch) arch; break ;;
+			3|debian) debian; break ;;
+			4|fedora) fedora; break ;;
+			5|kali) kali; break ;;
+			6|manjaro) manjaro; break ;;
+			7|parrot) parrot; break ;;
+			8|ubuntu) ubuntu; break ;;
+			9|void) voidx; break ;;
+			0|exit)
+				exit 0
+			;;
+			*)
+				inputDistro=
+			;;
+		esac
 	done
 }
 
-clear && main
-echo
+main
