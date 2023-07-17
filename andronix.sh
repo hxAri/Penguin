@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Andronix
+# Shell utility to install Linux on Termux.
+
+# ...
+
 # Application name.
 appname=Andronix
 
@@ -19,6 +24,9 @@ termux=/data/data/com.termux/
 
 # Installation directory.
 install=/data/data/com.termux/linux
+
+# Rootfs Images stored.
+images=$install/.rootfs
 
 # Termux architecture.
 architect=$(dpkg --print-architecture)
@@ -139,9 +147,25 @@ function readInputAction()
 				readline $1 "dekstop" "XFCE"
 				inputDekstop=${inputDekstop^^}
 				case $inputDekstop in
-					1|XFCE) inputDekstop=xfce ;;
-					2|LXQT) inputDekstop=lxqt ;;
-					3|LXDE) inputDekstop=lxde ;;
+					1|XFCE)
+						inputDekstop=xfce
+					;;
+					2|LXQT)
+						inputDekstop=lxqt
+						case ${1,,} in
+							alpine|arch)
+								inputDekstop=
+							;;
+						esac
+					;;
+					3|LXDE)
+						inputDekstop=lxde
+						case ${1,,} in
+							alpine)
+								inputDekstop=
+							;;
+						esac
+					;;
 					*)
 						inputDekstop=
 					;;
@@ -160,9 +184,7 @@ function readInputAction()
 					1|awesome) inputWindow=awesome ;;
 					2|openbox) inputWindow=openbox ;;
 					3|i3) inputWindow=i3 ;;
-					*)
-						inputDekstop=
-					;;
+					*) inputDekstop= ;;
 				esac
 			done
 		}
@@ -171,18 +193,24 @@ function readInputAction()
 			readline $1 "select" "cli"
 			inputSelect=${inputSelect,,}
 			case $inputSelect in
-				1|cli) ;;
+				1|cli) inputSelect=cli ;;
 				2|window)
-					readInputWindowManager $1 $3
-					window=$inputWindow
+					inputSelect=window
+					if [[ ${1,,} != "alpine" ]]; then
+						readInputWindowManager $1 $3
+						window=$inputWindow
+					else
+						inputSelect=
+					fi
 				;;
 				3|dekstop)
+					inputSelect=dekstop
 					readInputDekstopEnv $1 $3
 					dekstop=$inputDekstop
 				;;
 				*) inputSelect= ;;
 			esac
-			select=$inputSelect
+			select=${inputSelect,,}
 		done
 	}
 	
@@ -207,12 +235,7 @@ function readInputAction()
 		fi
 	}
 	
-	echo -e "\x20\x20\c"
-	echo -e "\e[1;32mstdin\c"
-	echo -e "\e[1;38;5;70m<\c"
-	echo -e "\e[1;38;5;112m$1\c"
-	echo -e "\e[1;38;5;70m>\c"
-	echo -e "\x20\e[1;38;5;229m"
+	stdio stdin $1
 	while [[ $inputAction == "" ]]; do
 		readline $1 "action" $2
 		case ${inputAction,,} in
@@ -236,10 +259,9 @@ function readInputAction()
 		if [[ $action == "import" ]]; then
 			readInputImport
 			import=$inputImport
-		else
-			readInputSelect $1
-			select=$inputSelect
 		fi
+		readInputSelect $1
+		select=$inputSelect
 		if [[ $select == "window" ]]; then
 			window=$inputWindow
 		elif [[ $select == "dekstop" ]]; then
@@ -510,6 +532,14 @@ function ubuntu()
 	# Because we don't know where source destination.
 	local import=
 	
+	# Default Ubuntu Directory.
+	local target=$install/ubuntu
+	local folder=ubuntu-fs
+	
+	# Default Ubuntu Executable.
+	local starts=ubuntu-start
+	local binary=ubuntu
+	
 	# Default Ubuntu Environment for install.
 	local dekstop=XFCE
 	
@@ -519,12 +549,104 @@ function ubuntu()
 	# Default Ubuntu Version for install.
 	local version=22.04
 	
-	# Available Ubuntu Versions for install.
-	local ubuntuVersions=(
-		"22.04"
-		"20.04"
-		"18.04"
-	)
+	# Handle Ubuntu Import.
+	function ubuntuImport()
+	{
+		echo
+	}
+	
+	# Handle Ubuntu Install.
+	function ubuntuInstall()
+	{
+		# Ubuntu Install Source Destination.
+		local source=$target/$version
+		
+		# Ubuntu RootFS name.
+		local rootfs=ubuntu-rootfs.$version.tar.gz
+		if [[ $version == 18.04 ]]; then
+			rootfs=ubuntu-rootfs.$version.tar.xz
+		fi
+		
+		# Resolve Source Destination.
+		case $select in
+			cli) source=$source/cli ;;
+			window) source=$source/window/$window ;;
+			dekstop) source=$source/dekstop/$dekstop ;;
+			*)
+				puts "ubuntu: $select: unknown selection mode"
+				exit 1
+			;;
+		esac
+		
+		# Check if folder is does not exists.
+		if [[ ! -d $source ]]; then
+			mkdir -p $source
+		fi
+		
+		# Check if file system does not exists.
+		if [[ ! -d $source/$folder ]]; then
+			if [[ ! -f $images/$rootfs ]]; then
+				case $version in
+					22.04)
+						case ${architect,,} in
+							aarch64) arcurl="arm64" ;;
+							*)
+								puts "ubuntu: $architect: $version: unsupported architecture"
+								exit 1
+							;;
+						esac
+						arcurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu22/jammy-${arcurl}.tar.gz"
+					;;
+					20.04)
+						case ${architect,,} in
+							aarch64) arcurl="arm64" ;;
+							arm) arcurl="armhf" ;;
+							amd64) arcurl="amd64" ;;
+							x86_64) arcurl="amd64" ;;
+							*)
+								puts "ubuntu: $architect: $version: unsupported architecture"
+								exit 1
+							;;
+						esac
+						arcurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu20/focal-${arcurl}.tar.gz"
+					;;
+					18.04)
+						case ${architect,,} in
+							aarch64) arcurl="arm64" ;;
+							arm) arcurl="armhf" ;;
+							amd64) arcurl="amd64" ;;
+							x86_64) arcurl="amd64" ;;
+							i*86) arcurl="i386" ;;
+							x86) arcurl="i386" ;;
+							*)
+								puts "ubuntu: $architect: $version: unsupported architecture"
+								exit 1
+							;;
+						esac
+						arcurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Ubuntu/${arcurl}/ubuntu-rootfs-${arcurl}.tar.xz?raw=true"
+					;;
+					*)
+						puts "ubuntu: $version: unsupported version"
+						exit 1
+					;;
+				esac
+				wget $arcurl -O $images/$rootfs
+			fi
+			#mkdir -p $source/$folder
+			#proot --link2symlink tar -xf $images/$rootfs -C $source/$folder
+		fi
+		
+		# Avoid access denied.
+		#chmod 755 $source/$folder/proc
+		
+		mkdir -p $source/ubuntu-binds
+		mkdir -p $source/$folder/proc/fakethings
+		
+		echo $target
+		echo $source
+		echo $source/$rootfs
+		echo $arcurl
+	}
 	
 	# Prints Ubuntu informations.
 	clear
@@ -562,8 +684,7 @@ function ubuntu()
 		;;
 		import)
 		;;
-		install)
-		;;
+		install) ubuntuInstall ;;
 	esac
 }
 
@@ -653,7 +774,7 @@ function main()
 			8|ubuntu) ubuntu; break ;;
 			9|void) voidx; break ;;
 			0|exit)
-				exit 0
+				echo && exit 0
 			;;
 			*)
 				inputDistro=
@@ -662,4 +783,8 @@ function main()
 	done
 }
 
+# Trying make directory for save downloaded rootfs.
+mkdir -p $images
+
+# Starting main program.
 main
