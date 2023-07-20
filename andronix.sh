@@ -1086,7 +1086,7 @@ function ubuntu()
 						command+=" -0"
 						command+=" -r $source/$folder"
 						
-						if [ -n "\$(ls -A $source/ubuntu-binds)" ]; then
+						if [[ -n "\$(ls -A $source/ubuntu-binds)" ]]; then
 						    for f in $source/ubuntu-binds/*; do
 						        . \$f
 						    done
@@ -1108,7 +1108,7 @@ function ubuntu()
 						
 						# Uncomment the following line to have
 						# access to the home directory of termux.
-						#command+=" -b /data/data/com.termux/files/home:/root"
+						#command+=" -b $termux/files/home:/root"
 						
 						command+=" -b /sdcard"
 						command+=" -w /root"
@@ -1121,7 +1121,7 @@ function ubuntu()
 						command+=" /bin/bash --login"
 						com="\$@"
 						
-						if [ -z "\$1" ]; then
+						if [[ -z "\$1" ]]; then
 						    exec \$command
 						else
 						    \$command -c "\$com"
@@ -1186,14 +1186,14 @@ function ubuntu()
 							# Create directory for vnc configuration.
 							mkdir -p ~/.vnc
 							
-							if [ ! -f /root/dekstop.sh ]; then
+							if [[ ! -f /root/${dekstop}.sh ]]; then
 							    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
 							    wget --tries=20 $rinku/${dekstop}22.sh -O /root/${dekstop}.sh
 							fi
 							bash ~/${dekstop}.sh
 							clear
 							
-							if [ ! -f /usr/local/bin/vncserver-start ]; then
+							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
 							    echo -e "..ubuntu: $version: vncserver-start: downloading"
 							    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
 							    echo -e "..ubuntu: $version: vncserver-start: removing"
@@ -1206,7 +1206,7 @@ function ubuntu()
 							fi
 							clear
 							
-							if [ ! -f /usr/bin/vncserver ]; then
+							if [[ ! -f /usr/bin/vncserver ]]; then
 							    apt install tigervnc-standalone-server -y
 							fi
 							clear
@@ -1217,6 +1217,9 @@ function ubuntu()
 							echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
 							rm -rf ~/.bash_profile
 						EOF
+						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
+						chmod +x $source/$folder/root/.bash_profile
+						
 						sleep 1.4
 						clear
 						echo -e "\n..\n..ubuntu: $version: $dekstop: installed"
@@ -1246,9 +1249,9 @@ function ubuntu()
 						echo -e "\n..ubuntu: $version: $window: setup apt retry count"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
-						echo -e "\n..ubuntu: $version: $dekstop: ${window}.sh: downloading"
+						echo -e "\n..ubuntu: $version: $window: ${window}.sh: downloading"
 						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/${window}.sh
-						echo -e "..ubuntu: $version: $dekstop: ${window}.sh: allow executable"
+						echo -e "..ubuntu: $version: $window: ${window}.sh: allow executable"
 						chmod +x $source/$folder/${window}.sh
 						
 						echo -e "..ubuntu: $version: $window: .bash_profile: building"
@@ -1280,6 +1283,9 @@ function ubuntu()
 							echo -e "..ubuntu: $version: $window: .bash_profile: removing"
 							rm -rf ~/.bash_profile
 						EOF
+						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
+						chmod +x $source/$folder/root/.bash_profile
+						
 						sleep 1.4
 						clear
 						echo -e "\n..\n..ubuntu: $version: $window: installed"
@@ -1295,21 +1301,283 @@ function ubuntu()
 				fi
 			;;
 			20.04)
+				if [[ ! -f $source/$execute ]]; then
+					cat > $source/$execute <<- EOM
+						#!/usr/bin/env bash
+						
+						# Change current working directory.
+						cd \$(dirname \$0)
+						
+						# Avoid termux-exec, execve() conflicts with PRoot.
+						unset LD_PRELOAD
+						
+						# Arrange command.
+						command="proot"
+						command+=" --kill-on-exit"
+						command+=" --link2symlink"
+						command+=" -0"
+						command+=" -r $source/$folder"
+						
+						if [[ -n "\$(ls -A $source/ubuntu-binds)" ]]; then
+						    for f in $source/ubuntu-binds/* ;do
+						      . \$f
+						    done
+						fi
+						
+						command+=" -b /dev"
+						command+=" -b /proc"
+						command+=" -b /sys"
+						command+=" -b /data"
+						command+=" -b $source/$folder/root:/dev/shm"
+						command+=" -b /proc/self/fd/2:/dev/stderr"
+						command+=" -b /proc/self/fd/1:/dev/stdout"
+						command+=" -b /proc/self/fd/0:/dev/stdin"
+						command+=" -b /dev/urandom:/dev/random"
+						command+=" -b /proc/self/fd:/dev/fd"
+						command+=" -b $source/$folder/proc/fakethings/stat:/proc/stat"
+						command+=" -b $source/$folder/proc/fakethings/vmstat:/proc/vmstat"
+						command+=" -b $source/$folder/proc/fakethings/version:/proc/version"
+						
+						# Uncomment the following line to have
+						# access to the home directory of termux.
+						#command+=" -b $termux/files/home:/root"
+						
+						command+=" -b /sdcard"
+						command+=" -w /root"
+						command+=" /usr/bin/env -i"
+						command+=" MOZ_FAKE_NO_SANDBOX=1"
+						command+=" HOME=/root"
+						command+=" PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+						command+=" TERM=\$TERM"
+						command+=" LANG=C.UTF-8"
+						command+=" /bin/bash --login"
+						com="\$@"
+						
+						if [[ -z "\$1" ]];then
+						    exec \$command
+						else
+						    \$command -c "\$com"
+						fi
+					EOM
+				fi
 				if [[ $select == "dekstop" ]]; then
 					case ${dekstop,,} in
-						xfce) ;;
-						lxqt) ;;
-						lxde) ;;
+						xfce) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
+						lxqt) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
+						lxde) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
 					esac
+					
+					echo -e "\n..ubuntu: $version: dekstop: setup of ${dekstop^^} VNC"
+					mkdir -p $source/$folder/var/tmp
+					rm -rf $source/$folder/usr/local/bin/*
+					
+					# Create new hostname.
+					echo "127.0.0.1 localhost localhost" > $source/$folder/etc/hosts
+					
+					# Setup VNC Viewer
+					vncViewerSetup $source/$folder
+					
+					echo -e "\n..ubuntu: $version: $dekstop: setup apt retry count"
+					echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+					
+					echo -e "..ubuntu: $version: $dekstop: .hushlogin: creating"
+					touch $source/$folder/root/.hushlogin
+					
+					echo -e "\n..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
+					wget --tries=20 $rinku/${dekstop}19.sh -O $source/$folder/root/${dekstop}.sh
+					echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: allow executable"
+					chmod +x $source/$folder/root/${dekstop}.sh
+					
+					echo -e "\n..ubuntu: $version: $dekstop: .profile.1: downloading"
+					wget -q https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/.profile -O $source/$folder/root/.profile.1 > /dev/null
+					echo -e "\n..ubuntu: $version: $dekstop: .profile: writing"
+					cat $source/$folder/root/.profile.1 >> $source/$folder/root/.profile
+					echo -e "\n..ubuntu: $version: $dekstop: .profile: allow executable"
+					chmod +x $source/$folder/root/.profile
+					echo -e "\n..ubuntu: $version: $dekstop: .profile.1: removing"
+					rm -rf $source/$folder/root/.profile.1
+					
+					echo -e "\n..ubuntu: $version: $dekstop: .bash_profile: removing"
+					rm -rf $source/$folder/root/.bash_profile
+					
+					echo -e "..ubuntu: $version: $dekstop: .bash_profile: building"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Remove old resolve configuration.
+						rm -rf /etc/resolv.conf
+						
+						# Create new resolve configuration.
+						echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+						
+						# Installing required packages.
+						apt update -y && apt install sudo wget nano screenfetch -y > /dev/null
+						
+						# Displaying screenfetch.
+						clear && screenfetch && echo
+						sleep 1.4
+						
+						# Create directory for vnc configuration.
+						mkdir -p ~/.vnc
+						
+						if [[ ! -f /root/${dekstop}.sh ]]; then
+						    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
+						    wget --tries=20 $rinku/${dekstop}19.sh -O /root/${dekstop}.sh
+						fi
+						bash ~/${dekstop}.sh
+						clear
+						
+						if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+						    echo -e "..ubuntu: $version: vncserver-start: downloading"
+						    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
+						    echo -e "..ubuntu: $version: vncserver-start: removing"
+						    chmod +x /usr/local/bin/vncserver-start
+						    
+						    echo -e "\n..ubuntu: $version: vncserver-stop: downloading"
+						    wget --tries=20 $rinku/vncserver-stop -O /usr/local/bin/vncserver-stop
+						    echo -e "..ubuntu: $version: vncserver-stop: removing"
+						    chmod +x /usr/local/bin/vncserver-stop
+						fi
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+						    apt install tigervnc-standalone-server -y
+						fi
+						clear
+						
+						echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: removing"
+						rm -rf /root/{dekstop}.sh
+						
+						echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
+						rm -rf ~/.bash_profile
+					EOF
+					echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
+					chmod +x $source/$folder/root/.bash_profile
+					
+					sleep 1.4
+					clear
+					echo -e "\n..\n..ubuntu: $version: $dekstop: installed"
+					echo -e "..ubuntu: $version: $dekstop: command"
+					echo -e "..ubuntu: $version: $dekstop: ubuntu $version dekstop $dekstop\n..\n"
 				elif [[ $select == "window" ]]; then
-					case ${window,,} in
-						awesome) ;;
-						openbox) ;;
-						i3) ;;
-					esac
+					
+					# dlink delcare.
+					declare -A rinku=(
+						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
+						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
+					)
+					
+					echo -e "\n..ubuntu: $version: window: setup of ${window^} VNC"
+					mkdir -p $source/$folder/var/tmp
+					rm -rf $source/$folder/usr/local/bin/*
+					
+					# Remove old resolve configuration.
+					rm -rf $source/$folder/etc/resolv.conf
+					
+					# Create new resolve configuration.
+					echo "nameserver 1.1.1.1" > $source/$folder/etc/resolv.conf
+					
+					# Setup VNC Viewer
+					vncViewerSetup $source/$folder
+					
+					echo -e "\n..ubuntu: $version: $window: setup apt retry count"
+					echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+					
+					echo -e "\n..ubuntu: $version: $window: ${window}.sh: downloading"
+					wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/${window}.sh
+					echo -e "..ubuntu: $version: $window: ${window}.sh: allow executable"
+					chmod +x $source/$folder/${window}.sh
+					
+					echo -e "..ubuntu: $version: $window: .bash_profile: building"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Installing required packages.
+						apt update -y && apt install wget sudo nano screenfetch -y
+						
+						# Displaying screenfetch.
+						clear && screenfetch && echo
+						sleep 1.4
+						
+						if [[ ! -f /root/${window}.sh ]]; then
+						    echo -e "..ubuntu: $version: $window: ${window}.sh: downloading"
+						    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+						fi
+						bash ~/${window}.sh
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+						    apt install tigervnc-standalone-server -y
+						fi
+						clear
+						
+						echo -e "..ubuntu: $version: $window: ${window}.sh: removing"
+						rm -rf /root/{window}.sh
+						
+						echo -e "..ubuntu: $version: $window: .bash_profile: removing"
+						rm -rf ~/.bash_profile
+					EOF
+					echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
+					chmod +x $source/$folder/root/.bash_profile
+					
+					sleep 1.4
+					clear
+					echo -e "\n..\n..ubuntu: $version: $window: installed"
+					echo -e "..ubuntu: $version: $window: command"
+					echo -e "..ubuntu: $version: $window: ubuntu $version window $window\n..\n"
 				fi
 			;;
 			18.04)
+				if [[ ! -f $source/$execute ]]; then
+					cat > $source/$execute <<- EOM
+						#!/usr/bin/env bash
+						
+						# Change current working directory.
+						cd \$(dirname \$0)
+						
+						# Avoid termux-exec, execve() conflicts with PRoot.
+						unset LD_PRELOAD
+						
+						# Arrange command.
+						command="proot"
+						command+=" --link2symlink"
+						command+=" -0"
+						command+=" -r $source/$folder"
+						
+						if [[ -n "\$(ls -A $source/ubuntu-binds)" ]]; then
+						    for f in $source/ubuntu-binds/* ;do
+						      . \$f
+						    done
+						fi
+						
+						command+=" -b /dev"
+						command+=" -b /proc"
+						command+=" -b $source/$folder/root:/dev/shm"
+						
+						# Uncomment the following line to have
+						# access to the home directory of termux.
+						#command+=" -b $termux/files/home:/root"
+						
+						# Uncomment the following line to
+						# mount /sdcard directly to /.
+						#command+=" -b /sdcard"
+						
+						command+=" -w /root"
+						command+=" /usr/bin/env -i"
+						command+=" HOME=/root"
+						command+=" PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+						command+=" TERM=\$TERM"
+						command+=" LANG=C.UTF-8"
+						command+=" /bin/bash --login"
+						com="\$@"
+						
+						if [[ -z "\$1" ]];then
+						    exec \$command
+						else
+						    \$command -c "\$com"
+						fi
+					EOM
+				fi
 				if [[ $select == "dekstop" ]]; then
 					case ${dekstop,,} in
 						xfce) ;;
@@ -1317,11 +1585,7 @@ function ubuntu()
 						lxde) ;;
 					esac
 				elif [[ $select == "window" ]]; then
-					case ${window,,} in
-						awesome) ;;
-						openbox) ;;
-						i3) ;;
-					esac
+					# ....
 				fi
 			;;
 		esac
