@@ -280,6 +280,12 @@ function readline()
 # readInputAction [distro] [action] [version]
 function readInputAction()
 {
+	local inputAction=
+	local inputSelect=
+	local inputWindow=
+	local inputDekstop=
+	local inputVersion=
+	
 	# Handle readline input selection mode.
 	# readInputSelect [distro]
 	function readInputSelect()
@@ -965,7 +971,7 @@ function ubuntu()
 		# Default Ubuntu Install Source Destination.
 		local source=$target/$version
 		
-		# Default Ubuntu RootFS name.
+		# Default Ubuntu RootFS name based on version number.
 		local rootfs=ubuntu-rootfs.$version.tar.gz
 		
 		# Resolve Ubuntu RootFS name and archive url.
@@ -1729,11 +1735,13 @@ function ubuntu()
 				fi
 			;;
 		esac
+		
 		if [[ ! -f $termux/files/usr/bin/$binary ]]; then
 			ubuntuBinary
 		fi
+		
+		echo -e "..ubuntu: action: run ubuntu [Y/n]"
 		while [[ $inputNext == "" ]]; do
-			echo -e "..ubuntu: action: run ubuntu [Y/n]"
 			readline "ubuntu" "next" "Y"
 			case ${inputNext,,} in
 				y|yes)
@@ -1765,6 +1773,35 @@ function ubuntu()
 				*) inputNext= ;;
 			esac
 		done
+	}
+	
+	# Handle Ubuntu Remove.
+	function ubuntuRemove()
+	{
+		# Default Ubuntu Install Source Destination.
+		local source=$target/$version
+		
+		case $select in
+			cli)
+				source=$source/cli
+				echo -e "\n..\n..ubuntu: $version: cli: removing"
+			;;
+			window)
+				source=$source/window/$window
+				echo -e "\n..\n..ubuntu: $version: window: $window: removing"
+			;;
+			dekstop)
+				source=$source/dekstop/$dekstop
+				echo -e "\n..\n..ubuntu: $version: window: $dekstop: removing"
+			;;
+			*)
+				echo -e "\n..\n..ubuntu: $version: $select: unknown selection mode"
+				exit 1
+			;;
+		esac
+		rm -rf $source
+		readline "ubuntu" "next"
+		ubuntu
 	}
 	
 	# Prints Ubuntu informations.
