@@ -553,10 +553,14 @@ function alpine()
 			" > $termux/files/usr/bin/$binary
 			chmod +x $termux/files/usr/bin/$binary
 		EOF
+		
 		echo -e "..alpine: /:bin/$binary: fixing shebang"
 		termux-fix-shebang $termux/files/usr/bin/$binary
-		echo -e "..alpine: /:bin/$binary: allow executable\n..\n"
+		
+		echo -e "..alpine: /:bin/$binary: allow executable"
 		chmod +x $termux/files/usr/bin/$binary
+		
+		echo -e "..alpine: /:bin/$binary: re-wriring\n..\n"
 		bash $termux/files/usr/bin/$binary
 	}
 	
@@ -940,16 +944,18 @@ function debian()
 	echo -e "      [4] Cancel"
 	echo -e
 	
-	# Handle input action for .
+	# Handle input action for debian.
 	readInputAction "debian" "install"
 	case $action in
-		cancel) main
-		;;
+		cancel) main ;;
 		remove)
-		;;
+			debianRemove ;;
 		import)
+			debianImport
+			debianInstall
 		;;
 		install)
+			debianInstall
 		;;
 	esac
 }
@@ -957,6 +963,9 @@ function debian()
 # Handle Fedora Actions.
 function fedora()
 {
+	
+	
+	
 	# Prints informations.
 	clear
 	echo -e
@@ -984,6 +993,7 @@ function fedora()
 	
 	# Handle input action for fedora.
 	readInputAction "fedora" "install"
+	
 	case $action in
 		cancel) main ;;
 		remove)
