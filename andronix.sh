@@ -811,7 +811,11 @@ function alpine()
 				case ${inputNext,,} in
 					y|yes)
 						case $select in
-							cli) params="cli" ;;
+							cli)
+								params=(
+									"cli"
+								)
+							;;
 							dekstop)
 								params=(
 									"dekstop"
@@ -1639,7 +1643,7 @@ function ubuntu()
 				proot --link2symlink tar -xf $images/$rootfs --exclude=dev -C $source/$folder||:
 			fi
 			
-			echo -e "..ubuntu: action: remove tarball [Y/n]"
+			echo -e "..ubuntu: $rootfs: remove tarball [Y/n]"
 			local inputRemove=
 			while [[ $inputRemove == "" ]]; do
 				readline "ubuntu" "remove" "Y"
