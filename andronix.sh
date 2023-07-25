@@ -637,9 +637,9 @@ function alpine()
 	{
 		# Resolve Alpine Source Destination.
 		case $select in
-			cli) source=$source/cli ;;
-			window) source=$source/window/$window ;;
-			dekstop) source=$source/dekstop/$dekstop ;;
+			cli) source+=/cli ;;
+			window) source+=/window/$window ;;
+			dekstop) source+=/dekstop/$dekstop ;;
 			*)
 				echo -e "..alpine: $select: unknown selection mode"
 				exit 1
@@ -673,12 +673,12 @@ function alpine()
 			
 			# Resolve Alpine RootFS archive url.
 			case ${architect,,} in
-				aarch64) archurl="aarch64" ;;
-				arm) archurl="armhf" ;;
-				amd64) archurl="x86_64" ;;
-				x86_64) archurl="x86_64" ;;	
-				i*86) archurl="x86" ;;
-				x86) archurl="x86" ;;
+				aarch64) local archurl="aarch64" ;;
+				arm) local archurl="armhf" ;;
+				amd64) local archurl="x86_64" ;;
+				x86_64) local archurl="x86_64" ;;	
+				i*86) local archurl="x86" ;;
+				x86) local archurl="x86" ;;
 				*)
 					echo -e "..alpine: $architect: unsupported architecture"
 					exit 1
@@ -759,8 +759,9 @@ function alpine()
 			
 			if [[ ${select,,} != "cli" ]]; then
 				if [[ ${select,,} == "window" ]]; then
-					echo 0
+					local params=$window
 				elif [[ ${select,,} == "dekstop" ]]; then
+					local params=$dekstop
 					case ${dekstop,,} in
 						xfce) ;;
 						*)
@@ -790,40 +791,24 @@ function alpine()
 					
 					echo -e "..alpine: /:root/.bash_profile: allow executable"
 					chmod +x $source/$folder/root/.bash_profile
-					
-					sleep 1.4
-					clear
-					echo -e "\n..\n..alpine: dekstop: $dekstop: installed"
-					echo -e "..alpine: dekstop: $dekstop: command"
-					echo -e "..alpine: dekstop: $dekstop: alpine dekstop $dekstop\n..\n"
 				fi
 			else
-				sleep 1.4
-				clear
-				echo -e "\n..\n..alpine: cli: installed"
-				echo -e "..alpine: cli: command"
-				echo -e "..alpine: cli: alpine cli\n..\n"
+				local params=
 			fi
 			
+			sleep 1.4
+			clear
+			echo -e "\n..\n..alpine: $select: installed"
+			echo -e "..alpine: $select: command"
+			echo -e "..alpine: $select: alpine $select ${params[@]}\n..\n"
+			
 			echo -e "\n..alpine: action: run alpine [Y/n]"
+			local inputNext=
 			while [[ $inputNext == "" ]]; do
 				readline "alpine" "next" "Y"
 				case ${inputNext,,} in
 					y|yes)
-						case $select in
-							cli)
-								params=(
-									"cli"
-								)
-							;;
-							dekstop)
-								params=(
-									"dekstop"
-									"$dekstop"
-								)
-							;;
-						esac
-						bash $termux/files/usr/bin/$binary ${params[@]}
+						bash $termux/files/usr/bin/$binary $select ${params[@]}
 					;;
 					n|no) main ;;
 					*) inputNext= ;;
@@ -1575,40 +1560,40 @@ function ubuntu()
 		# Resolve Ubuntu RootFS name and archive url.
 		if [[ $version == 22.04 ]]; then
 			case ${architect,,} in
-				aarch64) archurl="arm64" ;;
+				aarch64) local archurl="arm64" ;;
 				*)
 					echo -e "..ubuntu: $version: $architect: unsupported architecture"
 					exit 1
 				;;
 			esac
-			archive="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu22/jammy-${archurl}.tar.gz"
+			local archive="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu22/jammy-${archurl}.tar.gz"
 		elif [[ $version == 20.03 ]]; then
 			case ${architect,,} in
-				aarch64) archurl="arm64" ;;
-				arm) archurl="armhf" ;;
-				amd64) archurl="amd64" ;;
-				x86_64) archurl="amd64" ;;
+				aarch64) local archurl="arm64" ;;
+				arm) local archurl="armhf" ;;
+				amd64) local archurl="amd64" ;;
+				x86_64) local archurl="amd64" ;;
 				*)
 					echo -e "..ubuntu: $version: $architect: unsupported architecture"
 					exit 1
 				;;
 			esac
-			archive="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu20/focal-${archurl}.tar.gz"
+			local archive="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu20/focal-${archurl}.tar.gz"
 		elif [[ $version == 18.04 ]]; then
 			case ${architect,,} in
-				aarch64) archurl="arm64" ;;
-				arm) archurl="armhf" ;;
-				amd64) archurl="amd64" ;;
-				x86_64) archurl="amd64" ;;
-				i*86) archurl="i386" ;;
-				x86) archurl="i386" ;;
+				aarch64) local archurl="arm64" ;;
+				arm) local archurl="armhf" ;;
+				amd64) local archurl="amd64" ;;
+				x86_64) local archurl="amd64" ;;
+				i*86) local archurl="i386" ;;
+				x86) local archurl="i386" ;;
 				*)
 					echo -e "..ubuntu: $version: $architect: unsupported architecture"
 					exit 1
 				;;
 			esac
-			archive="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Ubuntu/${archurl}/ubuntu-rootfs-${archurl}.tar.xz?raw=true"
-			rootfs=ubuntu-rootfs.$version.tar.xz
+			local archive="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Ubuntu/${archurl}/ubuntu-rootfs-${archurl}.tar.xz?raw=true"
+			local rootfs=ubuntu-rootfs.$version.tar.xz
 		else
 			echo -e "..ubuntu: $version: unsupported version"
 			exit 1
@@ -1616,9 +1601,9 @@ function ubuntu()
 		
 		# Resolve Ubuntu Source Destination.
 		case $select in
-			cli) source=$source/cli ;;
-			window) source=$source/window/$window ;;
-			dekstop) source=$source/dekstop/$dekstop ;;
+			cli) source+=/cli ;;
+			window) source+=/window/$window ;;
+			dekstop) source+=/dekstop/$dekstop ;;
 			*)
 				echo -e "..ubuntu: $version: $select: unknown selection mode"
 				exit 1
@@ -1681,9 +1666,9 @@ function ubuntu()
 				if [[ ${select,,} != "cli" ]]; then
 					if [[ ${select,,} == "dekstop" ]]; then
 						case ${dekstop,,} in
-							xfce) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
-							lxqt) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
-							lxde) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
+							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
+							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
+							lxde) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
 						esac
 						
 						echo -e "\n..ubuntu: $version: dekstop: setup of ${dekstop^^} VNC"
@@ -1735,7 +1720,7 @@ function ubuntu()
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
-							    echo -e "..ubuntu: $version: vncserver-start: downloading"
+							    echo -e "\n..ubuntu: $version: vncserver-start: downloading"
 							    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
 							    echo -e "..ubuntu: $version: vncserver-start: removing"
 							    chmod +x /usr/local/bin/vncserver-start
@@ -1849,9 +1834,9 @@ function ubuntu()
 				if [[ ${select,,} != "cli" ]]; then
 					if [[ ${select,,} == "dekstop" ]]; then
 						case ${dekstop,,} in
-							xfce) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
-							lxqt) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
-							lxde) rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
+							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
+							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
+							lxde) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
 						esac
 						
 						echo -e "\n..ubuntu: $version: dekstop: setup of ${dekstop^^} VNC"
@@ -1912,7 +1897,7 @@ function ubuntu()
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
-							    echo -e "..ubuntu: $version: vncserver-start: downloading"
+							    echo -e "\n..ubuntu: $version: vncserver-start: downloading"
 							    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
 							    echo -e "..ubuntu: $version: vncserver-start: removing"
 							    chmod +x /usr/local/bin/vncserver-start
@@ -2027,19 +2012,19 @@ function ubuntu()
 					if [[ ${select,,} == "dekstop" ]]; then
 						case ${dekstop,,} in
 							xfce)
-								rinku=(
+								local rinku=(
 									"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
 									"xfce4_de.sh"
 								)
 							;;
 							lxqt)
-								rinku=(
+								local rinku=(
 									"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT"
 									"lxqt_de.sh"
 								)
 							;;
 							lxde)
-								rinku=(
+								local rinku=(
 									"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE"
 									"lxde_de.sh"
 								)
@@ -2079,7 +2064,7 @@ function ubuntu()
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
-							    echo -e "..ubuntu: $version: vncserver-start: downloading"
+							    echo -e "\n..ubuntu: $version: vncserver-start: downloading"
 							    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
 							    echo -e "..ubuntu: $version: vncserver-start: removing"
 							    chmod +x /usr/local/bin/vncserver-start
@@ -2199,20 +2184,20 @@ function ubuntu()
 				y|yes)
 					case $select in
 						cli)
-							params=(
+							local params=(
 								"$version"
 								"cli"
 							)
 						;;
 						window)
-							params=(
+							local params=(
 								"$version"
 								"window"
 								"$window"
 							)
 						;;
 						dekstop)
-							params=(
+							local params=(
 								"$version"
 								"dekstop"
 								"$dekstop"
@@ -2235,15 +2220,15 @@ function ubuntu()
 		
 		case $select in
 			cli)
-				source=$source/cli
+				source+=/cli
 				echo -e "\n..\n..ubuntu: $version: cli: removing"
 			;;
 			window)
-				source=$source/window/$window
+				source+=/window/$window
 				echo -e "\n..\n..ubuntu: $version: window: $window: removing"
 			;;
 			dekstop)
-				source=$source/dekstop/$dekstop
+				source+=/dekstop/$dekstop
 				echo -e "\n..\n..ubuntu: $version: window: $dekstop: removing"
 			;;
 			*)
