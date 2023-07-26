@@ -531,10 +531,10 @@ function alpine()
 			    esac
 			fi
 			
-			# Default alpine Source.
-			source=$target/\\\$select
+			# Default Alpine Source.
+			source=$source/\\\$select
 			
-			# Resolve alpine Source.
+			# Resolve Alpine Source.
 			case \\\$select in
 			    window) source+=/\\\$window ;;
 			    dekstop) source+=/\\\$dekstop ;;
@@ -568,7 +568,7 @@ function alpine()
 	function alpineLauncher()
 	{
 		echo -e "..\n..alpine: $launch: building"
-		cat > $source/$launch <<- EOM
+		cat > $target/$launch <<- EOM
 			#!/usr/bin/env bash
 			
 			# Change current working directory.
@@ -581,17 +581,17 @@ function alpine()
 			command="proot"
 			command+=" --link2symlink"
 			command+=" -0"
-			command+=" -r $source/$folder"
+			command+=" -r $target/$folder"
 			
-			if [ -n "\$(ls -A $source/alpine-binds)" ]; then
-			    for f in $source/alpine-binds/* ;do
+			if [ -n "\$(ls -A $target/alpine-binds)" ]; then
+			    for f in $target/alpine-binds/* ;do
 			        . \$f
 			    done
 			fi
 			
 			command+=" -b /dev"
 			command+=" -b /proc"
-			command+=" -b $source/$folder/root:/dev/shm"
+			command+=" -b $target/$folder/root:/dev/shm"
 			
 			# Uncomment the following line to have
 			# access to the home directory of termux
@@ -620,13 +620,13 @@ function alpine()
 		EOM
 		
 		echo -e "..alpine: $launch: fixing shebang"
-		termux-fix-shebang $source/$launch
+		termux-fix-shebang $target/$launch
 		
 		echo -e "..alpine: $launch: allow executable"
-		chmod +x $source/$launch
+		chmod +x $target/$launch
 	}
 	
-	# Handle alpine Import.
+	# Handle Alpine Import.
 	function alpineImport()
 	{
 		echo 0
@@ -637,9 +637,9 @@ function alpine()
 	{
 		# Resolve Alpine Source Destination.
 		case $select in
-			cli) source+=/cli ;;
-			window) source+=/window/$window ;;
-			dekstop) source+=/dekstop/$dekstop ;;
+			cli) local target=$source/cli ;;
+			window) local target=$source/window/$window ;;
+			dekstop) local target=$source/dekstop/$dekstop ;;
 			*)
 				echo -e "..alpine: $select: unknown selection mode"
 				exit 1
@@ -647,7 +647,7 @@ function alpine()
 		esac
 		
 		# Check if previous file system is exists.
-		if [[ -d $source/$folder ]]; then
+		if [[ -d $target/$folder ]]; then
 			echo -e "\n..\n..alpine: remove: remove previous installation [Y/n]"
 			local inputRemove=
 			while [[ $inputRemove == "" ]]; do
@@ -656,7 +656,7 @@ function alpine()
 					y|yes)
 						inputRemove=y
 						echo -e "\n..alpine: $folder: removing previously installation"
-						rm -f $source
+						rm -f $target
 					;;
 					n|no) inputRemove=n ;;
 					*)
@@ -699,13 +699,13 @@ function alpine()
 			fi
 			
 			echo -e "..alpine: alpine-binds: creating"
-			mkdir -p $source/alpine-binds
+			mkdir -p $target/alpine-binds
 			
 			echo -e "..alpine: $folder: creating"
-			mkdir -p $source/$folder
+			mkdir -p $target/$folder
 			
 			echo -e "..alpine: $rootfs: decompressing"
-			proot --link2symlink tar -zxf $images/$rootfs --exclude=dev -C $source/$folder||:
+			proot --link2symlink tar -zxf $images/$rootfs --exclude=dev -C $target/$folder||:
 			
 			echo -e "..alpine: $rootfs: remove tarball [Y/n]"
 			local inputRemove=
@@ -724,38 +724,38 @@ function alpine()
 			done
 			clear
 			
-			# Check if alpine binary doesn't exists.
+			# Check if Alpine binary doesn't exists.
 			if [[ ! -f $termux/files/usr/bin/$binary ]]; then
 				alpineBinary
 			fi
 			
 			# Check if launcher script doesn't exists.
-			if [[ ! -f $source/$launch ]]; then
+			if [[ ! -f $target/$launch ]]; then
 				alpineLauncher
 			fi
 			
 			echo -e "\n..\n..alpine: /:etc/fstab: creating"
-			echo "" > $source/$folder/etc/fstab
+			echo "" > $target/$folder/etc/fstab
 			
 			echo -e "..alpine: /:etc/resolv.conf: removing"
-			rm -rf $source/$folder/etc/resolv.conf
+			rm -rf $target/$folder/etc/resolv.conf
 			
 			echo -e "..alpine: /:etc/resolf.conf: creating"
-			echo "nameserver 8.8.8.8" > $source/$folder/etc/resolv.conf
+			echo "nameserver 8.8.8.8" > $target/$folder/etc/resolv.conf
 			
 			echo -e "\n..\n..alpine: $launch: updating"
-			bash $source/$launch apk update
+			bash $target/$launch apk update
 			clear
 			
 			echo -e "\n..\n..alpine: $launch: installing bash"
-			bash $source/$launch apk add --no-cache bash
+			bash $target/$launch apk add --no-cache bash
 			clear
 			
 			echo -e "\n..\n..alpine: /:etc/passwd: seeding"
-			sed -i "s/ash/bash/g" $source/$folder/etc/passwd
+			sed -i "s/ash/bash/g" $target/$folder/etc/passwd
 			
 			echo -e "..alpine: $launch: seeding"
-			sed -i "s/bin\/sh/bin\/bash/g" $source/$launch
+			sed -i "s/bin\/sh/bin\/bash/g" $target/$launch
 			
 			if [[ ${select,,} != "cli" ]]; then
 				if [[ ${select,,} == "window" ]]; then
@@ -771,10 +771,10 @@ function alpine()
 					esac
 					
 					echo -e "\n..\n..alpine: /:root/.bash_profile: removing"
-					rm -rf $source/$folder/root/.bash_profile
+					rm -rf $target/$folder/root/.bash_profile
 					
 					echo -e "..alpine: /:root/.bash_profile: creating"
-					cat <<- EOF > $source/$folder/root/.bash_profile
+					cat <<- EOF > $target/$folder/root/.bash_profile
 						#!/usr/bin/env bash
 						
 						# Downloading Dekstop Environment Setup file.
@@ -790,7 +790,7 @@ function alpine()
 					EOF
 					
 					echo -e "..alpine: /:root/.bash_profile: allow executable"
-					chmod +x $source/$folder/root/.bash_profile
+					chmod +x $target/$folder/root/.bash_profile
 				fi
 			else
 				local params=
@@ -802,7 +802,7 @@ function alpine()
 			echo -e "..alpine: $select: command"
 			echo -e "..alpine: $select: alpine $select ${params[@]}\n..\n"
 			
-			echo -e "\n..alpine: action: run alpine [Y/n]"
+			echo -e "..alpine: action: run alpine [Y/n]"
 			local inputNext=
 			while [[ $inputNext == "" ]]; do
 				readline "alpine" "next" "Y"
@@ -953,7 +953,460 @@ function debian()
 function fedora()
 {
 	
+	# Default Fedora Mode for install.
+	local select=cli
 	
+	# Default Import is always empty.
+	# Because we don't know where source destination.
+	local import=
+	
+	# Default Fedora Directory.
+	local source=$install/fedora
+	local folder=fedora-fs
+	
+	# Default Fedora Executable.
+	local binary=fedora
+	local launch=fedora-start
+	
+	# Default Fedora RootFS name.
+	local rootfs=fedora-rootfs.tar.xz
+	
+	# Default Fedora Window Manager.
+	local window=Awesome
+	
+	# Default Fedora Environment for install.
+	local dekstop=XFCE
+	
+	# Handle Building Fedora Binary.
+	function fedoraBinary()
+	{
+		echo -e "..\n..fedora: /:bin/$binary: building"
+		cat <<- EOF > $termux/files/usr/bin/${binary}
+			#!/usr/bin/env bash
+			echo -e "#!/usr/bin/env bash
+			
+			# Default Fedora Selection.
+			select=cli
+			window=awesome
+			dekstop=xfce
+			
+			if [[ \\\$1 != \"\" ]]; then
+			    case \\\${1,,} in
+			        cli) select=cli ;;
+			        window)
+			            select=window
+			            if [[ \\\$2 != \"\" ]]; then
+			                case \\\${2,,} in
+			                    awesome) window=awesome ;;
+			                    openbox) window=openbox ;;
+			                    i3) window=i3 ;;
+			                    *)
+			                        echo -e \"fedora: \\\$2: unsupported window manager\"
+			                        exit 1
+			                    ;;
+			                esac
+			            fi
+			        ;;
+			        dekstop)
+			            select=dekstop
+			            if [[ \\\$2 != \"\" ]]; then
+			                case \\\${2^^} in
+			                    XFCE) dekstop=xfce ;;
+			                    LXQT) dekstop=lxqt ;;
+			                    LXDE) dekstop=lxde ;;
+			                    *)
+			                        echo -e \"fedora: \\\$2: unsupported dekstop environment\"
+			                        exit 1
+			                esac
+			            fi
+			        ;;
+			        *)
+			            echo -e \"fedora: \\\$1: unsupported selection mode\"
+			            exit 1
+			        ;;
+			    esac
+			fi
+			
+			# Default Fedora Source.
+			source=$source/\\\$select
+			
+			# Resolve Fedora Source.
+			case \\\$select in
+			    window) source+=/\\\$window ;;
+			    dekstop) source+=/\\\$dekstop ;;
+			esac
+			
+			if [[ ! -d \\\$source/fedora-fs ]]; then
+			    case \\\$select in
+			        cli) echo -e \"fedora: \\\$select: is not installed\" ;;
+			        window) echo -e \"fedora: \\\$select: \\\$window: is not installed\" ;;
+			        dekstop) echo -e \"fedora: \\\$select: \\\$dekstop: is not installed\" ;;
+			    esac
+			    exit 1
+			fi
+			
+			bash \\\$source/$launch
+			" > $termux/files/usr/bin/$binary
+			chmod +x $termux/files/usr/bin/$binary
+		EOF
+		
+		echo -e "..fedora: /:bin/$binary: fixing shebang"
+		termux-fix-shebang $termux/files/usr/bin/$binary
+		
+		echo -e "..fedora: /:bin/$binary: allow executable"
+		chmod +x $termux/files/usr/bin/$binary
+		
+		echo -e "..fedora: /:bin/$binary: re-wriring\n..\n"
+		bash $termux/files/usr/bin/$binary
+	}
+	
+	# Handle Building Fedora Launcher.
+	function fedoraLauncher()
+	{
+		echo -e "..\n..fedora: $launch: building"
+		cat > $target/$launch <<- EOM
+			#!/usr/bin/env bash
+			
+			# Change current working directory.
+			cd \$(dirname \$0)
+			
+			# Avoid termux-exec, execve() conflicts with PRoot.
+			unset LD_PRELOAD
+			
+			# Arrange command.
+			command="proot"
+			command+=" --link2symlink"
+			command+=" -0"
+			command+=" -r $target/$folder"
+			
+			if [ -n "\$(ls -A $target/fedora-binds)" ]; then
+			    for f in $target/fedora-binds/* ;do
+			        . \$f
+			    done
+			fi
+			
+			command+=" -b /dev"
+			command+=" -b /proc"
+			command+=" -b $target/$folder/root:/dev/shm"
+			
+			# Uncomment the following line to have access to the home directory of termux
+			#command+=" -b $termux/files/home:/root"
+			
+			# Uncomment the following line to
+			# mount /sdcard directly to /.
+			#command+=" -b /sdcard"
+			
+			command+=" -w /root"
+			command+=" /usr/bin/env -i"
+			command+=" HOME=/root"
+			command+=" PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+			command+=" TERM=\$TERM"
+			command+=" LANG=C.UTF-8"
+			command+=" /bin/bash --login"
+			com="\$@"
+			
+			if [ -z "\$1" ];then
+			    exec \$command
+			else
+			    \$command -c "\$com"
+			fi
+		EOM
+		
+		echo -e "..fedora: $launch: fixing shebang"
+		termux-fix-shebang $target/$launch
+		
+		echo -e "..fedora: $launch: allow executable"
+		chmod +x $target/$launch
+	}
+	
+	# Handle Fedora Import.
+	function fedoraImport()
+	{
+		echo 0
+	}
+	
+	# Handle Fedora Install.
+	function fedoraInstall()
+	{
+		# Resolve Fedora Source Destination.
+		case $select in
+			cli) local target=$source/cli ;;
+			window) local target=$source/window/$window ;;
+			dekstop) local target=$source/dekstop/$dekstop ;;
+			*)
+				echo -e "..fedora: $select: unknown selection mode"
+				exit 1
+			;;
+		esac
+		
+		
+		# Check if file system does not exists.
+		if [[ ! -d $target/$folder ]]; then
+			if [[ ! -f $images/$rootfs ]]; then
+				if [[ ${architect,,} == "aarch64" ]]; then
+					
+					echo -e "..fedora: /:.rootfs/fedora: creating"
+					mkdir -p $images/fedora
+					
+					if [[ ! -f $images/fedora/fedora.partaa ]]; then
+						echo -e "\n..fedora: fedora.partaa: downloading"
+						wget --tries=20 "https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partaa" -O $images/fedora/fedora.partaa
+					fi
+					if [[ ! -f $images/fedora/fedora.partab ]]; then
+						echo -e "\n..fedora: fedora.partab: downloading"
+						wget --tries=20 "https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partab" -O $images/fedora/fedora.partab
+					fi
+					clear
+					
+					echo -e "\n..fedora: $rootfs: building"
+					cat $images/fedora/fedora.parta* > $images/fedora/fedora-rootfs.tar.xz
+					
+					echo -e "..fedora: fedora.parta[a-b]: remove [Y/n]"
+					local inputRemove=
+					while [[ $inputRemove == "" ]]; do
+						readline "fedora" "remove" "Y"
+						case ${inputRemove,,} in
+							y|yes)
+								echo -e "\n..fedora: fedora.parta[a-b]: removing"
+								rm -rf $images/fedora/fedora.parta*
+							;;
+							n|no) ;;
+							*)
+								inputRemove=
+							;;
+						esac
+					done
+					clear
+				else
+					case ${architect,,} in
+						arm) archurl="armhf" ;;
+						amd64) archurl="amd64" ;;
+						x86_64) archurl="amd64" ;;
+						*)
+							echo -e "..fedora: $architect: unsupported architecture"
+							exit 1
+						;;
+					esac
+					echo -e "\n..fedora: $rootfs: downloading"
+					wget --tries=20 "https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Fedora/${archurl}/fedora-rootfs-${archurl}.tar.xz?raw=true" -O $images/$rootfs
+					clear
+				fi
+			fi
+			
+			echo -e "\n..fedora: $folder: creating"
+			mkdir -p $target/$folder
+			
+			echo -e "..fedora: $rootfs: decompressing"
+			proot --link2symlink tar -xJf $images/$rootfs --exclude=dev -C $target/$folder||:
+			
+			echo -e "..fedora: $rootfs: remove [Y/n]"
+			local inputRemove=
+			while [[ $inputRemove == "" ]]; do
+				readline "fedora" "remove" "Y"
+				case ${inputRemove,,} in
+					y|yes)
+						echo -e "\n..fedora: $rootfs: removing"
+						rm -rf $images/$rootfs
+					;;
+					n|no) ;;
+					*)
+						inputRemove=
+					;;
+				esac
+			done
+			clear
+		fi
+		
+		# Resolve Fedora name server.
+		case ${archurl,,} in
+			armhf|amd64|amd64)
+				echo -e "fedora: setup: Setting up name server"
+				
+				echo -e "fedora: /:etc/hosts: creating"
+				echo "127.0.0.1 localhost" > $target/$folder/etc/hosts
+				
+				echo -e "fedora: /:etc/resolv.conf: creating"
+				echo "nameserver 8.8.8.8" > $target/$folder/etc/resolv.conf
+				echo "nameserver 8.8.4.4" >> $target/$folder/etc/resolv.conf
+			;;
+		esac
+		
+		echo -e "..fedora: fedora-binds: creating"
+		mkdir -p $target/fedora-binds
+		
+		# Check if Fedora binary doesn't exists.
+		if [[ ! -f $termux/files/usr/bin/$binary ]]; then
+			fedoraBinary
+		fi
+		
+		# Check if Fedora launcher script doesn't exists.
+		if [[ ! -f $target/$launch ]]; then
+			fedoraLauncher
+		fi
+		
+		if [[ ${select,,} != "cli" ]]; then
+			if [[ ${select,,} == "dekstop" ]]; then
+				local params=$dekstop
+				case ${dekstop,,} in
+					xfce)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Fedora/XFCE4"
+							"xfce4_de.sh"
+						)
+					;;
+					lxqt)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Fedora/LXQT"
+							"lxqt_de.sh"
+						)
+					;;
+					lxde)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Fedora/LXDE"
+							"lxde_de.sh"
+						)
+					;;
+				esac
+				
+				echo -e "\n..fedora: dekstop: setup of ${dekstop^^} VNC"
+				echo -e "\n..fedora: $dekstop: ${dekstop}.sh: downloading"
+				wget --tries=20 $rinku[0]/$rinku[1] -O $target/$folder/root/${dekstop}.sh
+				echo -e "..fedora: $version: $dekstop: ${dekstop}.sh: allow executable"
+				chmod +x $target/$folder/root/${dekstop}.sh
+				
+				echo -e "\n..\n..fedora: /:root/.bash_profile: removing"
+				rm -rf $target/$folder/root/.bash_profile
+				
+				echo -e "..fedora: /:root/.bash_profile: creating"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Installing required packages.
+					yum install wget screenfetch -y
+					clear
+					
+					if [[ ! -f /root/${dekstop}.sh ]]; then
+						echo -e "..fedora: $dekstop: ${dekstop}.sh: downloading"
+					    wget --tries=20 $rinku[0]/$rinku[1] -O /root/${dekstop}.sh
+					fi
+					
+					# Executing Dekstop Environment Setup file..
+					bash ~/$rinku[1].sh
+					clear
+					
+					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+					    echo -e "\n..fedora: vncserver-start: downloading"
+					    wget --tries=20 $rinku[0]/vncserver-start -O /usr/local/bin/vncserver-start
+					    
+					    echo -e "..fedora: vncserver-start: allow executable"
+					    chmod +x /usr/local/bin/vncserver-start
+					    
+					    echo -e "\n..fedora: vncserver-stop: downloading"
+					    wget --tries=20 $rinku[0]/vncserver-stop -O /usr/local/bin/vncserver-stop
+					    
+					    echo -e "..fedora: vncserver-stop: allow executable"
+					    chmod +x /usr/local/bin/vncserver-stop
+					fi
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    yum install tigervnc-server -y
+					fi
+					clear
+					
+					echo -e "..fedora: firefox: installing"
+					yum install firefox -y
+					
+					echo -e "..fedora: $dekstop: ${dekstop}.sh: removing"
+					rm -rf /root/{dekstop}.sh
+					
+					echo -e "..fedora: $dekstop: .bash_profile: removing"
+					rm -rf ~/.bash_profile
+					
+					# Displaying screenfetch.
+					clear && screenfetch && echo
+					sleep 1.4
+				EOF
+				
+				echo -e "..fedora: /:root/.bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			elif [[ ${select,,} == "window" ]]; then
+				local params=$window
+				declare -A rinku=(
+					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/DNF/"
+					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/DNF/"
+				)
+				
+				echo -e "\n..fedora: window: setup of ${window^} VNC"
+				
+				echo -e "\n..fedora: $version: $window: ${window}.sh: downloading"
+				wget --tries=20 ${rinku[2]}/${window}.sh -O $target/$folder/root/${window}.sh
+				echo -e "..fedora: $version: $window: ${window}.sh: allow executable"
+				chmod +x $target/$folder/root/${window}.sh
+				
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Installing required packages.
+					dnf install wget nano screenfetch -y
+					clear
+					
+					if [[ ! -f /root/${window}.sh ]]; then
+					    echo -e "..fedora: $window: ${window}.sh: downloading"
+					    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+					fi
+					
+					# Executing Window Manager Setup file..
+					bash ~/${window}.sh
+					clear
+					
+					# Removing Window Manager Setup file.
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    dnf install tigervnc-server -y
+					fi
+					clear
+					
+					echo -e "..fedora: $window: ${window}.sh: removing"
+					rm -rf /root/{window}.sh
+					
+					echo -e "..fedora: $window: .bash_profile: removing"
+					rm -rf ~/.bash_profile
+					
+					# Displaying screenfetch.
+					clear && screenfetch && echo
+					sleep 1.4
+				EOF
+				
+				echo -e "..fedora: $window: .bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			fi
+		else
+			local params=
+		fi
+		
+		sleep 1.4
+		clear
+		echo -e "\n..\n..fedora: $select: installed"
+		echo -e "..fedora: $select: command"
+		echo -e "..fedora: $select: fedora $select ${params[@]}\n..\n"
+		
+		echo -e "..fedora: action: run fedora [Y/n]"
+		local inputNext=
+		while [[ $inputNext == "" ]]; do
+			readline "fedora" "next" "Y"
+			case ${inputNext,,} in
+				y|yes)
+					bash $termux/files/usr/bin/$binary $select ${params[@]}
+				;;
+				n|no) main ;;
+				*) inputNext= ;;
+			esac
+		done
+	}
+	
+	# Handle Fedora Remove.
+	function fedoraRemove()
+	{
+		echo 0
+	}
 	
 	# Prints informations.
 	clear
@@ -980,7 +1433,7 @@ function fedora()
 	echo -e "      [4] Cancel"
 	echo -e
 	
-	# Handle input action for fedora.
+	# Handle input action for Fedora.
 	readInputAction "fedora" "install"
 	
 	case $action in
@@ -1661,10 +2114,12 @@ function ubuntu()
 			fi
 		fi
 		
+		local params=
 		case $version in
 			22.04)
 				if [[ ${select,,} != "cli" ]]; then
 					if [[ ${select,,} == "dekstop" ]]; then
+						local params=$dekstop
 						case ${dekstop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -1747,17 +2202,11 @@ function ubuntu()
 							clear && screenfetch && echo
 							sleep 1.4
 						EOF
+						
 						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
-						
-						sleep 1.4
-						clear
-						echo -e "\n..\n..ubuntu: $version: $dekstop: installed"
-						echo -e "..ubuntu: $version: $dekstop: command"
-						echo -e "..ubuntu: $version: $dekstop: ubuntu $version dekstop $dekstop\n..\n"
 					elif [[ ${select,,} == "window" ]]; then
-						
-						# dlink delcare.
+						local params=$window
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -1780,9 +2229,9 @@ function ubuntu()
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
 						echo -e "\n..ubuntu: $version: $window: ${window}.sh: downloading"
-						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/${window}.sh
+						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
 						echo -e "..ubuntu: $version: $window: ${window}.sh: allow executable"
-						chmod +x $source/$folder/${window}.sh
+						chmod +x $source/$folder/root/${window}.sh
 						
 						echo -e "..ubuntu: $version: $window: .bash_profile: building"
 						cat <<- EOF > $source/$folder/root/.bash_profile
@@ -1813,26 +2262,16 @@ function ubuntu()
 							clear && screenfetch && echo
 							sleep 1.4
 						EOF
+						
 						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
-						
-						sleep 1.4
-						clear
-						echo -e "\n..\n..ubuntu: $version: $window: installed"
-						echo -e "..ubuntu: $version: $window: command"
-						echo -e "..ubuntu: $version: $window: ubuntu $version window $window\n..\n"
 					fi
-				else
-					sleep 1.4
-					clear
-					echo -e "\n..\n..ubuntu: $version: cli: installed"
-					echo -e "..ubuntu: $version: cli: command"
-					echo -e "..ubuntu: $version: cli: ubuntu $version cli\n..\n"
 				fi
 			;;
 			20.04)
 				if [[ ${select,,} != "cli" ]]; then
 					if [[ ${select,,} == "dekstop" ]]; then
+						local params=$dekstop
 						case ${dekstop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -1924,17 +2363,11 @@ function ubuntu()
 							clear && screenfetch && echo
 							sleep 1.4
 						EOF
+						
 						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
-						
-						sleep 1.4
-						clear
-						echo -e "\n..\n..ubuntu: $version: $dekstop: installed"
-						echo -e "..ubuntu: $version: $dekstop: command"
-						echo -e "..ubuntu: $version: $dekstop: ubuntu $version dekstop $dekstop\n..\n"
 					elif [[ ${select,,} == "window" ]]; then
-						
-						# dlink delcare.
+						local params=$window
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -1957,9 +2390,9 @@ function ubuntu()
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
 						echo -e "\n..ubuntu: $version: $window: ${window}.sh: downloading"
-						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/${window}.sh
+						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
 						echo -e "..ubuntu: $version: $window: ${window}.sh: allow executable"
-						chmod +x $source/$folder/${window}.sh
+						chmod +x $source/$folder/root/${window}.sh
 						
 						echo -e "..ubuntu: $version: $window: .bash_profile: building"
 						cat <<- EOF > $source/$folder/root/.bash_profile
@@ -1990,26 +2423,16 @@ function ubuntu()
 							clear && screenfetch && echo
 							sleep 1.4
 						EOF
+						
 						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
-						
-						sleep 1.4
-						clear
-						echo -e "\n..\n..ubuntu: $version: $window: installed"
-						echo -e "..ubuntu: $version: $window: command"
-						echo -e "..ubuntu: $version: $window: ubuntu $version window $window\n..\n"
 					fi
-				else
-					sleep 1.4
-					clear
-					echo -e "\n..\n..ubuntu: $version: cli: installed"
-					echo -e "..ubuntu: $version: cli: command"
-					echo -e "..ubuntu: $version: cli: ubuntu $version cli\n..\n"
 				fi
 			;;
 			18.04)
 				if [[ ${select,,} != "cli" ]]; then
 					if [[ ${select,,} == "dekstop" ]]; then
+						local params=$dekstop
 						case ${dekstop,,} in
 							xfce)
 								local rinku=(
@@ -2091,17 +2514,11 @@ function ubuntu()
 							clear && screenfetch && echo
 							sleep 1.4
 						EOF
+						
 						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
-						
-						sleep 1.4
-						clear
-						echo -e "\n..\n..ubuntu: $version: $dekstop: installed"
-						echo -e "..ubuntu: $version: $dekstop: command"
-						echo -e "..ubuntu: $version: $dekstop: ubuntu $version dekstop $dekstop\n..\n"
 					elif [[ ${select,,} == "window" ]]; then
-						
-						# dlink delcare.
+						local params=$window
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2114,9 +2531,9 @@ function ubuntu()
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
 						echo -e "\n..ubuntu: $version: $window: ${window}.sh: downloading"
-						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/${window}.sh
+						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
 						echo -e "..ubuntu: $version: $window: ${window}.sh: allow executable"
-						chmod +x $source/$folder/${window}.sh
+						chmod +x $source/$folder/root/${window}.sh
 						
 						echo -e "..ubuntu: $version: $window: .bash_profile: building"
 						cat <<- EOF > $source/$folder/root/.bash_profile
@@ -2147,64 +2564,37 @@ function ubuntu()
 							clear && screenfetch && echo
 							sleep 1.4
 						EOF
+						
 						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
-						
-						sleep 1.4
-						clear
-						echo -e "\n..\n..ubuntu: $version: $window: installed"
-						echo -e "..ubuntu: $version: $window: command"
-						echo -e "..ubuntu: $version: $window: ubuntu $version window $window\n..\n"
 					fi
-				else
-					sleep 1.4
-					clear
-					echo -e "\n..\n..ubuntu: $version: cli: installed"
-					echo -e "..ubuntu: $version: cli: command"
-					echo -e "..ubuntu: $version: cli: ubuntu $version cli\n..\n"
 				fi
 			;;
 		esac
 		
-		# Check if ubuntu binary doesn't exists.
+		# Check if Ubuntu binary doesn't exists.
 		if [[ ! -f $termux/files/usr/bin/$binary ]]; then
 			ubuntuBinary
 		fi
 		
-		# Check if ubuntu launcher script doesn't exists.
+		# Check if Ubuntu launcher script doesn't exists.
 		if [[ ! -f $source/$launch ]]; then
 			ubuntuLauncher $source
 		fi
 		
-		echo -e "..ubuntu: action: run ubuntu [Y/n]"
+		sleep 1.4
+		clear
+		echo -e "\n..\n..ubuntu: $select: installed"
+		echo -e "..ubuntu: $version: $select: command"
+		echo -e "..ubuntu: $version: $select: ubuntu $version $select ${params[@]}\n..\n"
+		
+		echo -e "..ubuntu: $version: $select: action: run ubuntu [Y/n]"
 		local inputNext=
 		while [[ $inputNext == "" ]]; do
 			readline "ubuntu" "next" "Y"
 			case ${inputNext,,} in
 				y|yes)
-					case $select in
-						cli)
-							local params=(
-								"$version"
-								"cli"
-							)
-						;;
-						window)
-							local params=(
-								"$version"
-								"window"
-								"$window"
-							)
-						;;
-						dekstop)
-							local params=(
-								"$version"
-								"dekstop"
-								"$dekstop"
-							)
-						;;
-					esac
-					bash $termux/files/usr/bin/$binary ${params[@]}
+					bash $termux/files/usr/bin/$binary $select ${params[@]}
 				;;
 				n|no) main ;;
 				*) inputNext= ;;
@@ -2217,26 +2607,30 @@ function ubuntu()
 	{
 		# Default Ubuntu Install Source Destination.
 		local source=$target/$version
+		local params=
 		
 		case $select in
 			cli)
 				source+=/cli
-				echo -e "\n..\n..ubuntu: $version: cli: removing"
+				params=cli
 			;;
 			window)
 				source+=/window/$window
-				echo -e "\n..\n..ubuntu: $version: window: $window: removing"
+				params=$window
 			;;
 			dekstop)
 				source+=/dekstop/$dekstop
-				echo -e "\n..\n..ubuntu: $version: window: $dekstop: removing"
+				params=$dekstop
 			;;
 			*)
 				echo -e "\n..\n..ubuntu: $version: $select: unknown selection mode"
 				exit 1
 			;;
 		esac
+		
+		echo -e "\n..\n..ubuntu: $version: $select: $params: removing"
 		rm -rf $source
+		
 		readline "ubuntu" "next"
 		ubuntu
 	}
@@ -2268,7 +2662,7 @@ function ubuntu()
 	echo -e "      [4] Cancel"
 	echo -e
 	
-	# Get input action for ubuntu.
+	# Get input action for Ubuntu.
 	readInputAction "ubuntu" "install" $version
 	case $action in
 		cancel)
