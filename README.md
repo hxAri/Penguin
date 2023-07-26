@@ -5,6 +5,13 @@ Penguin is a Command Line Utility Tool to install various Linux distros on Termu
 ## Warning
 If there is an outdated distro installation, or an outdated gpg key it is purely not this script's fault because, this tool is not completely self-contained, it fetches various Linux Root File System (rootfs) resources from various sources, and be thankful they ever existed.
 
+## Features
+* Easy Binary Execution
+* Command Line Interactive
+* Distro Backup Import
+* Easily Install Distro
+* Uninstalling The Distro
+
 ## Distros
 List of supported linux distros.
 * Alpine (**Andronix**)
@@ -41,6 +48,63 @@ List of supported linux distros.
   [https://github.com/AndronixApp/AndronixOrigin](https://github.com/AndronixApp/AndronixOrigin)
 * **AnLinux**<br/>
   [https://github.com/EXALAB/AnLinux-App](https://github.com/EXALAB/AnLinux-App)
+
+## Dependency
+* curl
+* proot
+* tar
+* wget
+
+## Install
+To install Penguin is very easy.
+```sh
+#!/usr/bin/env bash
+
+# Clone this repository.
+git clone https://github.com/hxAri/Penguin
+
+# Change current working directory.
+cd Penguin
+
+# Allow executable penguin.
+chmod +x penguin*
+
+# Run the penguin.
+bash penguin*
+```
+
+## Example
+To run the distro that has been installed is also quite easy.
+```sh
+#!/usr/bin/env bash
+
+# Fedora CLI Only
+fedora cli
+
+# Fedora Window Manager
+fedora window
+fedora window (i3|openbox|awesome)
+
+# Fedora Dekstop Environment
+fedora dekstop
+fedora dekstop (xfce|lxqt|lxde)
+```
+
+Especially for distributions that have more than one supported version, such as Ubuntu.
+```sh
+#!/usr/bin/env bash
+
+# Ubuntu CLI Only
+ubuntu (22|20|18) cli
+
+# Ubuntu Window Manager
+ubuntu (22|20|18) window
+ubuntu (22|20|18) window (i3|openbox|awesome)
+
+# Ubuntu Dekstop Environment
+ubuntu (22|20|18) dekstop
+ubuntu (22|20|18) dekstop (xfce|lxqt|lxde)
+```
 
 ## Donate
 Give spirit to the developer, no matter how many donations given will still be accepted<br/>
