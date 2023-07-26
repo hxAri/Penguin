@@ -7,11 +7,11 @@ If there is an outdated distro installation, or an outdated gpg key it is purely
 
 ## Distros
 List of supported linux distros.
-* Alpine
+* Alpine (**Andronix**)
   * CLI Only
   * Dekstop Environment
     * XFCE
-* Fedora
+* Fedora (**Andronix**)
   * CLI Only
   * Window Manager
     * i3
@@ -21,7 +21,7 @@ List of supported linux distros.
     * XFCE
     * LXQT
     * LXDE
-* Ubuntu
+* Ubuntu (**Andronix**)
   * Versions
     * 22.04
     * 20.04
@@ -37,8 +37,14 @@ List of supported linux distros.
     * LXDE
 
 ## Sources
-* Andronix<br/>
+* **Andronix**<br/>
   [https://github.com/AndronixApp/AndronixOrigin](https://github.com/AndronixApp/AndronixOrigin)
-* AnLinux<br/>
+* **AnLinux**<br/>
   [https://github.com/EXALAB/AnLinux-App](https://github.com/EXALAB/AnLinux-App)
 
+## Donate
+Give spirit to the developer, no matter how many donations given will still be accepted<br/>
+[paypal.me/hxAri](https://paypal.me/hxAri)
+
+## Licence
+All Penguin source code is licensed under the GNU General Public License v3. Please [see](https://www.gnu.org/licenses) the original document for more details.
