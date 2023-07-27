@@ -49,7 +49,8 @@ List of supported linux distros.
 * **AnLinux**<br/>
   [https://github.com/EXALAB/AnLinux-App](https://github.com/EXALAB/AnLinux-App)
 
-## Dependency
+## Requires
+Before you run this program it would be a good idea if you install the following packages on your Termux, or run `setup.sh`
 * curl
 * proot
 * tar
@@ -66,11 +67,14 @@ git clone https://github.com/hxAri/Penguin
 # Change current working directory.
 cd Penguin
 
-# Allow executable penguin.
-chmod +x penguin*
+# Allow executables.
+chmod +x *.sh
+
+# Setup penguin.
+./setup.sh
 
 # Run the penguin.
-bash penguin*
+./penguin.sh
 ```
 
 ## Example
