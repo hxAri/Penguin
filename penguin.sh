@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Andronix
+# Penguin
 # Shell utility to install Linux on Termux.
 # Please report any issues or bugs you find while using this tool.
 
@@ -15,7 +15,7 @@
 #
 
 # Application name.
-appname=Andronix
+appname=Penguin
 
 # Application author.
 author="Ari Setiawan (hxAri)"
