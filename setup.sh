@@ -16,7 +16,7 @@ done
 
 if [[ ${#installs[@]} > 0 ]]; then
 	pkg update -y
-	pkg install ${installs[@]}
+	pkg install -y ${installs[@]}
 fi
 
 mkdir -p /data/data/com.termux/linux
