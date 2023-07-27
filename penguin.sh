@@ -11,7 +11,8 @@
 
 #
 # Distribution Sources
-# ....
+# Andronix
+# AnLinux
 #
 
 # Application name.
@@ -43,19 +44,267 @@ architect=$(dpkg --print-architecture)
 # Square bracket with interpunch.
 sint="[·]"
 
+# Handle Building common Binary for execute Launch Script.
+# binaryBuilder [distro] [binary] [launch] [folder] [source]
+function binaryBuilder()
+{
+	local distro=$1
+	local binary=$2
+	local launch=$3
+	local folder=$4
+	local source=$5
+	
+	if [[ $distro == "" ]]; then
+		echo -e "..\n..$appname: distro name can't be empty"
+		exit 1
+	fi
+	if [[ $binary == "" ]]; then
+		echo -e "..\n..$distro: binary filename required"
+		exit 1
+	fi
+	if [[ $launch == "" ]]; then
+		echo -e "..\n..$distro: launch script name required"
+		exit 1
+	fi
+	if [[ $folder == "" ]]; then
+		echo -e "..\n..$distro: folder name can't be empty"
+		exit 1
+	fi
+	if [[ $source == "" ]]; then
+		echo -e "..\n..$distro: source of installed distro required"
+		exit 1
+	fi
+	
+	echo -e "..\n..$distro: /:bin/$binary: building"
+	cat <<- EOF > $termux/files/usr/bin/${binary}
+		#!/usr/bin/env bash
+		echo -e "#!/usr/bin/env bash
+		
+		# Default ${distro^} Selection.
+		select=cli
+		window=awesome
+		dekstop=xfce
+		
+		if [[ \\\$1 != \"\" ]]; then
+		    case \\\${1,,} in
+		        cli) select=cli ;;
+		        window)
+		            select=window
+		            if [[ \\\$2 != \"\" ]]; then
+		                case \\\${2,,} in
+		                    awesome) window=awesome ;;
+		                    openbox) window=openbox ;;
+		                    i3) window=i3 ;;
+		                    *)
+		                        echo -e \"$distro: \\\$2: unsupported window manager\"
+		                        exit 1
+		                    ;;
+		                esac
+		            fi
+		        ;;
+		        dekstop)
+		            select=dekstop
+		            if [[ \\\$2 != \"\" ]]; then
+		                case \\\${2^^} in
+		                    XFCE) dekstop=xfce ;;
+		                    LXQT) dekstop=lxqt ;;
+		                    LXDE) dekstop=lxde ;;
+		                    *)
+		                        echo -e \"$distro: \\\$2: unsupported dekstop environment\"
+		                        exit 1
+		                esac
+		            fi
+		        ;;
+		        *)
+		            echo -e \"$distro: \\\$1: unsupported selection mode\"
+		            exit 1
+		        ;;
+		    esac
+		fi
+		
+		# Default ${distro^} Source.
+		source=$source/\\\$select
+		
+		# Resolve ${distro^} Source.
+		case \\\$select in
+		    window) source+=/\\\$window ;;
+		    dekstop) source+=/\\\$dekstop ;;
+		esac
+		
+		if [[ ! -d \\\$source/$folder ]] || [[ ! -d \\\$source/${distro,,}-binds ]] || [[ ! -f \\\$source/$launch ]]; then
+		    case \\\$select in
+		        cli) echo -e \"$distro: \\\$select: is not installed\" ;;
+		        window) echo -e \"$distro: \\\$select: \\\$window: is not installed\" ;;
+		        dekstop) echo -e \"$distro: \\\$select: \\\$dekstop: is not installed\" ;;
+		    esac
+		    exit 1
+		else
+		    if [[ -d \\\$source/$folder/proc ]]; then
+		        chmod 755 \\\$source/$folder/proc
+		        mkdir -p \\\$source/$folder/proc/fakethings
+		        if [[ ! -d \\\$source/$folder/proc/fakethings ]]; then
+		            mkdir -p \\\$source/$folder/proc/fakethings
+		        fi
+		        if [[ ! -f \\\$source/$folder/proc/fakethings/version ]]; then
+		            cat <<- EOF > \\\$source/$folder/proc/fakethings/version
+		\t\t\t\tLinux version 5.4.0-faked (andronix@fakeandroid) (gcc version 4.9.x (Andronix fake /proc/version) ) #1 SMP PREEMPT Sun Sep 13 00:00:00 IST 2020
+		\t\t\tEOF
+		        fi
+		        if [[ ! -f \\\$source/$folder/proc/fakethings/vmstat ]]; then
+		            cat <<- EOF > \\\$source/$folder/proc/fakethings/vmstat
+		\t\t\t\tnr_free_pages 15717
+		\t\t\t\tnr_zone_inactive_anon 87325
+		\t\t\t\tnr_zone_active_anon 259521
+		\t\t\t\tnr_zone_inactive_file 95508
+		\t\t\t\tnr_zone_active_file 57839
+		\t\t\t\tnr_zone_unevictable 58867
+		\t\t\t\tnr_zone_write_pending 0
+		\t\t\t\tnr_mlock 58867
+		\t\t\t\tnr_page_table_pages 24569
+		\t\t\t\tnr_kernel_stack 49552
+		\t\t\t\tnr_bounce 0
+		\t\t\t\tnr_zspages 80896
+		\t\t\t\tnr_free_cma 0
+		\t\t\t\tnr_inactive_anon 87325
+		\t\t\t\tnr_active_anon 259521
+		\t\t\t\tnr_inactive_file 95508
+		\t\t\t\tnr_active_file 57839
+		\t\t\t\tnr_unevictable 58867
+		\t\t\t\tnr_slab_reclaimable 17709
+		\t\t\t\tnr_slab_unreclaimable 47418
+		\t\t\t\tnr_isolated_anon 0
+		\t\t\t\tnr_isolated_file 0
+		\t\t\t\tworkingset_refault 33002180
+		\t\t\t\tworkingset_activate 5498395
+		\t\t\t\tworkingset_restore 2354202
+		\t\t\t\tworkingset_nodereclaim 140006
+		\t\t\t\tnr_anon_pages 344014
+		\t\t\t\tnr_mapped 193745
+		\t\t\t\tnr_file_pages 218441
+		\t\t\t\tnr_dirty 0
+		\t\t\t\tnr_writeback 0
+		\t\t\t\tnr_writeback_temp 0
+		\t\t\t\tnr_shmem 1880
+		\t\t\t\tnr_shmem_hugepages 0
+		\t\t\t\tnr_shmem_pmdmapped 0
+		\t\t\t\tnr_anon_transparent_hugepages 0
+		\t\t\t\tnr_unstable 0
+		\t\t\t\tnr_vmscan_write 8904094
+		\t\t\t\tnr_vmscan_immediate_reclaim 139732
+		\t\t\t\tnr_dirtied 8470080
+		\t\t\t\tnr_written 16835370
+		\t\t\t\tnr_indirectly_reclaimable 8273152
+		\t\t\t\tnr_unreclaimable_pages 130861
+		\t\t\t\tnr_dirty_threshold 31217
+		\t\t\t\tnr_dirty_background_threshold 15589
+		\t\t\t\tpgpgin 198399484
+		\t\t\t\tpgpgout 31742368
+		\t\t\t\tpgpgoutclean 45542744
+		\t\t\t\tpswpin 3843200
+		\t\t\t\tpswpout 8903884
+		\t\t\t\tpgalloc_dma 192884869
+		\t\t\t\tpgalloc_normal 190990320
+		\t\t\t\tpgalloc_movable 0
+		\t\t\t\tallocstall_dma 0
+		\t\t\t\tallocstall_normal 3197
+		\t\t\t\tallocstall_movable 1493
+		\t\t\t\tpgskip_dma 0
+		\t\t\t\tpgskip_normal 0
+		\t\t\t\tpgskip_movable 0
+		\t\t\t\tpgfree 384653565
+		\t\t\t\tpgactivate 34249517
+		\t\t\t\tpgdeactivate 44271435
+		\t\t\t\tpglazyfree 192
+		\t\t\t\tpgfault 46133667
+		\t\t\t\tpgmajfault 5568301
+		\t\t\t\tpglazyfreed 0
+		\t\t\t\tpgrefill 55909145
+		\t\t\t\tpgsteal_kswapd 58467386
+		\t\t\t\tpgsteal_direct 255950
+		\t\t\t\tpgscan_kswapd 86628315
+		\t\t\t\tpgscan_direct 415889
+		\t\t\t\tpgscan_direct_throttle 0
+		\t\t\t\tpginodesteal 18
+		\t\t\t\tslabs_scanned 31242197
+		\t\t\t\tkswapd_inodesteal 1238474
+		\t\t\t\tkswapd_low_wmark_hit_quickly 11637
+		\t\t\t\tkswapd_high_wmark_hit_quickly 5411
+		\t\t\t\tpageoutrun 32167
+		\t\t\t\tpgrotated 213328
+		\t\t\t\tdrop_pagecache 0
+		\t\t\t\tdrop_slab 0
+		\t\t\t\toom_kill 0
+		\t\t\t\tpgmigrate_success 729722
+		\t\t\t\tpgmigrate_fail 450
+		\t\t\t\tcompact_migrate_scanned 43510584
+		\t\t\t\tcompact_free_scanned 248175096
+		\t\t\t\tcompact_isolated 1494774
+		\t\t\t\tcompact_stall 6
+		\t\t\t\tcompact_fail 3
+		\t\t\t\tcompact_success 3
+		\t\t\t\tcompact_daemon_wake 9438
+		\t\t\t\tcompact_daemon_migrate_scanned 43502436
+		\t\t\t\tcompact_daemon_free_scanned 248107303
+		\t\t\t\tunevictable_pgs_culled 66418
+		\t\t\t\tunevictable_pgs_scanned 0
+		\t\t\t\tunevictable_pgs_rescued 8484
+		\t\t\t\tunevictable_pgs_mlocked 78830
+		\t\t\t\tunevictable_pgs_munlocked 8508
+		\t\t\t\tunevictable_pgs_cleared 11455
+		\t\t\t\tunevictable_pgs_stranded 11455
+		\t\t\t\tswap_ra 0
+		\t\t\t\tswap_ra_hit 7
+		\t\t\t\tspeculative_pgfault 221449963
+		\t\t\tEOF
+		        fi
+		        if [[ ! -f \\\$source/$folder/proc/fakethings/stat ]]; then
+		            cat <<- EOF > \\\$source/$folder/proc/fakethings/stat
+		\t\t\t\tcpu  5502487 1417100 4379831 62829678 354709 539972 363929 0 0 0
+		\t\t\t\tcpu0 611411 171363 667442 7404799 61301 253898 205544 0 0 0
+		\t\t\t\tcpu1 660993 192673 571402 7853047 39647 49434 29179 0 0 0
+		\t\t\t\tcpu2 666965 186509 576296 7853110 39012 48973 26407 0 0 0
+		\t\t\t\tcpu3 657630 183343 573805 7863627 38895 48768 26636 0 0 0
+		\t\t\t\tcpu4 620516 161440 594973 7899146 39438 47605 26467 0 0 0
+		\t\t\t\tcpu5 610849 155665 594684 7912479 40258 46870 26044 0 0 0
+		\t\t\t\tcpu6 857685 92294 387182 8096756 46609 22110 12364 0 0 0
+		\t\t\t\tcpu7 816434 273809 414043 7946709 49546 22311 11284 0 0 0
+		\t\t\t\tintr 601715486 0 0 0 0 70612466 0 2949552 0 93228 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 12862684 625329 10382717 16209 55315 8510 0 0 0 0 11 11 13 270 192 40694 95 7 0 0 0 36850 0 0 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 286 6378 0 0 0 54 0 3239423 2575191 82725 0 0 127 0 0 0 1791277 850609 20 9076504 0 301 0 0 0 0 0 3834621 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 806645 0 0 0 0 0 7243 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2445850 52 1783 0 0 5091520 0 0 0 3 0 0 0 0 0 5475 0 198001 0 2 42 1289224 0 2 202483 4 0 8390 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3563336 4202122 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 1 0 1 0 0 1 0 1 0 17948 0 0 612 0 0 0 0 2103 0 0 20 0 0 0 0 0 0 0 0 0 0 0 0 0 10 0 0 0 0 0 0 0 11 11 12 0 12 0 52 752 0 0 0 0 0 0 0 743 0 14 0 0 12 0 0 1863 229 0 464 0 0 0 0 0 0 8588 97 7236426 92766 622 31 0 0 0 18 4 4 0 5 0 0 116013 7 0 0 752406
+		\t\t\t\tctxt 826091808
+		\t\t\t\tbtime 1611513513
+		\t\t\t\tprocesses 288493
+		\t\t\t\tprocs_running 1
+		\t\t\t\tprocs_blocked 0
+		\t\t\t\tsoftirq 175407567 14659158 51739474 28359 5901272 8879590 0 11988166 46104015 0 36107533
+		\t\t\tEOF
+		        fi
+		    fi
+		fi
+		
+		bash \\\$source/$launch
+		" > $termux/files/usr/bin/$binary
+		chmod +x $termux/files/usr/bin/$binary
+	EOF
+	
+	echo -e "..$distro: /:bin/$binary: fixing shebang"
+	termux-fix-shebang $termux/files/usr/bin/$binary
+	
+	echo -e "..$distro: /:bin/$binary: allow executable"
+	chmod +x $termux/files/usr/bin/$binary
+	
+	echo -e "..$distro: /:bin/$binary: re-wriring\n..\n"
+	bash $termux/files/usr/bin/$binary
+}
+
 # Array joins.
-function joins() {
+function joins()
+{
 	echo $(IFS="|" ; echo "$*" )
 }
 
 # Empty block.
-function pass() {
+function pass()
+{
 	return 0
-}
-
-# Prints with prefix app name.
-function puts() {
-	echo -e "\e[1;38;5;112m${appname,,}\e[1;38;5;214m: \e[1;38;5;229m$*\e[0m"
 }
 
 # Fakethings builder.
@@ -206,8 +455,15 @@ function procFakethingBuilder()
 	fi
 }
 
+# Prints with prefix app name.
+function puts()
+{
+	echo -e "\e[1;38;5;112m${appname,,}\e[1;38;5;214m: \e[1;38;5;229m$*\e[0m"
+}
+
 # Prints standard input label.
-function stdin() {
+function stdin()
+{
 	echo -e "$(stdio stdin $@)\x20\e[1;38;5;229m\c"
 }
 
@@ -484,84 +740,7 @@ function alpine()
 	# Handle Building Alpine Binary.
 	function alpineBinary()
 	{
-		echo -e "..\n..alpine: /:bin/$binary: building"
-		cat <<- EOF > $termux/files/usr/bin/${binary}
-			#!/usr/bin/env bash
-			echo -e "#!/usr/bin/env bash
-			
-			# Default Alpine Selection.
-			select=cli
-			window=awesome
-			dekstop=xfce
-			
-			if [[ \\\$1 != \"\" ]]; then
-			    case \\\${1,,} in
-			        cli) select=cli ;;
-			        window)
-			            select=window
-			            if [[ \\\$2 != \"\" ]]; then
-			                case \\\${2,,} in
-			                    awesome) window=awesome ;;
-			                    openbox) window=openbox ;;
-			                    i3) window=i3 ;;
-			                    *)
-			                        echo -e \"alpine: \\\$2: unsupported window manager\"
-			                        exit 1
-			                    ;;
-			                esac
-			            fi
-			        ;;
-			        dekstop)
-			            select=dekstop
-			            if [[ \\\$2 != \"\" ]]; then
-			                case \\\${2^^} in
-			                    XFCE) dekstop=xfce ;;
-			                    LXQT) dekstop=lxqt ;;
-			                    LXDE) dekstop=lxde ;;
-			                    *)
-			                        echo -e \"alpine: \\\$2: unsupported dekstop environment\"
-			                        exit 1
-			                esac
-			            fi
-			        ;;
-			        *)
-			            echo -e \"alpine: \\\$1: unsupported selection mode\"
-			            exit 1
-			        ;;
-			    esac
-			fi
-			
-			# Default Alpine Source.
-			source=$source/\\\$select
-			
-			# Resolve Alpine Source.
-			case \\\$select in
-			    window) source+=/\\\$window ;;
-			    dekstop) source+=/\\\$dekstop ;;
-			esac
-			
-			if [[ ! -d \\\$source/alpine-fs ]]; then
-			    case \\\$select in
-			        cli) echo -e \"alpine: \\\$select: is not installed\" ;;
-			        window) echo -e \"alpine: \\\$select: \\\$window: is not installed\" ;;
-			        dekstop) echo -e \"alpine: \\\$select: \\\$dekstop: is not installed\" ;;
-			    esac
-			    exit 1
-			fi
-			
-			bash \\\$source/$launch
-			" > $termux/files/usr/bin/$binary
-			chmod +x $termux/files/usr/bin/$binary
-		EOF
-		
-		echo -e "..alpine: /:bin/$binary: fixing shebang"
-		termux-fix-shebang $termux/files/usr/bin/$binary
-		
-		echo -e "..alpine: /:bin/$binary: allow executable"
-		chmod +x $termux/files/usr/bin/$binary
-		
-		echo -e "..alpine: /:bin/$binary: re-wriring\n..\n"
-		bash $termux/files/usr/bin/$binary
+		binaryBuilder "alpine" $binary $launch $folder $source
 	}
 	
 	# Handle Building Alpine Launcher.
@@ -796,7 +975,7 @@ function alpine()
 				local params=
 			fi
 			
-			sleep 1.4
+			sleep 2.4
 			clear
 			echo -e "\n..\n..alpine: $select: installed"
 			echo -e "..alpine: $select: command"
@@ -952,7 +1131,6 @@ function debian()
 # Handle Fedora Actions.
 function fedora()
 {
-	
 	# Default Fedora Mode for install.
 	local select=cli
 	
@@ -980,84 +1158,7 @@ function fedora()
 	# Handle Building Fedora Binary.
 	function fedoraBinary()
 	{
-		echo -e "..\n..fedora: /:bin/$binary: building"
-		cat <<- EOF > $termux/files/usr/bin/${binary}
-			#!/usr/bin/env bash
-			echo -e "#!/usr/bin/env bash
-			
-			# Default Fedora Selection.
-			select=cli
-			window=awesome
-			dekstop=xfce
-			
-			if [[ \\\$1 != \"\" ]]; then
-			    case \\\${1,,} in
-			        cli) select=cli ;;
-			        window)
-			            select=window
-			            if [[ \\\$2 != \"\" ]]; then
-			                case \\\${2,,} in
-			                    awesome) window=awesome ;;
-			                    openbox) window=openbox ;;
-			                    i3) window=i3 ;;
-			                    *)
-			                        echo -e \"fedora: \\\$2: unsupported window manager\"
-			                        exit 1
-			                    ;;
-			                esac
-			            fi
-			        ;;
-			        dekstop)
-			            select=dekstop
-			            if [[ \\\$2 != \"\" ]]; then
-			                case \\\${2^^} in
-			                    XFCE) dekstop=xfce ;;
-			                    LXQT) dekstop=lxqt ;;
-			                    LXDE) dekstop=lxde ;;
-			                    *)
-			                        echo -e \"fedora: \\\$2: unsupported dekstop environment\"
-			                        exit 1
-			                esac
-			            fi
-			        ;;
-			        *)
-			            echo -e \"fedora: \\\$1: unsupported selection mode\"
-			            exit 1
-			        ;;
-			    esac
-			fi
-			
-			# Default Fedora Source.
-			source=$source/\\\$select
-			
-			# Resolve Fedora Source.
-			case \\\$select in
-			    window) source+=/\\\$window ;;
-			    dekstop) source+=/\\\$dekstop ;;
-			esac
-			
-			if [[ ! -d \\\$source/fedora-fs ]]; then
-			    case \\\$select in
-			        cli) echo -e \"fedora: \\\$select: is not installed\" ;;
-			        window) echo -e \"fedora: \\\$select: \\\$window: is not installed\" ;;
-			        dekstop) echo -e \"fedora: \\\$select: \\\$dekstop: is not installed\" ;;
-			    esac
-			    exit 1
-			fi
-			
-			bash \\\$source/$launch
-			" > $termux/files/usr/bin/$binary
-			chmod +x $termux/files/usr/bin/$binary
-		EOF
-		
-		echo -e "..fedora: /:bin/$binary: fixing shebang"
-		termux-fix-shebang $termux/files/usr/bin/$binary
-		
-		echo -e "..fedora: /:bin/$binary: allow executable"
-		chmod +x $termux/files/usr/bin/$binary
-		
-		echo -e "..fedora: /:bin/$binary: re-wriring\n..\n"
-		bash $termux/files/usr/bin/$binary
+		binaryBuilder "fedora" $binary $launch $folder $source
 	}
 	
 	# Handle Building Fedora Launcher.
@@ -1138,7 +1239,6 @@ function fedora()
 				exit 1
 			;;
 		esac
-		
 		
 		# Check if file system does not exists.
 		if [[ ! -d $target/$folder ]]; then
@@ -1270,8 +1370,8 @@ function fedora()
 				
 				echo -e "\n..fedora: dekstop: setup of ${dekstop^^} VNC"
 				echo -e "\n..fedora: $dekstop: ${dekstop}.sh: downloading"
-				wget --tries=20 $rinku[0]/$rinku[1] -O $target/$folder/root/${dekstop}.sh
-				echo -e "..fedora: $version: $dekstop: ${dekstop}.sh: allow executable"
+				wget --tries=20 ${rinku[0]}/${rinku[1]} -O $target/$folder/root/${dekstop}.sh
+				echo -e "..fedora: $dekstop: ${dekstop}.sh: allow executable"
 				chmod +x $target/$folder/root/${dekstop}.sh
 				
 				echo -e "\n..\n..fedora: /:root/.bash_profile: removing"
@@ -1287,22 +1387,22 @@ function fedora()
 					
 					if [[ ! -f /root/${dekstop}.sh ]]; then
 						echo -e "..fedora: $dekstop: ${dekstop}.sh: downloading"
-					    wget --tries=20 $rinku[0]/$rinku[1] -O /root/${dekstop}.sh
+					    wget --tries=20 ${rinku[0]}/${rinku[1]} -O /root/${dekstop}.sh
 					fi
 					
 					# Executing Dekstop Environment Setup file..
-					bash ~/$rinku[1].sh
+					bash ~/${rinku[1]}.sh
 					clear
 					
 					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
 					    echo -e "\n..fedora: vncserver-start: downloading"
-					    wget --tries=20 $rinku[0]/vncserver-start -O /usr/local/bin/vncserver-start
+					    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
 					    
 					    echo -e "..fedora: vncserver-start: allow executable"
 					    chmod +x /usr/local/bin/vncserver-start
 					    
 					    echo -e "\n..fedora: vncserver-stop: downloading"
-					    wget --tries=20 $rinku[0]/vncserver-stop -O /usr/local/bin/vncserver-stop
+					    wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
 					    
 					    echo -e "..fedora: vncserver-stop: allow executable"
 					    chmod +x /usr/local/bin/vncserver-stop
@@ -1323,7 +1423,7 @@ function fedora()
 					
 					# Displaying screenfetch.
 					clear && screenfetch && echo
-					sleep 1.4
+					sleep 2.4
 				EOF
 				
 				echo -e "..fedora: /:root/.bash_profile: allow executable"
@@ -1336,10 +1436,9 @@ function fedora()
 				)
 				
 				echo -e "\n..fedora: window: setup of ${window^} VNC"
-				
-				echo -e "\n..fedora: $version: $window: ${window}.sh: downloading"
+				echo -e "\n..fedora: $window: ${window}.sh: downloading"
 				wget --tries=20 ${rinku[2]}/${window}.sh -O $target/$folder/root/${window}.sh
-				echo -e "..fedora: $version: $window: ${window}.sh: allow executable"
+				echo -e "..fedora: $window: ${window}.sh: allow executable"
 				chmod +x $target/$folder/root/${window}.sh
 				
 				cat <<- EOF > $target/$folder/root/.bash_profile
@@ -1372,7 +1471,7 @@ function fedora()
 					
 					# Displaying screenfetch.
 					clear && screenfetch && echo
-					sleep 1.4
+					sleep 2.4
 				EOF
 				
 				echo -e "..fedora: $window: .bash_profile: allow executable"
@@ -1382,7 +1481,7 @@ function fedora()
 			local params=
 		fi
 		
-		sleep 1.4
+		sleep 2.4
 		clear
 		echo -e "\n..\n..fedora: $select: installed"
 		echo -e "..fedora: $select: command"
@@ -1454,6 +1553,402 @@ function fedora()
 # Handle Kali Actions.
 function kali()
 {
+	# Default Kali Mode for install.
+	local select=cli
+	
+	# Default Import is always empty.
+	# Because we don't know where source destination.
+	local import=
+	
+	# Default Kali Directory.
+	local source=$install/kali
+	local folder=kali-fs
+	
+	# Default Kali Executable.
+	local binary=kali
+	local launch=kali-start
+	
+	# Default Kali RootFS name.
+	local rootfs=kali-rootfs.tar.xz
+	
+	# Default Kali Window Manager.
+	local window=Awesome
+	
+	# Default Kali Environment for install.
+	local dekstop=XFCE
+	
+	# Handle Building Kali Binary.
+	function kaliBinary()
+	{
+		binaryBuilder "kali" $binary $launch $folder $source
+	}
+	
+	# Handle Building Kali Launcher.
+	function kaliLauncher()
+	{
+		echo -e "..\n..kali: $launch: building"
+		cat > $target/$launch <<- EOM
+			#!/usr/bin/env bash
+			
+			# Change current working directory.
+			cd \$(dirname \$0)
+			
+			# Avoid termux-exec, execve() conflicts with PRoot.
+			unset LD_PRELOAD
+			
+			# Arrange command.
+			command="proot"
+			command+=" --link2symlink"
+			command+=" -0"
+			command+=" -r $target/$folder"
+			
+			if [ -n "\$(ls -A $target/kali-binds)" ]; then
+			    for f in $target/kali-binds/* ;do
+			        . \$f
+			    done
+			fi
+			
+			command+=" -b /data"
+			command+=" -b /dev"
+			command+=" -b /proc"
+			command+=" -b $target/$folder/root:/dev/shm"
+			
+			# Uncomment the following line to have
+			# access to the home directory of termux.
+			#command+=" -b $termux/files/home:/root"
+			
+			# Uncomment the following line to
+			# mount /sdcard directly to /.
+			#command+=" -b /sdcard"
+			
+			command+=" -w /root"
+			command+=" /usr/bin/env -i"
+			command+=" HOME=/root"
+			command+=" PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+			command+=" TERM=\$TERM"
+			command+=" LANG=C.UTF-8"
+			command+=" /bin/bash --login"
+			
+			if [ -z "\$1" ];then
+			    exec \$command
+			else
+			    \$command -c "\$com"
+			fi
+		EOM
+		
+		echo -e "..kali: $launch: fixing shebang"
+		termux-fix-shebang $target/$launch
+		
+		echo -e "..kali: $launch: allow executable"
+		chmod +x $target/$launch
+	}
+	
+	# Handle Kali Import.
+	function kaliImport()
+	{
+		echo 0
+	}
+	
+	# Handle Kali Install.
+	function kaliInstall()
+	{
+		# Resolve Kali Source Destination.
+		case $select in
+			cli) local target=$source/cli ;;
+			window) local target=$source/window/$window ;;
+			dekstop) local target=$source/dekstop/$dekstop ;;
+			*)
+				echo -e "..kali: $select: unknown selection mode"
+				exit 1
+			;;
+		esac
+		
+		# Check if file system does not exists.
+		if [[ ! -d $target/$folder ]]; then
+			if [[ ! -f $images/$rootfs ]]; then
+				case ${architect,,} in
+					aarch64) local archurl="arm64" ;;
+					arm) local archurl="armhf" ;;
+					amd64) local archurl="amd64" ;;
+					x86_64) local archurl="amd64" ;;	
+					i*86) local archurl="i386" ;;
+					x86) local archurl="i386" ;;
+					*)
+						echo -e "..kali: $architect: unsupported architecture"
+						exit 1
+					;;
+				esac
+				echo -e "\n..kali: $rootfs: downloading"
+				if [[ $archurl == "arm64" ]]; then
+					wget --tries=20 "https://github.com/AndronixApp/AndronixOrigin/releases/download/kali-arm64-tarball/kali-rootfs-arm64.tar.xz" -O $images/$rootfs
+				else
+					wget --tries=20 "https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Kali/${archurl}/kali-rootfs-${archurl}.tar.xz?raw=true" -O $images/$rootfs
+				fi
+				clear
+			fi
+			
+			echo -e "\n..kali: $folder: creating"
+			mkdir -p $target/$folder
+			
+			echo -e "..kali: $rootfs: decompressing"
+			proot --link2symlink tar -xJf $images/$rootfs --exclude=dev -C $target/$folder||:
+			
+			echo -e "..kali: $rootfs: remove [Y/n]"
+			local inputRemove=
+			while [[ $inputRemove == "" ]]; do
+				readline "kali" "remove" "Y"
+				case ${inputRemove,,} in
+					y|yes)
+						echo -e "\n..kali: $rootfs: removing"
+						rm -rf $images/$rootfs
+					;;
+					n|no) ;;
+					*)
+						inputRemove=
+					;;
+				esac
+			done
+			clear
+		fi
+		
+		echo -e "..kali: kali-binds: creating"
+		mkdir -p $target/kali-binds
+		
+		echo -e "..kali: /:etc/apt/sources.list: patching mirroslist"
+		echo "deb [trusted=yes] http://http.kali.org/kali kali-rolling main contrib non-free" > $target/$folder/etc/apt/sources.list
+		
+		echo -e "..kali: kali-archive-keyring.asc: downloading"
+		wget --tries=20 "https://archive.kali.org/archive-key.asc" -O $target/$folder/etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+		
+		# Check if Kali binary doesn't exists.
+		if [[ ! -f $termux/files/usr/bin/$binary ]]; then
+			kaliBinary
+		fi
+		
+		# Check if Kali launcher script doesn't exists.
+		if [[ ! -f $target/$launch ]]; then
+			kaliLauncher
+		fi
+		
+		local params=
+		if [[ ${select,,} != "cli" ]]; then
+			if [[ ${select,,} == "dekstop" ]]; then
+				local params=$dekstop
+				case ${dekstop,,} in
+					xfce)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
+							"xfce4_de.sh"
+						)
+					;;
+					lxqt)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT"
+							"lxqt_de.sh"
+						)
+					;;
+					lxde)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE"
+							"lxde_de.sh"
+						)
+					;;
+				esac
+				
+				echo -e "\n..kali: dekstop: setup of ${dekstop^^} VNC"
+				echo -e "\n..kali: $dekstop: $dekstop: setup apt retry count"
+				echo "APT::Acquire::Retries \"3\";" > $target/$folder/etc/apt/apt.conf.d/80-retries
+				
+				echo -e "..kali: $dekstop: ${dekstop}.sh: downloading"
+				wget --tries=20 ${rinku[0]}/${rinku[1]} -O $target/$folder/root/${dekstop}.sh
+				echo -e "..kali: $dekstop: ${dekstop}.sh: allow executable"
+				chmod +x $target/$folder/root/${dekstop}.sh
+				
+				echo -e "..kali: $dekstop: /:root/.bash_profile: removing"
+				rm -rf $target/$folder/root/.bash_profile
+				
+				echo -e "..kali: $dekstop: /:root/.bash_profile: creating"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Add key for avoid outdated GPG Key alert.
+					echo -e "..kali: kali-archive-keyring.asc: adding gpg key"
+					apt-key add /etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+					
+					# Updating packages.
+					apt update -y
+					
+					# Installing required packages.
+					apt install sudo nano wget screenfetch dbus-x11 -y
+					clear
+					
+					if [[ ! -f /root/${dekstop}.sh ]]; then
+						echo -e "..kali: $dekstop: ${dekstop}.sh: downloading"
+					    wget --tries=20 ${rinku[0]}/${rinku[1]} -O /root/${dekstop}.sh
+					fi
+					
+					# Executing Dekstop Environment Setup file..
+					bash ~/${dekstop}.sh
+					clear
+					
+					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+					    echo -e "\n..kali: vncserver-start: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
+					    
+					    echo -e "..kali: vncserver-start: allow executable"
+					    chmod +x /usr/local/bin/vncserver-start
+					    
+					    echo -e "\n..kali: vncserver-stop: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+					    
+					    echo -e "..kali: vncserver-stop: allow executable"
+					    chmod +x /usr/local/bin/vncserver-stop
+					fi
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    apt install tigervnc-standalone-server -y
+					fi
+					clear
+					
+					echo -e "..kali: firefox: installing"
+					apt install firefox-esr -y
+					
+					echo -e "..kali: $dekstop: ${dekstop}.sh: removing"
+					rm -rf /root/{dekstop}.sh
+					
+					echo -e "..kali: $dekstop: .bash_profile: removing"
+					rm -rf ~/.bash_profile
+					
+					# Displaying screenfetch.
+					clear && screenfetch && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..kali: $dekstop: /:root/.bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			elif [[ ${select,,} == "window" ]]; then
+				local params=$window
+				declare -A rinku=(
+					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/"
+					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT/"
+				)
+				
+				echo -e "\n..kali: window: setup of ${window^} VNC"
+				echo -e "\n..kali: $window: $window: setup apt retry count"
+				echo "APT::Acquire::Retries \"3\";" > $target/$folder/etc/apt/apt.conf.d/80-retries
+				
+				echo -e "..kali: $window: ${window}.sh: downloading"
+				wget --tries=20 ${rinku[2]}/${window}.sh -O $target/$folder/root/${window}.sh
+				echo -e "..kali: $window: ${window}.sh: allow executable"
+				chmod +x $target/$folder/root/${window}.sh
+				
+				echo -e "..kali: $window: /:root/.bash_profile: removing"
+				rm -rf $target/$folder/root/.bash_profile
+				
+				echo -e "..kali: $window: /:root/.bash_profile: creating"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Add key for avoid outdated GPG Key alert.
+					echo -e "..kali: kali-archive-keyring.asc: adding gpg key"
+					apt-key add /etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+					
+					# Updating packages.
+					apt update -y
+					
+					# Installing required packages.
+					apt install sudo nano wget screenfetch -y
+					clear
+					
+					if [[ ! -f /root/${window}.sh ]]; then
+					    echo -e "..kali: $window: ${window}.sh: downloading"
+					    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+					fi
+					
+					# Executing Window Manager Setup file..
+					bash ~/${window}.sh
+					clear
+					
+					# Removing Window Manager Setup file.
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    apt install tigervnc-standalone-server -y
+					fi
+					clear
+					
+					echo -e "..kali: $window: ${window}.sh: removing"
+					rm -rf /root/{window}.sh
+					
+					echo -e "..kali: $window: .bash_profile: removing"
+					rm -rf ~/.bash_profile
+					
+					# Displaying screenfetch.
+					clear && screenfetch && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..kali: $window: .bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			fi
+			
+			echo -e "..kali: $select: /:root/.bash_logout: creating"
+			cat <<- EOF > $target/$folder/root/.bash_logout
+				#!/usr/bin/env bash
+				
+				# Stopping VNC Server.
+				vncserver-stop
+				
+				# Kill all dbus and ssh process.
+				pkill dbus*
+				pkill ssh*
+			EOF
+			
+			echo -e "..kali: $select: .bash_logout: allow executable"
+			chmod +x $target/$folder/root/.bash_logout
+		else
+			echo -e "\n..\n..kali: /:root/.bash_profile: removing"
+			rm -rf $target/$folder/root/.bash_profile
+			
+			echo -e "..kali: /:root/.bash_profile: creating"
+			cat <<- EOF > $target/$folder/root/.bash_profile
+				#!/usr/bin/env bash
+				
+				# Add key for avoid outdated GPG Key alert.
+				echo -e "..kali: kali-archive-keyring.asc: adding gpg key"
+				apt-key add /etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+				
+				echo -e "..kali: .bash_profile: removing"
+				rm -rf ~/.bash_profile
+			EOF
+			
+			echo -e "..kali: .bash_profile: allow executable"
+			chmod +x $target/$folder/root/.bash_profile
+		fi
+		
+		sleep 2.4
+		clear
+		echo -e "\n..\n..kali: $select: installed"
+		echo -e "..kali: $select: command"
+		echo -e "..kali: $select: kali $select ${params[@]}\n..\n"
+		
+		echo -e "..kali: action: run kali [Y/n]"
+		local inputNext=
+		while [[ $inputNext == "" ]]; do
+			readline "kali" "next" "Y"
+			case ${inputNext,,} in
+				y|yes)
+					bash $termux/files/usr/bin/$binary $select ${params[@]}
+				;;
+				n|no) main ;;
+				*) inputNext= ;;
+			esac
+		done
+	}
+	
+	# Handle Kali Remove.
+	function kaliRemove()
+	{
+		echo 0
+	}
+	
 	# Prints informations.
 	clear
 	echo -e
@@ -2200,7 +2695,7 @@ function ubuntu()
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
-							sleep 1.4
+							sleep 2.4
 						EOF
 						
 						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
@@ -2260,7 +2755,7 @@ function ubuntu()
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
-							sleep 1.4
+							sleep 2.4
 						EOF
 						
 						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
@@ -2361,7 +2856,7 @@ function ubuntu()
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
-							sleep 1.4
+							sleep 2.4
 						EOF
 						
 						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
@@ -2421,7 +2916,7 @@ function ubuntu()
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
-							sleep 1.4
+							sleep 2.4
 						EOF
 						
 						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
@@ -2512,7 +3007,7 @@ function ubuntu()
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
-							sleep 1.4
+							sleep 2.4
 						EOF
 						
 						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
@@ -2562,7 +3057,7 @@ function ubuntu()
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
-							sleep 1.4
+							sleep 2.4
 						EOF
 						
 						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
@@ -2582,7 +3077,7 @@ function ubuntu()
 			ubuntuLauncher $source
 		fi
 		
-		sleep 1.4
+		sleep 2.4
 		clear
 		echo -e "\n..\n..ubuntu: $select: installed"
 		echo -e "..ubuntu: $version: $select: command"
