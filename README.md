@@ -28,6 +28,16 @@ List of supported linux distros.
     * XFCE
     * LXQT
     * LXDE
+* Kali Linux (**Andronix**)
+  * CLI Only
+  * Window Manager
+    * i3
+    * Openbox
+    * Awesome
+  * Dekstop Environment
+    * XFCE
+    * LXQT
+    * LXDE
 * Ubuntu (**Andronix**)
   * Versions
     * 22.04
