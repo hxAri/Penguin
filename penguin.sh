@@ -1,18 +1,30 @@
 #!/usr/bin/env bash
 
+#
 # Penguin
 # Shell utility to install Linux on Termux.
 # Please report any issues or bugs you find while using this tool.
-
 # If there is an outdated distro installation, or an outdated gpg key
 # it is purely not this script's fault because, this tool is not completely
 # self-contained, it fetches various Linux Root File System (rootfs) resources
 # from various sources, and be thankful they ever existed.
+#
 
 #
-# Distribution Sources
-# Andronix
-# AnLinux
+# @author Ari Setiawan
+# @create 11.07-2023
+# @github https://github.com/hxAri/Penguin
+#
+# Penguin Copyright (c) 2023 - Ari Setiawan <hxari@proton.me>
+# Penguin Licence under GNU General Public Licence v3
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
 # Application name.
@@ -1043,6 +1055,7 @@ function alpine()
 # Handle Arch Linux Actions.
 function arch()
 {
+	
 	# Prints informations.
 	clear
 	echo -e
@@ -1779,7 +1792,7 @@ function kali()
 					apt update -y
 					
 					# Installing required packages.
-					apt install sudo nano wget screenfetch dbus-x11 -y
+					apt install sudo nano wget bash screenfetch dbus-x11 -y
 					clear
 					
 					if [[ ! -f /root/${dekstop}.sh ]]; then
@@ -1856,7 +1869,7 @@ function kali()
 					apt update -y
 					
 					# Installing required packages.
-					apt install sudo nano wget screenfetch -y
+					apt install sudo nano bash wget screenfetch -y
 					clear
 					
 					if [[ ! -f /root/${window}.sh ]]; then
