@@ -770,6 +770,7 @@ function alpine()
 			
 			# Arrange command.
 			command="proot"
+			command+=" --kill-on-exit"
 			command+=" --link2symlink"
 			command+=" -0"
 			command+=" -r $target/$folder"
@@ -1055,6 +1056,396 @@ function alpine()
 # Handle Arch Linux Actions.
 function arch()
 {
+	# Default Arch Mode for install.
+	local select=cli
+	
+	# Default Import is always empty.
+	# Because we don't know where source destination.
+	local import=
+	
+	# Default Arch Directory.
+	local source=$install/arch
+	local folder=arch-fs
+	
+	# Default Arch Executable.
+	local binary=arch
+	local launch=arch-start
+	
+	# Default Arch RootFS name.
+	local rootfs=arch-rootfs.tar.gz
+	
+	# Default Arch Window Manager.
+	local window=Awesome
+	
+	# Default Arch Environment for install.
+	local dekstop=XFCE
+	
+	# Handle Building Arch Binary.
+	function archBinary()
+	{
+		binaryBuilder "arch" $binary $launch $folder $source
+	}
+	
+	# Handle Building Arch Launcher.
+	function archLauncher()
+	{
+		echo -e "..\n..arch: $launch: building"
+		cat > $target/$launch <<- EOM
+			#!/usr/bin/env bash
+			
+			# Change current working directory.
+			cd \$(dirname \$0)
+			
+			# Avoid termux-exec, execve() conflicts with PRoot.
+			unset LD_PRELOAD
+			
+			# Arrange command.
+			command="proot"
+			command+=" --kill-on-exit"
+			command+=" --link2symlink"
+			command+=" -0"
+			command+=" -r $target/$folder"
+			
+			if [ -n "\$(ls -A $target/arch-binds)" ]; then
+			    for f in $target/arch-binds/* ;do
+			        . \$f
+			    done
+			fi
+			
+			command+=" -b /dev"
+			command+=" -b /proc"
+			command+=" -b /sys"
+			command+=" -b /data"
+			command+=" -b $target/$folder/root:/dev/shm"
+			command+=" -b /proc/self/fd/2:/dev/stderr"
+			command+=" -b /proc/self/fd/1:/dev/stdout"
+			command+=" -b /proc/self/fd/0:/dev/stdin"
+			command+=" -b /dev/urandom:/dev/random"
+			command+=" -b /proc/self/fd:/dev/fd"
+			command+=" -b $target/$folder/proc/fakethings/stat:/proc/stat"
+			command+=" -b $target/$folder/proc/fakethings/vmstat:/proc/vmstat"
+			command+=" -b $target/$folder/proc/fakethings/version:/proc/version"
+			
+			# Uncomment the following line to have
+			# access to the home directory of termux.
+			#command+=" -b $termux/files/home:/root" 
+			
+			command+=" -b /sdcard"
+			command+=" -w /root"
+			command+=" /usr/bin/env -i"
+			command+=" MOZ_FAKE_NO_SANDBOX=1"
+			command+=" HOME=/root"
+			command+=" PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+			command+=" TERM=\$TERM"
+			command+=" LANG=C.UTF-8"
+			command+=" /bin/bash --login"
+			com="\$@"
+			
+			if [ -z "\$1" ];then
+			    exec \$command
+			else
+			    \$command -c "\$com"
+			fi
+		EOM
+		
+		echo -e "..arch: $launch: fixing shebang"
+		termux-fix-shebang $target/$launch
+		
+		echo -e "..arch: $launch: allow executable"
+		chmod +x $target/$launch
+	}
+	
+	# Handle Arch Import.
+	function archImport()
+	{
+		echo 0
+	}
+	
+	# Handle Arch Install.
+	function archInstall()
+	{
+		# Resolve Arch Source Destination.
+		case $select in
+			cli) local target=$source/cli ;;
+			window) local target=$source/window/$window ;;
+			dekstop) local target=$source/dekstop/$dekstop ;;
+			*)
+				echo -e "..arch: $select: unknown selection mode"
+				exit 1
+			;;
+		esac
+		
+		# Check if file system does not exists.
+		if [[ ! -d $target/$folder ]]; then
+			if [[ ! -f $images/$rootfs ]]; then
+				case ${architect,,} in
+					aarch64) local archurl="aarch64" ;;
+					arm) local archurl="armv7" ;;
+					*)
+						echo -e "..arch: $architect: unsupported architecture"
+						exit 1
+					;;
+				esac
+				echo -e "\n..arch: $rootfs: downloading"
+				wget --tries=20 "http://os.archlinuxarm.org/os/ArchLinuxARM-${archurl}-latest.tar.gz" -O $images/$rootfs
+				#clear
+			fi
+			
+			echo -e "\n..arch: $folder: creating"
+			mkdir -p $target/$folder
+			
+			echo -e "..arch: $rootfs: decompressing"
+			proot --link2symlink tar -xf $images/$rootfs -C $target/$folder||:
+			
+			echo -e "..arch: $rootfs: remove [Y/n]"
+			local inputRemove=
+			while [[ $inputRemove == "" ]]; do
+				readline "arch" "remove" "Y"
+				case ${inputRemove,,} in
+					y|yes)
+						echo -e "\n..arch: $rootfs: removing"
+						rm -rf $images/$rootfs
+					;;
+					n|no) ;;
+					*)
+						inputRemove=
+					;;
+				esac
+			done
+			#clear
+		fi
+		
+		echo -e "..arch: arch-binds: creating"
+		mkdir -p $target/arch-binds
+		
+		echo -e "\n..arch: resolv.conf: downloading"
+		wget "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/resolv.conf" -P $target/$folder/root
+		
+		echo -e "..arch: additional.sh: downloading"
+		wget "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/additional.sh" -P $target/$folder/root
+		
+		if [[ -d $source/$folder/proc ]]; then
+			chmod 755 $source/$folder/proc
+			mkdir -p $source/$folder/proc/fakethings
+			if [[ ! -f $source/$folder/proc/fakethings/version ]]; then
+				procFakethingBuilder "version" $source/$folder
+			fi
+			if [[ ! -f $source/$folder/proc/fakethings/vmstat ]]; then
+				procFakethingBuilder "vmstat" $source/$folder
+			fi
+			if [[ ! -f $source/$folder/proc/fakethings/stat ]]; then
+				procFakethingBuilder "stat" $source/$folder
+			fi
+		fi
+		
+		# Check if Arch binary doesn't exists.
+		if [[ ! -f $termux/files/usr/bin/$binary ]]; then
+			archBinary
+		fi
+		
+		# Check if Arch launcher script doesn't exists.
+		if [[ ! -f $target/$launch ]]; then
+			archLauncher
+		fi
+		
+		local params=
+		if [[ ${select,,} != "cli" ]]; then
+			if [[ ${select,,} == "dekstop" ]]; then
+				local params=$dekstop
+				case ${dekstop,,} in
+					xfce)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/XFCE4"
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+							"xfce4_de.sh"
+						)
+					;;
+					lxqt)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXQT"
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+							"lxqt_de.sh"
+						)
+					;;
+					lxde)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXDE"
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+							"lxde_de.sh"
+						)
+					;;
+				esac
+				
+				echo -e "\n..arch: dekstop: setup of ${dekstop^^} VNC"
+				echo -e "\n..arch: $dekstop: ${dekstop}.sh: downloading"
+				wget --tries=20 ${rinku[1]}/${rinku[2]} -O $target/$folder/root/${dekstop}.sh
+				echo -e "..arch: $dekstop: ${dekstop}.sh: allow executable"
+				chmod +x $target/$folder/root/${dekstop}.sh
+				
+				echo -e "\n..\n..arch: /:root/.bash_profile: removing"
+				rm -rf $target/$folder/root/.bash_profile
+				
+				echo -e "..arch: /:root/.bash_profile: creating"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Executing additional script.
+					bash /root/additional.sh
+					#clear
+					
+					echo -e "..arch: additional.sh: removing"
+					rm -rf /root/additional.sh
+					
+					# Installing required packages.
+					pacman -Syyuu --noconfirm && pacman -S wget sudo screenfetch --noconfirm 
+					#clear
+					
+					if [[ ! -f /root/${dekstop}.sh ]]; then
+						echo -e "..arch: $dekstop: ${dekstop}.sh: downloading"
+					    wget --tries=20 ${rinku[1]}/${rinku[2]} -O /root/${dekstop}.sh
+					fi
+					
+					# Executing Dekstop Environment Setup file..
+					bash /root/${rinku[1]}.sh
+					#clear
+					
+					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+					    echo -e "\n..arch: vncserver-start: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
+					    
+					    echo -e "..arch: vncserver-start: allow executable"
+					    chmod +x /usr/local/bin/vncserver-start
+					    
+					    echo -e "\n..arch: vncserver-stop: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+					    
+					    echo -e "..arch: vncserver-stop: allow executable"
+					    chmod +x /usr/local/bin/vncserver-stop
+					fi
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    pacman -S tigervnc --noconfirm > /dev/null
+					fi
+					#clear
+					
+					echo -e "..arch: firefox: installing"
+					pacman -S firefox --noconfirm
+					
+					echo -e "..arch: $dekstop: ${dekstop}.sh: removing"
+					rm -rf /root/{dekstop}.sh
+					
+					echo -e "..arch: $dekstop: .bash_profile: removing"
+					rm -rf /root/.bash_profile
+					
+					# Displaying screenfetch.
+					#clear && screenfetch && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..arch: /:root/.bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			elif [[ ${select,,} == "window" ]]; then
+				local params=$window
+				declare -A rinku=(
+					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman"
+					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/Pacman"
+				)
+				
+				echo -e "\n..arch: window: setup of ${window^} VNC"
+				echo -e "\n..arch: $window: ${window}.sh: downloading"
+				wget --tries=20 ${rinku[2]}/${window}.sh -O $target/$folder/root/${window}.sh
+				echo -e "..arch: $window: ${window}.sh: allow executable"
+				chmod +x $target/$folder/root/${window}.sh
+				
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Executing additional script.
+					bash /root/additional.sh
+					#clear
+					
+					echo -e "..arch: additional.sh: removing"
+					rm -rf /root/additional.sh
+					
+					# Installing required packages.
+					pacman -Syyuu --noconfirm && pacman -S wget sudo screenfetch --noconfirm
+					#clear
+					
+					if [[ ! -f /root/${window}.sh ]]; then
+					    echo -e "..arch: $window: ${window}.sh: downloading"
+					    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+					fi
+					
+					# Executing Window Manager Setup file..
+					bash /root/${window}.sh
+					#clear
+					
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    pacman -S tigervnc --noconfirm > /dev/null
+					fi
+					#clear
+					
+					echo -e "..arch: $window: ${window}.sh: removing"
+					rm -rf /root/{window}.sh
+					
+					echo -e "..arch: $window: .bash_profile: removing"
+					rm -rf /root/.bash_profile
+					
+					# Displaying screenfetch.
+					#clear && screenfetch && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..arch: $window: .bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			fi
+		else
+			echo -e "\n..\n..arch: /:root/.bash_profile: removing"
+			rm -rf $target/$folder/root/.bash_profile
+			
+			echo -e "..arch: /:root/.bash_profile: creating"
+			cat <<- EOF > $target/$folder/root/.bash_profile
+				#!/usr/bin/env bash
+				
+				# Executing additional script.
+				bash /root/additional.sh
+				#clear
+				
+				echo -e "..arch: additional.sh: removing"
+				rm -rf /root/additional.sh
+				
+				echo -e "..arch: .bash_profile: removing"
+				rm -rf /root/.bash_profile
+			EOF
+			
+			echo -e "..arch: .bash_profile: allow executable"
+			chmod +x $target/$folder/root/.bash_profile
+		fi
+		
+		sleep 2.4
+		#clear
+		echo -e "\n..\n..arch: $select: installed"
+		echo -e "..arch: $select: command"
+		echo -e "..arch: $select: arch $select ${params[@]}\n..\n"
+		
+		echo -e "..arch: action: run arch [Y/n]"
+		local inputNext=
+		while [[ $inputNext == "" ]]; do
+			readline "arch" "next" "Y"
+			case ${inputNext,,} in
+				y|yes)
+					bash $termux/files/usr/bin/$binary $select ${params[@]}
+				;;
+				n|no) main ;;
+				*) inputNext= ;;
+			esac
+		done
+	}
+	
+	# Handle Arch Remove.
+	function archRemove()
+	{
+		echo 0
+	}
 	
 	# Prints informations.
 	clear
@@ -1189,6 +1580,7 @@ function fedora()
 			
 			# Arrange command.
 			command="proot"
+			command+=" --kill-on-exit"
 			command+=" --link2symlink"
 			command+=" -0"
 			command+=" -r $target/$folder"
@@ -1292,9 +1684,9 @@ function fedora()
 					clear
 				else
 					case ${architect,,} in
-						arm) archurl="armhf" ;;
-						amd64) archurl="amd64" ;;
-						x86_64) archurl="amd64" ;;
+						arm) local archurl="armhf" ;;
+						amd64) local archurl="amd64" ;;
+						x86_64) local archurl="amd64" ;;
 						*)
 							echo -e "..fedora: $architect: unsupported architecture"
 							exit 1
@@ -1357,6 +1749,7 @@ function fedora()
 			fedoraLauncher
 		fi
 		
+		local params=
 		if [[ ${select,,} != "cli" ]]; then
 			if [[ ${select,,} == "dekstop" ]]; then
 				local params=$dekstop
@@ -1404,7 +1797,7 @@ function fedora()
 					fi
 					
 					# Executing Dekstop Environment Setup file..
-					bash ~/${rinku[1]}.sh
+					bash /root/${rinku[1]}.sh
 					clear
 					
 					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -1432,7 +1825,7 @@ function fedora()
 					rm -rf /root/{dekstop}.sh
 					
 					echo -e "..fedora: $dekstop: .bash_profile: removing"
-					rm -rf ~/.bash_profile
+					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
 					clear && screenfetch && echo
@@ -1444,8 +1837,8 @@ function fedora()
 			elif [[ ${select,,} == "window" ]]; then
 				local params=$window
 				declare -A rinku=(
-					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/DNF/"
-					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/DNF/"
+					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/DNF"
+					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/DNF"
 				)
 				
 				echo -e "\n..fedora: window: setup of ${window^} VNC"
@@ -1467,10 +1860,9 @@ function fedora()
 					fi
 					
 					# Executing Window Manager Setup file..
-					bash ~/${window}.sh
+					bash /root/${window}.sh
 					clear
 					
-					# Removing Window Manager Setup file.
 					if [[ ! -f /usr/bin/vncserver ]]; then
 					    dnf install tigervnc-server -y
 					fi
@@ -1480,7 +1872,7 @@ function fedora()
 					rm -rf /root/{window}.sh
 					
 					echo -e "..fedora: $window: .bash_profile: removing"
-					rm -rf ~/.bash_profile
+					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
 					clear && screenfetch && echo
@@ -1490,8 +1882,6 @@ function fedora()
 				echo -e "..fedora: $window: .bash_profile: allow executable"
 				chmod +x $target/$folder/root/.bash_profile
 			fi
-		else
-			local params=
 		fi
 		
 		sleep 2.4
@@ -1611,6 +2001,7 @@ function kali()
 			
 			# Arrange command.
 			command="proot"
+			command+=" --kill-on-exit"
 			command+=" --link2symlink"
 			command+=" -0"
 			command+=" -r $target/$folder"
@@ -1801,7 +2192,7 @@ function kali()
 					fi
 					
 					# Executing Dekstop Environment Setup file..
-					bash ~/${dekstop}.sh
+					bash /root/${dekstop}.sh
 					clear
 					
 					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -1829,7 +2220,7 @@ function kali()
 					rm -rf /root/{dekstop}.sh
 					
 					echo -e "..kali: $dekstop: .bash_profile: removing"
-					rm -rf ~/.bash_profile
+					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
 					clear && screenfetch && echo
@@ -1841,8 +2232,8 @@ function kali()
 			elif [[ ${select,,} == "window" ]]; then
 				local params=$window
 				declare -A rinku=(
-					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/"
-					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT/"
+					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
+					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
 				)
 				
 				echo -e "\n..kali: window: setup of ${window^} VNC"
@@ -1878,10 +2269,9 @@ function kali()
 					fi
 					
 					# Executing Window Manager Setup file..
-					bash ~/${window}.sh
+					bash /root/${window}.sh
 					clear
 					
-					# Removing Window Manager Setup file.
 					if [[ ! -f /usr/bin/vncserver ]]; then
 					    apt install tigervnc-standalone-server -y
 					fi
@@ -1891,7 +2281,7 @@ function kali()
 					rm -rf /root/{window}.sh
 					
 					echo -e "..kali: $window: .bash_profile: removing"
-					rm -rf ~/.bash_profile
+					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
 					clear && screenfetch && echo
@@ -1929,7 +2319,7 @@ function kali()
 				apt-key add /etc/apt/trusted.gpg.d/kali-archive-keyring.asc
 				
 				echo -e "..kali: .bash_profile: removing"
-				rm -rf ~/.bash_profile
+				rm -rf /root/.bash_profile
 			EOF
 			
 			echo -e "..kali: .bash_profile: allow executable"
@@ -2607,7 +2997,9 @@ function ubuntu()
 			clear
 		fi
 		
+		echo -e "..ubuntu: ubuntu-binds: creating"
 		mkdir -p $source/ubuntu-binds
+		
 		if [[ -d $source/$folder/proc ]]; then
 			chmod 755 $source/$folder/proc
 			mkdir -p $source/$folder/proc/fakethings
@@ -2679,7 +3071,7 @@ function ubuntu()
 							    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
 							    wget --tries=20 $rinku/${dekstop}22.sh -O /root/${dekstop}.sh
 							fi
-							bash ~/${dekstop}.sh
+							bash /root/${dekstop}.sh
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -2704,7 +3096,7 @@ function ubuntu()
 							rm -rf /root/{dekstop}.sh
 							
 							echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
-							rm -rf ~/.bash_profile
+							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
@@ -2752,7 +3144,7 @@ function ubuntu()
 							    echo -e "..ubuntu: $version: $window: ${window}.sh: downloading"
 							    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
 							fi
-							bash ~/${window}.sh
+							bash /root/${window}.sh
 							clear
 							
 							if [[ ! -f /usr/bin/vncserver ]]; then
@@ -2764,7 +3156,7 @@ function ubuntu()
 							rm -rf /root/{window}.sh
 							
 							echo -e "..ubuntu: $version: $window: .bash_profile: removing"
-							rm -rf ~/.bash_profile
+							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
@@ -2840,7 +3232,7 @@ function ubuntu()
 							    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
 							    wget --tries=20 $rinku/${dekstop}19.sh -O /root/${dekstop}.sh
 							fi
-							bash ~/${dekstop}.sh
+							bash /root/${dekstop}.sh
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -2865,7 +3257,7 @@ function ubuntu()
 							rm -rf /root/{dekstop}.sh
 							
 							echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
-							rm -rf ~/.bash_profile
+							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
@@ -2913,7 +3305,7 @@ function ubuntu()
 							    echo -e "..ubuntu: $version: $window: ${window}.sh: downloading"
 							    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
 							fi
-							bash ~/${window}.sh
+							bash /root/${window}.sh
 							clear
 							
 							if [[ ! -f /usr/bin/vncserver ]]; then
@@ -2925,7 +3317,7 @@ function ubuntu()
 							rm -rf /root/{window}.sh
 							
 							echo -e "..ubuntu: $version: $window: .bash_profile: removing"
-							rm -rf ~/.bash_profile
+							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
@@ -2991,7 +3383,7 @@ function ubuntu()
 							    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
 							    wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O /root/${dekstop}.sh
 							fi
-							bash ~/${dekstop}.sh
+							bash /root/${dekstop}.sh
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -3016,7 +3408,7 @@ function ubuntu()
 							rm -rf /root/{dekstop}.sh
 							
 							echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
-							rm -rf ~/.bash_profile
+							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
@@ -3054,7 +3446,7 @@ function ubuntu()
 							    echo -e "..ubuntu: $version: $window: ${window}.sh: downloading"
 							    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
 							fi
-							bash ~/${window}.sh
+							bash /root/${window}.sh
 							clear
 							
 							if [[ ! -f /usr/bin/vncserver ]]; then
@@ -3066,7 +3458,7 @@ function ubuntu()
 							rm -rf /root/{window}.sh
 							
 							echo -e "..ubuntu: $version: $window: .bash_profile: removing"
-							rm -rf ~/.bash_profile
+							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
 							clear && screenfetch && echo
