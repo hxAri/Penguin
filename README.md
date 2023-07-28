@@ -18,6 +18,15 @@ List of supported linux distros.
   * CLI Only
   * Dekstop Environment
     * XFCE
+* Arch Linux (**Andronix**)
+  * CLI Only
+  * Window Manager
+    * i3
+    * Openbox
+    * Awesome
+  * Dekstop Environment
+    * XFCE
+    * LXDE
 * Fedora (**Andronix**)
   * CLI Only
   * Window Manager
