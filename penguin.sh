@@ -2397,6 +2397,7 @@ function kali()
 # Handle Manjaro Actions.
 function manjaro()
 {
+	
 	# Prints informations.
 	clear
 	echo -e
@@ -2437,6 +2438,13 @@ function manjaro()
 			manjaroInstall
 		;;
 	esac
+}
+
+# Handle Nethunter Actions.
+function nethunter()
+{
+	# This functionality does not implemented at this time.
+	echo 0
 }
 
 # Handle Parrot Actions.
@@ -3636,7 +3644,7 @@ function main()
 	echo -e "  $sint $appname v$version"
 	echo -e "  [i] Author $author"
 	echo -e "  [i] E-Mail $author_email"
-	echo -e "  [s] Github $github"
+	echo -e "  [i] Github $github"
 	echo -e "  [!] Issues $issues"
 	echo -e "  [+] Distro"
 	echo -e "      [1] Alpine"
