@@ -16,7 +16,7 @@ If there is an outdated distro installation, or an outdated gpg key it is purely
 List of supported linux distros.
 * Alpine (**Andronix**)
   * CLI Only
-  * Dekstop Environment
+  * Desktop Environment
     * XFCE
 * Arch Linux (**Andronix**)
   * CLI Only
@@ -24,7 +24,7 @@ List of supported linux distros.
     * i3
     * Openbox
     * Awesome
-  * Dekstop Environment
+  * Desktop Environment
     * XFCE
     * LXDE
 * Fedora (**Andronix**)
@@ -33,7 +33,7 @@ List of supported linux distros.
     * i3
     * Openbox
     * Awesome
-  * Dekstop Environment
+  * Desktop Environment
     * XFCE
     * LXQT
     * LXDE
@@ -43,7 +43,7 @@ List of supported linux distros.
     * i3
     * Openbox
     * Awesome
-  * Dekstop Environment
+  * Desktop Environment
     * XFCE
     * LXQT
     * LXDE
@@ -57,7 +57,7 @@ List of supported linux distros.
     * i3
     * Openbox
     * Awesome
-  * Dekstop Environment
+  * Desktop Environment
     * XFCE
     * LXQT
     * LXDE
@@ -108,9 +108,9 @@ fedora cli
 fedora window
 fedora window (i3|openbox|awesome)
 
-# Fedora Dekstop Environment
-fedora dekstop
-fedora dekstop (xfce|lxqt|lxde)
+# Fedora Desktop Environment
+fedora desktop
+fedora desktop (xfce|lxqt|lxde)
 ```
 
 Especially for distributions that have more than one supported version, such as Ubuntu.
@@ -124,9 +124,9 @@ ubuntu (22|20|18) cli
 ubuntu (22|20|18) window
 ubuntu (22|20|18) window (i3|openbox|awesome)
 
-# Ubuntu Dekstop Environment
-ubuntu (22|20|18) dekstop
-ubuntu (22|20|18) dekstop (xfce|lxqt|lxde)
+# Ubuntu Desktop Environment
+ubuntu (22|20|18) desktop
+ubuntu (22|20|18) desktop (xfce|lxqt|lxde)
 ```
 
 ## Donate
