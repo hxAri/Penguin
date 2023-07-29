@@ -95,7 +95,7 @@ function binaryBuilder()
 		# Default ${distro^} Selection.
 		select=cli
 		window=awesome
-		dekstop=xfce
+		desktop=xfce
 		
 		if [[ \\\$1 != \"\" ]]; then
 		    case \\\${1,,} in
@@ -114,15 +114,15 @@ function binaryBuilder()
 		                esac
 		            fi
 		        ;;
-		        dekstop)
-		            select=dekstop
+		        desktop)
+		            select=desktop
 		            if [[ \\\$2 != \"\" ]]; then
 		                case \\\${2^^} in
-		                    XFCE) dekstop=xfce ;;
-		                    LXQT) dekstop=lxqt ;;
-		                    LXDE) dekstop=lxde ;;
+		                    XFCE) desktop=xfce ;;
+		                    LXQT) desktop=lxqt ;;
+		                    LXDE) desktop=lxde ;;
 		                    *)
-		                        echo -e \"$distro: \\\$2: unsupported dekstop environment\"
+		                        echo -e \"$distro: \\\$2: unsupported desktop environment\"
 		                        exit 1
 		                esac
 		            fi
@@ -140,14 +140,14 @@ function binaryBuilder()
 		# Resolve ${distro^} Source.
 		case \\\$select in
 		    window) source+=/\\\$window ;;
-		    dekstop) source+=/\\\$dekstop ;;
+		    desktop) source+=/\\\$desktop ;;
 		esac
 		
 		if [[ ! -d \\\$source/$folder ]] || [[ ! -d \\\$source/${distro,,}-binds ]] || [[ ! -f \\\$source/$launch ]]; then
 		    case \\\$select in
 		        cli) echo -e \"$distro: \\\$select: is not installed\" ;;
 		        window) echo -e \"$distro: \\\$select: \\\$window: is not installed\" ;;
-		        dekstop) echo -e \"$distro: \\\$select: \\\$dekstop: is not installed\" ;;
+		        desktop) echo -e \"$distro: \\\$select: \\\$desktop: is not installed\" ;;
 		    esac
 		    exit 1
 		else
@@ -556,42 +556,42 @@ function readInputAction()
 	local inputAction=
 	local inputSelect=
 	local inputWindow=
-	local inputDekstop=
+	local inputDesktop=
 	local inputVersion=
 	
 	# Handle readline input selection mode.
 	# readInputSelect [distro]
 	function readInputSelect()
 	{
-		# Handle readline input dekstop environment.
-		# readInputDekstopEnv [distro]
-		function readInputDekstopEnv()
+		# Handle readline input desktop environment.
+		# readInputDesktopEnv [distro]
+		function readInputDesktopEnv()
 		{
-			while [[ $inputDekstop == "" ]]; do
-				readline $1 "dekstop" "XFCE"
-				inputDekstop=${inputDekstop^^}
-				case $inputDekstop in
+			while [[ $inputDesktop == "" ]]; do
+				readline $1 "desktop" "XFCE"
+				inputDesktop=${inputDesktop^^}
+				case $inputDesktop in
 					1|XFCE)
-						inputDekstop=xfce
+						inputDesktop=xfce
 					;;
 					2|LXQT)
-						inputDekstop=lxqt
+						inputDesktop=lxqt
 						case ${1,,} in
 							alpine|arch)
-								inputDekstop=
+								inputDesktop=
 							;;
 						esac
 					;;
 					3|LXDE)
-						inputDekstop=lxde
+						inputDesktop=lxde
 						case ${1,,} in
 							alpine)
-								inputDekstop=
+								inputDesktop=
 							;;
 						esac
 					;;
 					*)
-						inputDekstop=
+						inputDesktop=
 					;;
 				esac
 			done
@@ -608,7 +608,7 @@ function readInputAction()
 					1|awesome) inputWindow=awesome ;;
 					2|openbox) inputWindow=openbox ;;
 					3|i3) inputWindow=i3 ;;
-					*) inputDekstop= ;;
+					*) inputDesktop= ;;
 				esac
 			done
 		}
@@ -627,10 +627,10 @@ function readInputAction()
 						inputSelect=
 					fi
 				;;
-				3|dekstop)
-					inputSelect=dekstop
-					readInputDekstopEnv $1 $3
-					dekstop=$inputDekstop
+				3|desktop)
+					inputSelect=desktop
+					readInputDesktopEnv $1 $3
+					desktop=$inputDesktop
 				;;
 				*) inputSelect= ;;
 			esac
@@ -688,8 +688,8 @@ function readInputAction()
 		select=$inputSelect
 		if [[ $select == "window" ]]; then
 			window=$inputWindow
-		elif [[ $select == "dekstop" ]]; then
-			dekstop=$inputDekstop
+		elif [[ $select == "desktop" ]]; then
+			desktop=$inputDesktop
 		fi
 	fi
 }
@@ -747,7 +747,7 @@ function alpine()
 	local window=Awesome
 	
 	# Default Alpine Environment for install.
-	local dekstop=XFCE
+	local desktop=XFCE
 	
 	# Handle Building Alpine Binary.
 	function alpineBinary()
@@ -831,7 +831,7 @@ function alpine()
 		case $select in
 			cli) local target=$source/cli ;;
 			window) local target=$source/window/$window ;;
-			dekstop) local target=$source/dekstop/$dekstop ;;
+			desktop) local target=$source/desktop/$desktop ;;
 			*)
 				echo -e "..alpine: $select: unknown selection mode"
 				exit 1
@@ -952,12 +952,12 @@ function alpine()
 			if [[ ${select,,} != "cli" ]]; then
 				if [[ ${select,,} == "window" ]]; then
 					local params=$window
-				elif [[ ${select,,} == "dekstop" ]]; then
-					local params=$dekstop
-					case ${dekstop,,} in
+				elif [[ ${select,,} == "desktop" ]]; then
+					local params=$desktop
+					case ${desktop,,} in
 						xfce) ;;
 						*)
-							echo -e "alpine: $dekstop: unsupported dekstop environment"
+							echo -e "alpine: $desktop: unsupported desktop environment"
 							exit 1
 						;;
 					esac
@@ -969,14 +969,14 @@ function alpine()
 					cat <<- EOF > $target/$folder/root/.bash_profile
 						#!/usr/bin/env bash
 						
-						# Downloading Dekstop Environment Setup file.
-						wget https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Alpine/alpine-${dekstop,,}.sh -O /root/${dekstop,,}.sh
+						# Downloading Desktop Environment Setup file.
+						wget https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Alpine/alpine-${desktop,,}.sh -O /root/${desktop,,}.sh
 						
-						# Executing Dekstop Environment Setup file..
-						bash /root/${dekstop,,}.sh
+						# Executing Desktop Environment Setup file..
+						bash /root/${desktop,,}.sh
 						
-						# Removing Dekstop Environment Setup file.
-						rm -rf /root/${dekstop,,}.sh
+						# Removing Desktop Environment Setup file.
+						rm -rf /root/${desktop,,}.sh
 						
 						clear
 					EOF
@@ -1078,7 +1078,7 @@ function arch()
 	local window=Awesome
 	
 	# Default Arch Environment for install.
-	local dekstop=XFCE
+	local desktop=XFCE
 	
 	# Handle Building Arch Binary.
 	function archBinary()
@@ -1168,7 +1168,7 @@ function arch()
 		case $select in
 			cli) local target=$source/cli ;;
 			window) local target=$source/window/$window ;;
-			dekstop) local target=$source/dekstop/$dekstop ;;
+			desktop) local target=$source/desktop/$desktop ;;
 			*)
 				echo -e "..arch: $select: unknown selection mode"
 				exit 1
@@ -1250,9 +1250,9 @@ function arch()
 		
 		local params=
 		if [[ ${select,,} != "cli" ]]; then
-			if [[ ${select,,} == "dekstop" ]]; then
-				local params=$dekstop
-				case ${dekstop,,} in
+			if [[ ${select,,} == "desktop" ]]; then
+				local params=$desktop
+				case ${desktop,,} in
 					xfce)
 						local rinku=(
 							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/XFCE4"
@@ -1276,11 +1276,11 @@ function arch()
 					;;
 				esac
 				
-				echo -e "\n..arch: dekstop: setup of ${dekstop^^} VNC"
-				echo -e "\n..arch: $dekstop: ${dekstop}.sh: downloading"
-				wget --tries=20 ${rinku[1]}/${rinku[2]} -O $target/$folder/root/${dekstop}.sh
-				echo -e "..arch: $dekstop: ${dekstop}.sh: allow executable"
-				chmod +x $target/$folder/root/${dekstop}.sh
+				echo -e "\n..arch: desktop: setup of ${desktop^^} VNC"
+				echo -e "\n..arch: $desktop: ${desktop}.sh: downloading"
+				wget --tries=20 ${rinku[1]}/${rinku[2]} -O $target/$folder/root/${desktop}.sh
+				echo -e "..arch: $desktop: ${desktop}.sh: allow executable"
+				chmod +x $target/$folder/root/${desktop}.sh
 				
 				echo -e "\n..\n..arch: /:root/.bash_profile: removing"
 				rm -rf $target/$folder/root/.bash_profile
@@ -1300,12 +1300,12 @@ function arch()
 					pacman -Syyuu --noconfirm && pacman -S wget sudo screenfetch --noconfirm 
 					#clear
 					
-					if [[ ! -f /root/${dekstop}.sh ]]; then
-						echo -e "..arch: $dekstop: ${dekstop}.sh: downloading"
-					    wget --tries=20 ${rinku[1]}/${rinku[2]} -O /root/${dekstop}.sh
+					if [[ ! -f /root/${desktop}.sh ]]; then
+						echo -e "..arch: $desktop: ${desktop}.sh: downloading"
+					    wget --tries=20 ${rinku[1]}/${rinku[2]} -O /root/${desktop}.sh
 					fi
 					
-					# Executing Dekstop Environment Setup file..
+					# Executing Desktop Environment Setup file..
 					bash /root/${rinku[1]}.sh
 					#clear
 					
@@ -1330,10 +1330,10 @@ function arch()
 					echo -e "..arch: firefox: installing"
 					pacman -S firefox --noconfirm
 					
-					echo -e "..arch: $dekstop: ${dekstop}.sh: removing"
-					rm -rf /root/{dekstop}.sh
+					echo -e "..arch: $desktop: ${desktop}.sh: removing"
+					rm -rf /root/{desktop}.sh
 					
-					echo -e "..arch: $dekstop: .bash_profile: removing"
+					echo -e "..arch: $desktop: .bash_profile: removing"
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
@@ -1557,7 +1557,7 @@ function fedora()
 	local window=Awesome
 	
 	# Default Fedora Environment for install.
-	local dekstop=XFCE
+	local desktop=XFCE
 	
 	# Handle Building Fedora Binary.
 	function fedoraBinary()
@@ -1638,7 +1638,7 @@ function fedora()
 		case $select in
 			cli) local target=$source/cli ;;
 			window) local target=$source/window/$window ;;
-			dekstop) local target=$source/dekstop/$dekstop ;;
+			desktop) local target=$source/desktop/$desktop ;;
 			*)
 				echo -e "..fedora: $select: unknown selection mode"
 				exit 1
@@ -1751,9 +1751,9 @@ function fedora()
 		
 		local params=
 		if [[ ${select,,} != "cli" ]]; then
-			if [[ ${select,,} == "dekstop" ]]; then
-				local params=$dekstop
-				case ${dekstop,,} in
+			if [[ ${select,,} == "desktop" ]]; then
+				local params=$desktop
+				case ${desktop,,} in
 					xfce)
 						local rinku=(
 							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Fedora/XFCE4"
@@ -1774,11 +1774,11 @@ function fedora()
 					;;
 				esac
 				
-				echo -e "\n..fedora: dekstop: setup of ${dekstop^^} VNC"
-				echo -e "\n..fedora: $dekstop: ${dekstop}.sh: downloading"
-				wget --tries=20 ${rinku[0]}/${rinku[1]} -O $target/$folder/root/${dekstop}.sh
-				echo -e "..fedora: $dekstop: ${dekstop}.sh: allow executable"
-				chmod +x $target/$folder/root/${dekstop}.sh
+				echo -e "\n..fedora: desktop: setup of ${desktop^^} VNC"
+				echo -e "\n..fedora: $desktop: ${desktop}.sh: downloading"
+				wget --tries=20 ${rinku[0]}/${rinku[1]} -O $target/$folder/root/${desktop}.sh
+				echo -e "..fedora: $desktop: ${desktop}.sh: allow executable"
+				chmod +x $target/$folder/root/${desktop}.sh
 				
 				echo -e "\n..\n..fedora: /:root/.bash_profile: removing"
 				rm -rf $target/$folder/root/.bash_profile
@@ -1791,12 +1791,12 @@ function fedora()
 					yum install wget screenfetch -y
 					clear
 					
-					if [[ ! -f /root/${dekstop}.sh ]]; then
-						echo -e "..fedora: $dekstop: ${dekstop}.sh: downloading"
-					    wget --tries=20 ${rinku[0]}/${rinku[1]} -O /root/${dekstop}.sh
+					if [[ ! -f /root/${desktop}.sh ]]; then
+						echo -e "..fedora: $desktop: ${desktop}.sh: downloading"
+					    wget --tries=20 ${rinku[0]}/${rinku[1]} -O /root/${desktop}.sh
 					fi
 					
-					# Executing Dekstop Environment Setup file..
+					# Executing Desktop Environment Setup file..
 					bash /root/${rinku[1]}.sh
 					clear
 					
@@ -1821,10 +1821,10 @@ function fedora()
 					echo -e "..fedora: firefox: installing"
 					yum install firefox -y
 					
-					echo -e "..fedora: $dekstop: ${dekstop}.sh: removing"
-					rm -rf /root/{dekstop}.sh
+					echo -e "..fedora: $desktop: ${desktop}.sh: removing"
+					rm -rf /root/{desktop}.sh
 					
-					echo -e "..fedora: $dekstop: .bash_profile: removing"
+					echo -e "..fedora: $desktop: .bash_profile: removing"
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
@@ -1978,7 +1978,7 @@ function kali()
 	local window=Awesome
 	
 	# Default Kali Environment for install.
-	local dekstop=XFCE
+	local desktop=XFCE
 	
 	# Handle Building Kali Binary.
 	function kaliBinary()
@@ -2060,7 +2060,7 @@ function kali()
 		case $select in
 			cli) local target=$source/cli ;;
 			window) local target=$source/window/$window ;;
-			dekstop) local target=$source/dekstop/$dekstop ;;
+			desktop) local target=$source/desktop/$desktop ;;
 			*)
 				echo -e "..kali: $select: unknown selection mode"
 				exit 1
@@ -2136,9 +2136,9 @@ function kali()
 		
 		local params=
 		if [[ ${select,,} != "cli" ]]; then
-			if [[ ${select,,} == "dekstop" ]]; then
-				local params=$dekstop
-				case ${dekstop,,} in
+			if [[ ${select,,} == "desktop" ]]; then
+				local params=$desktop
+				case ${desktop,,} in
 					xfce)
 						local rinku=(
 							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
@@ -2159,19 +2159,19 @@ function kali()
 					;;
 				esac
 				
-				echo -e "\n..kali: dekstop: setup of ${dekstop^^} VNC"
-				echo -e "\n..kali: $dekstop: $dekstop: setup apt retry count"
+				echo -e "\n..kali: desktop: setup of ${desktop^^} VNC"
+				echo -e "\n..kali: $desktop: $desktop: setup apt retry count"
 				echo "APT::Acquire::Retries \"3\";" > $target/$folder/etc/apt/apt.conf.d/80-retries
 				
-				echo -e "..kali: $dekstop: ${dekstop}.sh: downloading"
-				wget --tries=20 ${rinku[0]}/${rinku[1]} -O $target/$folder/root/${dekstop}.sh
-				echo -e "..kali: $dekstop: ${dekstop}.sh: allow executable"
-				chmod +x $target/$folder/root/${dekstop}.sh
+				echo -e "..kali: $desktop: ${desktop}.sh: downloading"
+				wget --tries=20 ${rinku[0]}/${rinku[1]} -O $target/$folder/root/${desktop}.sh
+				echo -e "..kali: $desktop: ${desktop}.sh: allow executable"
+				chmod +x $target/$folder/root/${desktop}.sh
 				
-				echo -e "..kali: $dekstop: /:root/.bash_profile: removing"
+				echo -e "..kali: $desktop: /:root/.bash_profile: removing"
 				rm -rf $target/$folder/root/.bash_profile
 				
-				echo -e "..kali: $dekstop: /:root/.bash_profile: creating"
+				echo -e "..kali: $desktop: /:root/.bash_profile: creating"
 				cat <<- EOF > $target/$folder/root/.bash_profile
 					#!/usr/bin/env bash
 					
@@ -2186,13 +2186,13 @@ function kali()
 					apt install sudo nano wget bash screenfetch dbus-x11 -y
 					clear
 					
-					if [[ ! -f /root/${dekstop}.sh ]]; then
-						echo -e "..kali: $dekstop: ${dekstop}.sh: downloading"
-					    wget --tries=20 ${rinku[0]}/${rinku[1]} -O /root/${dekstop}.sh
+					if [[ ! -f /root/${desktop}.sh ]]; then
+						echo -e "..kali: $desktop: ${desktop}.sh: downloading"
+					    wget --tries=20 ${rinku[0]}/${rinku[1]} -O /root/${desktop}.sh
 					fi
 					
-					# Executing Dekstop Environment Setup file..
-					bash /root/${dekstop}.sh
+					# Executing Desktop Environment Setup file..
+					bash /root/${desktop}.sh
 					clear
 					
 					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -2216,10 +2216,10 @@ function kali()
 					echo -e "..kali: firefox: installing"
 					apt install firefox-esr -y
 					
-					echo -e "..kali: $dekstop: ${dekstop}.sh: removing"
-					rm -rf /root/{dekstop}.sh
+					echo -e "..kali: $desktop: ${desktop}.sh: removing"
+					rm -rf /root/{desktop}.sh
 					
-					echo -e "..kali: $dekstop: .bash_profile: removing"
+					echo -e "..kali: $desktop: .bash_profile: removing"
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
@@ -2227,7 +2227,7 @@ function kali()
 					sleep 2.4
 				EOF
 				
-				echo -e "..kali: $dekstop: /:root/.bash_profile: allow executable"
+				echo -e "..kali: $desktop: /:root/.bash_profile: allow executable"
 				chmod +x $target/$folder/root/.bash_profile
 			elif [[ ${select,,} == "window" ]]; then
 				local params=$window
@@ -2473,7 +2473,7 @@ function ubuntu()
 	local launch=ubuntu-start
 	
 	# Default Ubuntu Environment for install.
-	local dekstop=XFCE
+	local desktop=XFCE
 	
 	# Default Ubuntu Window Manager for install.
 	local window=Awesome
@@ -2495,7 +2495,7 @@ function ubuntu()
 			# Default Ubuntu Selection.
 			select=cli
 			window=awesome
-			dekstop=xfce
+			desktop=xfce
 			
 			if [[ \\\$1 != \"\" ]]; then
 			    case \\\$1 in
@@ -2524,15 +2524,15 @@ function ubuntu()
 			                    esac
 			                fi
 			            ;;
-			            dekstop)
-			                select=dekstop
+			            desktop)
+			                select=desktop
 			                if [[ \\\$3 != \"\" ]]; then
 			                    case \\\${3^^} in
-			                        XFCE) dekstop=xfce ;;
-			                        LXQT) dekstop=lxqt ;;
-			                        LXDE) dekstop=lxde ;;
+			                        XFCE) desktop=xfce ;;
+			                        LXQT) desktop=lxqt ;;
+			                        LXDE) desktop=lxde ;;
 			                        *)
-			                            echo -e \"ubuntu: \\\$3: unsupported dekstop environment\"
+			                            echo -e \"ubuntu: \\\$3: unsupported desktop environment\"
 			                            exit 1
 			                    esac
 			                fi
@@ -2551,14 +2551,14 @@ function ubuntu()
 			# Resolve Ubuntu Source.
 			case \\\$select in
 			    window) source+=/\\\$window ;;
-			    dekstop) source+=/\\\$dekstop ;;
+			    desktop) source+=/\\\$desktop ;;
 			esac
 			
 			if [[ ! -d \\\$source/ubuntu-fs ]]; then
 			    case \\\$select in
 			        cli) echo -e \"ubuntu: \\\$version: \\\$select: is not installed\" ;;
 			        window) echo -e \"ubuntu: \\\$version: \\\$select: \\\$window: is not installed\" ;;
-			        dekstop) echo -e \"ubuntu: \\\$version: \\\$select: \\\$dekstop: is not installed\" ;;
+			        desktop) echo -e \"ubuntu: \\\$version: \\\$select: \\\$desktop: is not installed\" ;;
 			    esac
 			    exit 1
 			else
@@ -2962,7 +2962,7 @@ function ubuntu()
 		case $select in
 			cli) source+=/cli ;;
 			window) source+=/window/$window ;;
-			dekstop) source+=/dekstop/$dekstop ;;
+			desktop) source+=/desktop/$desktop ;;
 			*)
 				echo -e "..ubuntu: $version: $select: unknown selection mode"
 				exit 1
@@ -3026,15 +3026,15 @@ function ubuntu()
 		case $version in
 			22.04)
 				if [[ ${select,,} != "cli" ]]; then
-					if [[ ${select,,} == "dekstop" ]]; then
-						local params=$dekstop
-						case ${dekstop,,} in
+					if [[ ${select,,} == "desktop" ]]; then
+						local params=$desktop
+						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
 							lxde) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
 						esac
 						
-						echo -e "\n..ubuntu: $version: dekstop: setup of ${dekstop^^} VNC"
+						echo -e "\n..ubuntu: $version: desktop: setup of ${desktop^^} VNC"
 						mkdir -p $source/$folder/var/tmp
 						rm -rf $source/$folder/usr/local/bin/*
 						
@@ -3044,21 +3044,21 @@ function ubuntu()
 						# Setup VNC Viewer
 						vncViewerSetup $source/$folder
 						
-						echo -e "\n..ubuntu: $version: $dekstop: setup apt retry count"
+						echo -e "\n..ubuntu: $version: $desktop: setup apt retry count"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
-						echo -e "..ubuntu: $version: $dekstop: .hushlogin: creating"
+						echo -e "..ubuntu: $version: $desktop: .hushlogin: creating"
 						touch $source/$folder/root/.hushlogin
 						
-						echo -e "\n..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
-						wget --tries=20 $rinku/${dekstop}22.sh -O $source/$folder/root/${dekstop}.sh
-						echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: allow executable"
-						chmod +x $source/$folder/root/${dekstop}.sh
+						echo -e "\n..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+						wget --tries=20 $rinku/${desktop}22.sh -O $source/$folder/root/${desktop}.sh
+						echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: allow executable"
+						chmod +x $source/$folder/root/${desktop}.sh
 						
-						echo -e "\n..ubuntu: $version: $dekstop: .bash_profile: removing"
+						echo -e "\n..ubuntu: $version: $desktop: .bash_profile: removing"
 						rm -rf $source/$folder/root/.bash_profile
 						
-						echo -e "..ubuntu: $version: $dekstop: .bash_profile: building"
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: building"
 						cat <<- EOF > $source/$folder/root/.bash_profile
 							#!/usr/bin/env bash
 							
@@ -3075,11 +3075,11 @@ function ubuntu()
 							# Create directory for vnc configuration.
 							mkdir -p ~/.vnc
 							
-							if [[ ! -f /root/${dekstop}.sh ]]; then
-							    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
-							    wget --tries=20 $rinku/${dekstop}22.sh -O /root/${dekstop}.sh
+							if [[ ! -f /root/${desktop}.sh ]]; then
+							    echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+							    wget --tries=20 $rinku/${desktop}22.sh -O /root/${desktop}.sh
 							fi
-							bash /root/${dekstop}.sh
+							bash /root/${desktop}.sh
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -3100,10 +3100,10 @@ function ubuntu()
 							fi
 							clear
 							
-							echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: removing"
-							rm -rf /root/{dekstop}.sh
+							echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: removing"
+							rm -rf /root/{desktop}.sh
 							
-							echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
+							echo -e "..ubuntu: $version: $desktop: .bash_profile: removing"
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
@@ -3111,7 +3111,7 @@ function ubuntu()
 							sleep 2.4
 						EOF
 						
-						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
 					elif [[ ${select,,} == "window" ]]; then
 						local params=$window
@@ -3178,15 +3178,15 @@ function ubuntu()
 			;;
 			20.04)
 				if [[ ${select,,} != "cli" ]]; then
-					if [[ ${select,,} == "dekstop" ]]; then
-						local params=$dekstop
-						case ${dekstop,,} in
+					if [[ ${select,,} == "desktop" ]]; then
+						local params=$desktop
+						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
 							lxde) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
 						esac
 						
-						echo -e "\n..ubuntu: $version: dekstop: setup of ${dekstop^^} VNC"
+						echo -e "\n..ubuntu: $version: desktop: setup of ${desktop^^} VNC"
 						mkdir -p $source/$folder/var/tmp
 						rm -rf $source/$folder/usr/local/bin/*
 						
@@ -3196,30 +3196,30 @@ function ubuntu()
 						# Setup VNC Viewer
 						vncViewerSetup $source/$folder
 						
-						echo -e "\n..ubuntu: $version: $dekstop: setup apt retry count"
+						echo -e "\n..ubuntu: $version: $desktop: setup apt retry count"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
-						echo -e "..ubuntu: $version: $dekstop: .hushlogin: creating"
+						echo -e "..ubuntu: $version: $desktop: .hushlogin: creating"
 						touch $source/$folder/root/.hushlogin
 						
-						echo -e "\n..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
-						wget --tries=20 $rinku/${dekstop}19.sh -O $source/$folder/root/${dekstop}.sh
-						echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: allow executable"
-						chmod +x $source/$folder/root/${dekstop}.sh
+						echo -e "\n..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+						wget --tries=20 $rinku/${desktop}19.sh -O $source/$folder/root/${desktop}.sh
+						echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: allow executable"
+						chmod +x $source/$folder/root/${desktop}.sh
 						
-						echo -e "\n..ubuntu: $version: $dekstop: .profile.1: downloading"
+						echo -e "\n..ubuntu: $version: $desktop: .profile.1: downloading"
 						wget -q https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/.profile -O $source/$folder/root/.profile.1 > /dev/null
-						echo -e "\n..ubuntu: $version: $dekstop: .profile: writing"
+						echo -e "\n..ubuntu: $version: $desktop: .profile: writing"
 						cat $source/$folder/root/.profile.1 >> $source/$folder/root/.profile
-						echo -e "\n..ubuntu: $version: $dekstop: .profile: allow executable"
+						echo -e "\n..ubuntu: $version: $desktop: .profile: allow executable"
 						chmod +x $source/$folder/root/.profile
-						echo -e "\n..ubuntu: $version: $dekstop: .profile.1: removing"
+						echo -e "\n..ubuntu: $version: $desktop: .profile.1: removing"
 						rm -rf $source/$folder/root/.profile.1
 						
-						echo -e "\n..ubuntu: $version: $dekstop: .bash_profile: removing"
+						echo -e "\n..ubuntu: $version: $desktop: .bash_profile: removing"
 						rm -rf $source/$folder/root/.bash_profile
 						
-						echo -e "..ubuntu: $version: $dekstop: .bash_profile: building"
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: building"
 						cat <<- EOF > $source/$folder/root/.bash_profile
 							#!/usr/bin/env bash
 							
@@ -3236,11 +3236,11 @@ function ubuntu()
 							# Create directory for vnc configuration.
 							mkdir -p ~/.vnc
 							
-							if [[ ! -f /root/${dekstop}.sh ]]; then
-							    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
-							    wget --tries=20 $rinku/${dekstop}19.sh -O /root/${dekstop}.sh
+							if [[ ! -f /root/${desktop}.sh ]]; then
+							    echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+							    wget --tries=20 $rinku/${desktop}19.sh -O /root/${desktop}.sh
 							fi
-							bash /root/${dekstop}.sh
+							bash /root/${desktop}.sh
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -3261,10 +3261,10 @@ function ubuntu()
 							fi
 							clear
 							
-							echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: removing"
-							rm -rf /root/{dekstop}.sh
+							echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: removing"
+							rm -rf /root/{desktop}.sh
 							
-							echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
+							echo -e "..ubuntu: $version: $desktop: .bash_profile: removing"
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
@@ -3272,7 +3272,7 @@ function ubuntu()
 							sleep 2.4
 						EOF
 						
-						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
 					elif [[ ${select,,} == "window" ]]; then
 						local params=$window
@@ -3339,9 +3339,9 @@ function ubuntu()
 			;;
 			18.04)
 				if [[ ${select,,} != "cli" ]]; then
-					if [[ ${select,,} == "dekstop" ]]; then
-						local params=$dekstop
-						case ${dekstop,,} in
+					if [[ ${select,,} == "desktop" ]]; then
+						local params=$desktop
+						case ${desktop,,} in
 							xfce)
 								local rinku=(
 									"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
@@ -3365,21 +3365,21 @@ function ubuntu()
 						# Setup VNC Viewer
 						vncViewerSetup $source/$folder
 						
-						echo -e "\n..ubuntu: $version: $dekstop: setup apt retry count"
+						echo -e "\n..ubuntu: $version: $desktop: setup apt retry count"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
-						echo -e "..ubuntu: $version: $dekstop: .hushlogin: creating"
+						echo -e "..ubuntu: $version: $desktop: .hushlogin: creating"
 						touch $source/$folder/root/.hushlogin
 						
-						echo -e "\n..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
-						wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O $source/$folder/root/${dekstop}.sh
-						echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: allow executable"
-						chmod +x $source/$folder/root/${dekstop}.sh
+						echo -e "\n..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+						wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O $source/$folder/root/${desktop}.sh
+						echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: allow executable"
+						chmod +x $source/$folder/root/${desktop}.sh
 						
-						echo -e "\n..ubuntu: $version: $dekstop: .bash_profile: removing"
+						echo -e "\n..ubuntu: $version: $desktop: .bash_profile: removing"
 						rm -rf $source/$folder/root/.bash_profile
 						
-						echo -e "..ubuntu: $version: $dekstop: .bash_profile: building"
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: building"
 						cat <<- EOF > $source/$folder/root/.bash_profile
 							#!/usr/bin/env bash
 							
@@ -3387,11 +3387,11 @@ function ubuntu()
 							apt update -y && apt install sudo wget nano screenfetch -y > /dev/null
 							clear
 							
-							if [[ ! -f /root/${dekstop}.sh ]]; then
-							    echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: downloading"
-							    wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O /root/${dekstop}.sh
+							if [[ ! -f /root/${desktop}.sh ]]; then
+							    echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+							    wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O /root/${desktop}.sh
 							fi
-							bash /root/${dekstop}.sh
+							bash /root/${desktop}.sh
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -3412,10 +3412,10 @@ function ubuntu()
 							fi
 							clear
 							
-							echo -e "..ubuntu: $version: $dekstop: ${dekstop}.sh: removing"
-							rm -rf /root/{dekstop}.sh
+							echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: removing"
+							rm -rf /root/{desktop}.sh
 							
-							echo -e "..ubuntu: $version: $dekstop: .bash_profile: removing"
+							echo -e "..ubuntu: $version: $desktop: .bash_profile: removing"
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
@@ -3423,7 +3423,7 @@ function ubuntu()
 							sleep 2.4
 						EOF
 						
-						echo -e "..ubuntu: $version: $dekstop: .bash_profile: allow executable"
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: allow executable"
 						chmod +x $source/$folder/root/.bash_profile
 					elif [[ ${select,,} == "window" ]]; then
 						local params=$window
@@ -3502,7 +3502,7 @@ function ubuntu()
 			readline "ubuntu" "next" "Y"
 			case ${inputNext,,} in
 				y|yes)
-					bash $termux/files/usr/bin/$binary $select ${params[@]}
+					bash $termux/files/usr/bin/$binary $version $select ${params[@]}
 				;;
 				n|no) main ;;
 				*) inputNext= ;;
@@ -3526,9 +3526,9 @@ function ubuntu()
 				source+=/window/$window
 				params=$window
 			;;
-			dekstop)
-				source+=/dekstop/$dekstop
-				params=$dekstop
+			desktop)
+				source+=/desktop/$desktop
+				params=$desktop
 			;;
 			*)
 				echo -e "\n..\n..ubuntu: $version: $select: unknown selection mode"
