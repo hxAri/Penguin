@@ -1188,7 +1188,7 @@ function arch()
 				esac
 				echo -e "\n..arch: $rootfs: downloading"
 				wget --tries=20 "http://os.archlinuxarm.org/os/ArchLinuxARM-${archurl}-latest.tar.gz" -O $images/$rootfs
-				#clear
+				clear
 			fi
 			
 			echo -e "\n..arch: $folder: creating"
@@ -1212,7 +1212,7 @@ function arch()
 					;;
 				esac
 			done
-			#clear
+			clear
 		fi
 		
 		echo -e "..arch: arch-binds: creating"
@@ -1291,14 +1291,14 @@ function arch()
 					
 					# Executing additional script.
 					bash /root/additional.sh
-					#clear
+					clear
 					
 					echo -e "..arch: additional.sh: removing"
 					rm -rf /root/additional.sh
 					
 					# Installing required packages.
 					pacman -Syyuu --noconfirm && pacman -S wget sudo screenfetch --noconfirm 
-					#clear
+					clear
 					
 					if [[ ! -f /root/${desktop}.sh ]]; then
 						echo -e "..arch: $desktop: ${desktop}.sh: downloading"
@@ -1307,7 +1307,7 @@ function arch()
 					
 					# Executing Desktop Environment Setup file..
 					bash /root/${rinku[1]}.sh
-					#clear
+					clear
 					
 					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
 					    echo -e "\n..arch: vncserver-start: downloading"
@@ -1325,7 +1325,7 @@ function arch()
 					if [[ ! -f /usr/bin/vncserver ]]; then
 					    pacman -S tigervnc --noconfirm > /dev/null
 					fi
-					#clear
+					clear
 					
 					echo -e "..arch: firefox: installing"
 					pacman -S firefox --noconfirm
@@ -1337,7 +1337,7 @@ function arch()
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
-					#clear && screenfetch && echo
+					clear && screenfetch -A "Arch Linux" && echo
 					sleep 2.4
 				EOF
 				
@@ -1361,14 +1361,14 @@ function arch()
 					
 					# Executing additional script.
 					bash /root/additional.sh
-					#clear
+					clear
 					
 					echo -e "..arch: additional.sh: removing"
 					rm -rf /root/additional.sh
 					
 					# Installing required packages.
 					pacman -Syyuu --noconfirm && pacman -S wget sudo screenfetch --noconfirm
-					#clear
+					clear
 					
 					if [[ ! -f /root/${window}.sh ]]; then
 					    echo -e "..arch: $window: ${window}.sh: downloading"
@@ -1377,12 +1377,12 @@ function arch()
 					
 					# Executing Window Manager Setup file..
 					bash /root/${window}.sh
-					#clear
+					clear
 					
 					if [[ ! -f /usr/bin/vncserver ]]; then
 					    pacman -S tigervnc --noconfirm > /dev/null
 					fi
-					#clear
+					clear
 					
 					echo -e "..arch: $window: ${window}.sh: removing"
 					rm -rf /root/{window}.sh
@@ -1391,7 +1391,7 @@ function arch()
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
-					#clear && screenfetch && echo
+					clear && screenfetch -A "Arch Linux" && echo
 					sleep 2.4
 				EOF
 				
@@ -1408,7 +1408,7 @@ function arch()
 				
 				# Executing additional script.
 				bash /root/additional.sh
-				#clear
+				clear
 				
 				echo -e "..arch: additional.sh: removing"
 				rm -rf /root/additional.sh
@@ -1422,7 +1422,7 @@ function arch()
 		fi
 		
 		sleep 2.4
-		#clear
+		clear
 		echo -e "\n..\n..arch: $select: installed"
 		echo -e "..arch: $select: command"
 		echo -e "..arch: $select: arch $select ${params[@]}\n..\n"
@@ -1797,7 +1797,7 @@ function fedora()
 					fi
 					
 					# Executing Desktop Environment Setup file..
-					bash /root/${rinku[1]}.sh
+					bash /root/${desktop}.sh
 					clear
 					
 					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
@@ -1828,7 +1828,7 @@ function fedora()
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
-					clear && screenfetch && echo
+					clear && screenfetch -A "Fedora" && echo
 					sleep 2.4
 				EOF
 				
@@ -1875,7 +1875,7 @@ function fedora()
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
-					clear && screenfetch && echo
+					clear && screenfetch -A "Fedora" && echo
 					sleep 2.4
 				EOF
 				
@@ -2223,7 +2223,7 @@ function kali()
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
-					clear && screenfetch && echo
+					clear && screenfetch -A "Kali Linux" && echo
 					sleep 2.4
 				EOF
 				
@@ -2284,7 +2284,7 @@ function kali()
 					rm -rf /root/.bash_profile
 					
 					# Displaying screenfetch.
-					clear && screenfetch && echo
+					clear && screenfetch -A "Kali Linux" && echo
 					sleep 2.4
 				EOF
 				
@@ -2397,6 +2397,421 @@ function kali()
 # Handle Manjaro Actions.
 function manjaro()
 {
+	# Default Manjaro Mode for install.
+	local select=cli
+	
+	# Default Import is always empty.
+	# Because we don't know where source destination.
+	local import=
+	
+	# Default Manjaro Directory.
+	local source=$install/manjaro
+	local folder=manjaro-fs
+	
+	# Default Manjaro Executable.
+	local binary=manjaro
+	local launch=manjaro-start
+	
+	# Default Manjaro RootFS name.
+	local rootfs=manjaro-rootfs.tar.xz
+	
+	# Default Manjaro Window Manager.
+	local window=Awesome
+	
+	# Default Manjaro Environment for install.
+	local desktop=XFCE
+	
+	# Handle Building Manjaro Binary.
+	function manjaroBinary()
+	{
+		binaryBuilder "manjaro" $binary $launch $folder $source
+	}
+	
+	# Handle Building Manjaro Launcher.
+	function manjaroLauncher()
+	{
+		echo -e "..\n..manjaro: $launch: building"
+		cat > $target/$launch <<- EOM
+			#!/usr/bin/env bash
+			
+			# Change current working directory.
+			cd \$(dirname \$0)
+			
+			# Avoid termux-exec, execve() conflicts with PRoot.
+			unset LD_PRELOAD
+			
+			# Arrange command.
+			command="proot"
+			command+=" --kill-on-exit"
+			command+=" --link2symlink"
+			command+=" -0"
+			command+=" -r $target/$folder"
+			
+			if [ -n "\$(ls -A $target/manjaro-binds)" ]; then
+			    for f in $target/manjaro-binds/* ;do
+			        . \$f
+			    done
+			fi
+			
+			command+=" -b /data"
+			command+=" -b /dev"
+			command+=" -b /proc"
+			command+=" -b $target/$folder/root:/dev/shm"
+			
+			# Uncomment the following line to have
+			# access to the home directory of termux.
+			#command+=" -b $termux/files/home:/root"
+			
+			# Uncomment the following line to
+			# mount /sdcard directly to /.
+			#command+=" -b /sdcard"
+			
+			command+=" -w /root"
+			command+=" /usr/bin/env -i"
+			command+=" HOME=/root"
+			command+=" PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+			command+=" TERM=\$TERM"
+			command+=" LANG=en_US.UTF-8"
+			command+=" LC_ALL=C"
+			command+=" LANGUAGE=en_US"
+			command+=" /bin/bash --login"
+			
+			if [ -z "\$1" ];then
+			    exec \$command
+			else
+			    \$command -c "\$com"
+			fi
+		EOM
+		
+		echo -e "..manjaro: $launch: fixing shebang"
+		termux-fix-shebang $target/$launch
+		
+		echo -e "..manjaro: $launch: allow executable"
+		chmod +x $target/$launch
+	}
+	
+	# Handle Manjaro Import.
+	function manjaroImport()
+	{
+		echo 0
+	}
+	
+	# Handle Manjaro Install.
+	function manjaroInstall()
+	{
+		# Resolve Manjaro Source Destination.
+		case $select in
+			cli) local target=$source/cli ;;
+			window) local target=$source/window/$window ;;
+			desktop) local target=$source/desktop/$desktop ;;
+			*)
+				echo -e "..manjaro: $select: unknown selection mode"
+				exit 1
+			;;
+		esac
+		
+		# Check if file system does not exists.
+		if [[ ! -d $target/$folder ]]; then
+			if [[ ! -f $images/$rootfs ]]; then
+				
+				echo -e "..manjaro: /:.rootfs/manjaro: creating"
+				mkdir -p $images/manjaro
+				
+				if [[ ! -f $images/manjaro/manjaro.partaa ]]; then
+					echo -e "\n..manjaro: manjaro.partaa: downloading"
+					wget --tries=20 https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partaa -O $images/manjaro/manjaro.partaa
+				fi
+				if [[ ! -f $images/manjaro/manjaro.partab ]]; then
+					echo -e "\n..manjaro: manjaro.partab: downloading"
+					wget --tries=20 https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partab -O $images/manjaro/manjaro.partab
+				fi
+					if [[ ! -f $images/manjaro/manjaro.partac ]]; then
+				echo -e "\n..manjaro: manjaro.partac: downloading"
+					wget --tries=20 https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partac -O $images/manjaro/manjaro.partac
+				fi
+				#clear
+				
+				echo -e "\n..manjaro: $rootfs: building"
+				cat $images/manjaro/manjaro.parta* > $images/$rootfs
+				
+				echo -e "..manjaro: manjaro.parta[a-c]: remove [Y/n]"
+				local inputRemove=
+				while [[ $inputRemove == "" ]]; do
+					readline "manjaro" "remove" "Y"
+					case ${inputRemove,,} in
+						y|yes)
+							echo -e "\n..manjaro: manjaro.parta[a-b]: removing"
+							rm -rf $images/manjaro/manjaro.parta*
+						;;
+						n|no) ;;
+						*)
+							inputRemove=
+						;;
+					esac
+				done
+				#clear
+			fi
+			
+			echo -e "\n..manjaro: $folder: creating"
+			mkdir -p $target/$folder
+			
+			echo -e "..manjaro: $rootfs: decompressing"
+			proot --link2symlink tar -xf $images/$rootfs -C $target/$folder||:
+			
+			echo -e "..manjaro: $folder: fixing permissions"
+			chmod 755 -R $target/$folder
+			
+			echo -e "..manjaro: $rootfs: remove [Y/n]"
+			local inputRemove=
+			while [[ $inputRemove == "" ]]; do
+				readline "manjaro" "remove" "Y"
+				case ${inputRemove,,} in
+					y|yes)
+						echo -e "\n..manjaro: $rootfs: removing"
+						rm -rf $images/$rootfs
+					;;
+					n|no) ;;
+					*)
+						inputRemove=
+					;;
+				esac
+			done
+			#clear
+		fi
+		
+		echo -e "..manjaro: manjaro-binds: creating"
+		mkdir -p $target/manjaro-binds
+		
+		echo -e "..manjaro: /:etc/resolv.conf: removing"
+		rm -rf $target/$folder/etc/resolv.conf
+		
+		echo -e "..manjaro: /:etc/resolv.conf: creating"
+		echo "nameserver 1.1.1.1" > $target/$folder/etc/resolv.conf
+		
+		echo -e "..manjaro: /:bin/fix-repo: creating"
+		echo "pacman -Syyuu --noconfirm && pacman-key --init && pacman-key --populate && pacman -Syu --noconfirm" > $target/$folder/usr/local/bin/fix-repo
+		
+		echo -e "..manjaro: /:bin/fix-repo: allow executable"
+		chmod +x $target/$folder/usr/local/bin/fix-repo
+		
+		echo -e "..manjaro: mirrorlist: creating"
+		cat <<- EOL > $target/$folder/etc/pacman.d/mirrorlist
+			##
+			## Manjaro Linux repository mirrorlist
+			## Generated on 02 May 2020 14:22
+			##
+			## Use pacman-mirrors to modify
+			##
+			
+			## Location  : Germany
+			## Time      : 99.99
+			## Last Sync :
+			Server = https://mirrors.dotsrc.org/manjaro-arm/stable/$repo/$arch
+		EOL
+		
+		# Check if Manjaro binary doesn't exists.
+		if [[ ! -f $termux/files/usr/bin/$binary ]]; then
+			manjaroBinary
+		fi
+		
+		# Check if Manjaro launcher script doesn't exists.
+		if [[ ! -f $target/$launch ]]; then
+			manjaroLauncher
+		fi
+		
+		local params=
+		if [[ ${select,,} != "cli" ]]; then
+			if [[ ${select,,} == "desktop" ]]; then
+				local params=$desktop
+				case ${desktop,,} in
+					xfce)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/XFCE"
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+							"xfce4_de.sh"
+						)
+					;;
+					lxqt)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXQT"
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+							"lxqt_de.sh"
+						)
+					;;
+					lxde)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXDE"
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+							"lxde_de.sh"
+						)
+					;;
+				esac
+				
+				echo -e "\n..manjaro: desktop: setup of ${desktop^^} VNC"
+				echo -e "..manjaro: /:root/.vnc: creating"
+				mkdir -p $target/$folder/root/.vnc
+				
+				echo -e "\n..manjaro: vncserver-start: downloading"
+				wget --tries=20 ${rinku[0]}/vncserver-start -O $target/$folder/usr/local/bin/vncserver-start
+				echo -e "..manjaro: vncserver-start: allow executable"
+				chmod +x $target/$folder/usr/local/bin/vncserver-start
+				
+				echo -e "\n..manjaro: vncserver-stop: downloading"
+				wget --tries=20 ${rinku[0]}/vncserver-stop -O $target/$folder/usr/local/bin/vncserver-stop
+				echo -e "..manjaro: vncserver-stop: allow executable"
+				chmod +x $target/$folder/usr/local/bin/vncserver-stop
+				
+				echo -e "\n..manjaro: $desktop: ${desktop}.sh: downloading"
+				wget --tries=20 ${rinku[1]}/${rinku[2]} -O $target/$folder/root/${desktop}.sh
+				echo -e "..manjaro: $desktop: ${desktop}.sh: allow executable"
+				chmod +x $target/$folder/root/${desktop}.sh
+				
+				echo -e "\n..manjaro: xstartup: downloading"
+				wget --tries=20 "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Pacman/Manjaro/${desktop^^}/xstartup" -O $target/$folder/root/.vnc/xstartup
+				
+				echo -e "\n..\n..manjaro: /:root/.bash_profile: removing"
+				rm -rf $target/$folder/root/.bash_profile
+				
+				echo -e "..manjaro: /:root/.bash_profile: creating"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Fixing repository.
+					fix-repo
+					#clear
+					
+					if [[ ! -f /root/${desktop}.sh ]]; then
+						echo -e "..manjaro: $desktop: ${desktop}.sh: downloading"
+					    wget --tries=20 ${rinku[1]}/${rinku[2]} -O /root/${desktop}.sh
+					fi
+					
+					# Executing Desktop Environment Setup file..
+					bash /root/${desktop}.sh
+					#clear
+					
+					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+					    echo -e "\n..manjaro: vncserver-start: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
+					    
+					    echo -e "..manjaro: vncserver-start: allow executable"
+					    chmod +x /usr/local/bin/vncserver-start
+					    
+					    echo -e "\n..manjaro: vncserver-stop: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+					    
+					    echo -e "..manjaro: vncserver-stop: allow executable"
+					    chmod +x /usr/local/bin/vncserver-stop
+					fi
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    pacman -S tigervnc --noconfirm > /dev/null
+					fi
+					#clear
+					
+					echo -e "..manjaro: $desktop: ${desktop}.sh: removing"
+					rm -rf /root/{desktop}.sh
+					
+					echo -e "..manjaro: $desktop: .bash_profile: removing"
+					rm -rf /root/.bash_profile
+					
+					# Clear terminal screen.
+					#clear && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..manjaro: /:root/.bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			elif [[ ${select,,} == "window" ]]; then
+				local params=$window
+				declare -A rinku=(
+					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/Pacman"
+				)
+				
+				echo -e "\n..manjaro: window: setup of ${window^} VNC"
+				echo -e "\n..manjaro: $window: ${window}.sh: downloading"
+				wget --tries=20 ${rinku[2]}/${window}.sh -O $target/$folder/root/${window}.sh
+				echo -e "..manjaro: $window: ${window}.sh: allow executable"
+				chmod +x $target/$folder/root/${window}.sh
+				
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Fixing repository.
+					fix-repo
+					#clear
+					
+					if [[ ! -f /root/${window}.sh ]]; then
+					    echo -e "..manjaro: $window: ${window}.sh: downloading"
+					    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+					fi
+					
+					# Executing Window Manager Setup file..
+					bash /root/${window}.sh
+					#clear
+					
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    pacman -S tigervnc --noconfirm > /dev/null
+					fi
+					#clear
+					
+					echo -e "..manjaro: $window: ${window}.sh: removing"
+					rm -rf /root/{window}.sh
+					
+					echo -e "..manjaro: $window: .bash_profile: removing"
+					rm -rf /root/.bash_profile
+					
+					# Clear terminal screen.
+					#clear && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..manjaro: $window: .bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			fi
+		else
+			echo -e "\n..\n..manjaro: /:root/.bash_profile: removing"
+			rm -rf $target/$folder/root/.bash_profile
+			
+			echo -e "..manjaro: /:root/.bash_profile: creating"
+			cat <<- EOF > $target/$folder/root/.bash_profile
+				#!/usr/bin/env bash
+				
+				# ...
+				pacman-key --init && pacman-key --populate && pacman -Syu --noconfirm
+				
+				echo -e "..manjaro: .bash_profile: removing"
+				rm -rf /root/.bash_profile
+			EOF
+			
+			echo -e "..manjaro: .bash_profile: allow executable"
+			chmod +x $target/$folder/root/.bash_profile
+		fi
+		
+		sleep 2.4
+		#clear
+		echo -e "\n..\n..manjaro: $select: installed"
+		echo -e "..manjaro: $select: command"
+		echo -e "..manjaro: $select: manjaro $select ${params[@]}\n..\n"
+		
+		echo -e "..manjaro: action: run manjaro [Y/n]"
+		local inputNext=
+		while [[ $inputNext == "" ]]; do
+			readline "manjaro" "next" "Y"
+			case ${inputNext,,} in
+				y|yes)
+					bash $termux/files/usr/bin/$binary $select ${params[@]}
+				;;
+				n|no) main ;;
+				*) inputNext= ;;
+			esac
+		done
+	}
+	
+	# Handle Manjaro Remove.
+	function manjaroRemove()
+	{
+		echo 0
+	}
 	
 	# Prints informations.
 	clear
@@ -3107,7 +3522,7 @@ function ubuntu()
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
-							clear && screenfetch && echo
+							clear && screenfetch -A "Ubuntu" && echo
 							sleep 2.4
 						EOF
 						
@@ -3167,7 +3582,7 @@ function ubuntu()
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
-							clear && screenfetch && echo
+							clear && screenfetch -A "Ubuntu" && echo
 							sleep 2.4
 						EOF
 						
@@ -3268,7 +3683,7 @@ function ubuntu()
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
-							clear && screenfetch && echo
+							clear && screenfetch -A "Ubuntu" && echo
 							sleep 2.4
 						EOF
 						
@@ -3328,7 +3743,7 @@ function ubuntu()
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
-							clear && screenfetch && echo
+							clear && screenfetch -A "Ubuntu" && echo
 							sleep 2.4
 						EOF
 						
@@ -3419,7 +3834,7 @@ function ubuntu()
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
-							clear && screenfetch && echo
+							clear && screenfetch -A "Ubuntu" && echo
 							sleep 2.4
 						EOF
 						
@@ -3469,7 +3884,7 @@ function ubuntu()
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
-							clear && screenfetch && echo
+							clear && screenfetch -A "Ubuntu" && echo
 							sleep 2.4
 						EOF
 						
