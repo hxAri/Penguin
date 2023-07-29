@@ -57,6 +57,7 @@ List of supported linux distros.
     * XFCE
     * LXQT
     * LXDE
+    * MATE
 * Ubuntu (**Andronix**)
   * Versions
     * 22.04
