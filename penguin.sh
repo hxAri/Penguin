@@ -590,6 +590,12 @@ function readInputAction()
 							;;
 						esac
 					;;
+					4|MATE)
+						inputDesktop=mate
+						if [[ ${1,,} != "manjaro" ]]; then
+							inputDesktop=
+						fi
+					;;
 					*)
 						inputDesktop=
 					;;
@@ -2645,6 +2651,13 @@ function manjaro()
 							"lxde_de.sh"
 						)
 					;;
+					mate)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/MATE"
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+							"mate_de.sh"
+						)
+					;;
 				esac
 				
 				echo -e "\n..manjaro: desktop: setup of ${desktop^^} VNC"
@@ -2831,6 +2844,7 @@ function manjaro()
 	echo -e "          [+] XFCE"
 	echo -e "          [+] LXQT"
 	echo -e "          [+] LXDE"
+	echo -e "          [+] MATE"
 	echo -e "  $sint Actions"
 	echo -e "      [1] Install"
 	echo -e "      [2] Import"
