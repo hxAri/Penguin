@@ -2529,7 +2529,7 @@ function manjaro()
 				echo -e "\n..manjaro: manjaro.partac: downloading"
 					wget --tries=20 https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partac -O $images/manjaro/manjaro.partac
 				fi
-				#clear
+				clear
 				
 				echo -e "\n..manjaro: $rootfs: building"
 				cat $images/manjaro/manjaro.parta* > $images/$rootfs
@@ -2549,7 +2549,7 @@ function manjaro()
 						;;
 					esac
 				done
-				#clear
+				clear
 			fi
 			
 			echo -e "\n..manjaro: $folder: creating"
@@ -2576,7 +2576,7 @@ function manjaro()
 					;;
 				esac
 			done
-			#clear
+			clear
 		fi
 		
 		echo -e "..manjaro: manjaro-binds: creating"
@@ -2678,7 +2678,7 @@ function manjaro()
 					
 					# Fixing repository.
 					fix-repo
-					#clear
+					clear
 					
 					if [[ ! -f /root/${desktop}.sh ]]; then
 						echo -e "..manjaro: $desktop: ${desktop}.sh: downloading"
@@ -2687,7 +2687,7 @@ function manjaro()
 					
 					# Executing Desktop Environment Setup file..
 					bash /root/${desktop}.sh
-					#clear
+					clear
 					
 					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
 					    echo -e "\n..manjaro: vncserver-start: downloading"
@@ -2705,7 +2705,7 @@ function manjaro()
 					if [[ ! -f /usr/bin/vncserver ]]; then
 					    pacman -S tigervnc --noconfirm > /dev/null
 					fi
-					#clear
+					clear
 					
 					echo -e "..manjaro: $desktop: ${desktop}.sh: removing"
 					rm -rf /root/{desktop}.sh
@@ -2714,7 +2714,7 @@ function manjaro()
 					rm -rf /root/.bash_profile
 					
 					# Clear terminal screen.
-					#clear && echo
+					clear && echo
 					sleep 2.4
 				EOF
 				
@@ -2738,7 +2738,7 @@ function manjaro()
 					
 					# Fixing repository.
 					fix-repo
-					#clear
+					clear
 					
 					if [[ ! -f /root/${window}.sh ]]; then
 					    echo -e "..manjaro: $window: ${window}.sh: downloading"
@@ -2747,12 +2747,12 @@ function manjaro()
 					
 					# Executing Window Manager Setup file..
 					bash /root/${window}.sh
-					#clear
+					clear
 					
 					if [[ ! -f /usr/bin/vncserver ]]; then
 					    pacman -S tigervnc --noconfirm > /dev/null
 					fi
-					#clear
+					clear
 					
 					echo -e "..manjaro: $window: ${window}.sh: removing"
 					rm -rf /root/{window}.sh
@@ -2761,7 +2761,7 @@ function manjaro()
 					rm -rf /root/.bash_profile
 					
 					# Clear terminal screen.
-					#clear && echo
+					clear && echo
 					sleep 2.4
 				EOF
 				
@@ -2788,7 +2788,7 @@ function manjaro()
 		fi
 		
 		sleep 2.4
-		#clear
+		clear
 		echo -e "\n..\n..manjaro: $select: installed"
 		echo -e "..manjaro: $select: command"
 		echo -e "..manjaro: $select: manjaro $select ${params[@]}\n..\n"
