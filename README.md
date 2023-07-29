@@ -47,6 +47,16 @@ List of supported linux distros.
     * XFCE
     * LXQT
     * LXDE
+* Manjaro (**Andronix**)
+  * CLI Only
+  * Window Manager
+    * i3
+    * Openbox
+    * Awesome
+  * Desktop Environment
+    * XFCE
+    * LXQT
+    * LXDE
 * Ubuntu (**Andronix**)
   * Versions
     * 22.04
