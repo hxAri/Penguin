@@ -27,6 +27,16 @@ List of supported linux distros.
   * Desktop Environment
     * XFCE
     * LXDE
+* Debian (**Andeonix**)
+  * CLI Only
+  * Window Manager
+    * i3
+    * Openbox
+    * Awesome
+  * Desktop Environment
+    * XFCE
+    * LXQT
+    * LXDE
 * Fedora (**Andronix**)
   * CLI Only
   * Window Manager

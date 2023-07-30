@@ -1497,6 +1497,352 @@ function arch()
 # Handle Debian Actions.
 function debian()
 {
+	# Default Debian Mode for install.
+	local select=cli
+	
+	# Default Import is always empty.
+	# Because we don't know where source destination.
+	local import=
+	
+	# Default Debian Directory.
+	local source=$install/debian
+	local folder=debian-fs
+	
+	# Default Debian Executable.
+	local binary=debian
+	local launch=debian-start
+	
+	# Default Debian RootFS name.
+	local rootfs=debian-rootfs.tar.xz
+	
+	# Default Debian Window Manager.
+	local window=Awesome
+	
+	# Default Debian Environment for install.
+	local desktop=XFCE
+	
+	# Handle Building Debian Binary.
+	function debianBinary()
+	{
+		binaryBuilder "debian" $binary $launch $folder $source
+	}
+	
+	# Handle Building Debian Launcher.
+	function debianLauncher()
+	{
+		echo -e "..\n..debian: $launch: building"
+		cat > $target/$launch <<- EOM
+			#!/usr/bin/env bash
+			
+			# Change current working directory.
+			cd \$(dirname \$0)
+			
+			# Avoid termux-exec, execve() conflicts with PRoot.
+			unset LD_PRELOAD
+			
+			# Arrange command.
+			command="proot"
+			command+=" --kill-on-exit"
+			command+=" --link2symlink"
+			command+=" -0"
+			command+=" -r $target/$folder"
+			
+			if [ -n "\$(ls -A $target/debian-binds)" ]; then
+			    for f in $target/debian-binds/* ;do
+			        . \$f
+			    done
+			fi
+			
+			command+=" -b /data"
+			command+=" -b /dev"
+			command+=" -b /proc"
+			command+=" -b $target/$folder/root:/dev/shm"
+			
+			# Uncomment the following line to have
+			# access to the home directory of termux.
+			#command+=" -b $termux/files/home:/root"
+			
+			# Uncomment the following line to
+			# mount /sdcard directly to /.
+			#command+=" -b /sdcard"
+			
+			command+=" -w /root"
+			command+=" /usr/bin/env -i"
+			command+=" HOME=/root"
+			command+=" PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+			command+=" TERM=\$TERM"
+			command+=" LANG=C.UTF-8"
+			command+=" /bin/bash --login"
+			
+			if [ -z "\$1" ];then
+			    exec \$command
+			else
+			    \$command -c "\$com"
+			fi
+		EOM
+		
+		echo -e "..debian: $launch: fixing shebang"
+		termux-fix-shebang $target/$launch
+		
+		echo -e "..debian: $launch: allow executable"
+		chmod +x $target/$launch
+	}
+	
+	# Handle Debian Import.
+	function debianImport()
+	{
+		echo 0
+	}
+	
+	# Handle Debian Install.
+	function debianInstall()
+	{
+		# Resolve Debian Source Destination.
+		case $select in
+			cli) local target=$source/cli ;;
+			window) local target=$source/window/$window ;;
+			desktop) local target=$source/desktop/$desktop ;;
+			*)
+				echo -e "..debian: $select: unknown selection mode"
+				exit 1
+			;;
+		esac
+		
+		# Check if file system does not exists.
+		if [[ ! -d $target/$folder ]]; then
+			if [[ ! -f $images/$rootfs ]]; then
+				case ${architect,,} in
+					aarch64) local archurl="arm64" ;;
+					arm) local archurl="armhf" ;;
+					amd64) local archurl="amd64" ;;
+					x86_64) local archurl="amd64" ;;	
+					i*86) local archurl="i386" ;;
+					x86) local archurl="i386" ;;
+					*)
+						echo -e "..debian: $architect: unsupported architecture"
+						exit 1
+					;;
+				esac
+				echo -e "\n..debian: $rootfs: downloading"
+				wget --tries=20 "https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Debian/${archurl}/debian-rootfs-${archurl}.tar.xz?raw=true" -O $images/$rootfs
+				clear
+			fi
+			
+			echo -e "\n..debian: $folder: creating"
+			mkdir -p $target/$folder
+			
+			echo -e "..debian: $rootfs: decompressing"
+			proot --link2symlink tar -xJf $images/$rootfs --exclude=dev -C $target/$folder||:
+			
+			echo -e "..debian: $rootfs: remove [Y/n]"
+			local inputRemove=
+			while [[ $inputRemove == "" ]]; do
+				readline "debian" "remove" "Y"
+				case ${inputRemove,,} in
+					y|yes)
+						echo -e "\n..debian: $rootfs: removing"
+						rm -rf $images/$rootfs
+					;;
+					n|no) ;;
+					*)
+						inputRemove=
+					;;
+				esac
+			done
+			clear
+		fi
+		
+		echo -e "..debian: debian-binds: creating"
+		mkdir -p $target/debian-binds
+		
+		# Check if Debian binary doesn't exists.
+		if [[ ! -f $termux/files/usr/bin/$binary ]]; then
+			debianBinary
+		fi
+		
+		# Check if Debian launcher script doesn't exists.
+		if [[ ! -f $target/$launch ]]; then
+			debianLauncher
+		fi
+		
+		local params=
+		if [[ ${select,,} != "cli" ]]; then
+			if [[ ${select,,} == "desktop" ]]; then
+				local params=$desktop
+				case ${desktop,,} in
+					xfce)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
+							"xfce4_de.sh"
+						)
+					;;
+					lxqt)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT"
+							"lxqt_de.sh"
+						)
+					;;
+					lxde)
+						local rinku=(
+							"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE"
+							"lxde_de.sh"
+						)
+					;;
+				esac
+				
+				echo -e "\n..debian: desktop: setup of ${desktop^^} VNC"
+				echo -e "\n..debian: $desktop: $desktop: setup apt retry count"
+				echo "APT::Acquire::Retries \"3\";" > $target/$folder/etc/apt/apt.conf.d/80-retries
+				
+				echo -e "..debian: $desktop: ${desktop}.sh: downloading"
+				wget --tries=20 ${rinku[0]}/${rinku[1]} -O $target/$folder/root/${desktop}.sh
+				echo -e "..debian: $desktop: ${desktop}.sh: allow executable"
+				chmod +x $target/$folder/root/${desktop}.sh
+				
+				echo -e "..debian: $desktop: /:root/.bash_profile: removing"
+				rm -rf $target/$folder/root/.bash_profile
+				
+				echo -e "..debian: $desktop: /:root/.bash_profile: creating"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Updating packages.
+					apt update -y
+					
+					# Installing required packages.
+					apt install sudo nano wget bash screenfetch -y
+					clear
+					
+					if [[ ! -f /root/${desktop}.sh ]]; then
+						echo -e "..debian: $desktop: ${desktop}.sh: downloading"
+					    wget --tries=20 ${rinku[0]}/${rinku[1]} -O /root/${desktop}.sh
+					fi
+					
+					# Executing Desktop Environment Setup file..
+					bash /root/${desktop}.sh
+					clear
+					
+					if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+					    echo -e "\n..debian: vncserver-start: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
+					    
+					    echo -e "..debian: vncserver-start: allow executable"
+					    chmod +x /usr/local/bin/vncserver-start
+					fi
+					if [[ ! -f /usr/local/bin/vncserver-stop ]]; then
+					    echo -e "\n..debian: vncserver-stop: downloading"
+					    wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+					    
+					    echo -e "..debian: vncserver-stop: allow executable"
+					    chmod +x /usr/local/bin/vncserver-stop
+					fi
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    apt install tigervnc-standalone-server -y
+					fi
+					clear
+					
+					echo -e "..debian: firefox: installing"
+					apt install firefox-esr -y
+					
+					echo -e "..debian: $desktop: ${desktop}.sh: removing"
+					rm -rf /root/{desktop}.sh
+					
+					echo -e "..debian: $desktop: .bash_profile: removing"
+					rm -rf /root/.bash_profile
+					
+					# Displaying screenfetch.
+					clear && screenfetch -A "Debian" && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..debian: $desktop: /:root/.bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			elif [[ ${select,,} == "window" ]]; then
+				local params=$window
+				declare -A rinku=(
+					[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
+					[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
+				)
+				
+				echo -e "\n..debian: window: setup of ${window^} VNC"
+				echo -e "\n..debian: $window: $window: setup apt retry count"
+				echo "APT::Acquire::Retries \"3\";" > $target/$folder/etc/apt/apt.conf.d/80-retries
+				
+				echo -e "..debian: $window: ${window}.sh: downloading"
+				wget --tries=20 ${rinku[2]}/${window}.sh -O $target/$folder/root/${window}.sh
+				echo -e "..debian: $window: ${window}.sh: allow executable"
+				chmod +x $target/$folder/root/${window}.sh
+				
+				echo -e "..debian: $window: /:root/.bash_profile: removing"
+				rm -rf $target/$folder/root/.bash_profile
+				
+				echo -e "..debian: $window: /:root/.bash_profile: creating"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Updating packages.
+					apt update -y
+					
+					# Installing required packages.
+					apt install sudo nano bash wget screenfetch -y
+					clear
+					
+					if [[ ! -f /root/${window}.sh ]]; then
+					    echo -e "..debian: $window: ${window}.sh: downloading"
+					    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+					fi
+					
+					# Executing Window Manager Setup file..
+					bash /root/${window}.sh
+					clear
+					
+					if [[ ! -f /usr/bin/vncserver ]]; then
+					    apt install tigervnc-standalone-server -y
+					fi
+					clear
+					
+					echo -e "..debian: $window: ${window}.sh: removing"
+					rm -rf /root/{window}.sh
+					
+					echo -e "..debian: $window: .bash_profile: removing"
+					rm -rf /root/.bash_profile
+					
+					# Displaying screenfetch.
+					clear && screenfetch -A "Debian" && echo
+					sleep 2.4
+				EOF
+				
+				echo -e "..debian: $window: .bash_profile: allow executable"
+				chmod +x $target/$folder/root/.bash_profile
+			fi
+		fi
+		
+		sleep 2.4
+		clear
+		echo -e "\n..\n..debian: $select: installed"
+		echo -e "..debian: $select: command"
+		echo -e "..debian: $select: debian $select ${params[@]}\n..\n"
+		
+		echo -e "..debian: action: run debian [Y/n]"
+		local inputNext=
+		while [[ $inputNext == "" ]]; do
+			readline "debian" "next" "Y"
+			case ${inputNext,,} in
+				y|yes)
+					bash $termux/files/usr/bin/$binary $select ${params[@]}
+				;;
+				n|no) main ;;
+				*) inputNext= ;;
+			esac
+		done
+	}
+	
+	# Handle Debian Remove.
+	function debianRemove()
+	{
+		echo 0
+	}
+	
 	# Prints informations.
 	clear
 	echo -e

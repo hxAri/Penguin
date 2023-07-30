@@ -20,6 +20,7 @@
 installs=()
 requires=(
 	"curl"
+        "git"
 	"proot"
 	"tar"
 	"wget"
