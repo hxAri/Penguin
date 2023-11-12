@@ -2,6 +2,7 @@
 
 #
 # Penguin
+#
 # Shell utility to install Linux on Termux.
 # Please report any issues or bugs you find while using this tool.
 # If there is an outdated distro installation, or an outdated gpg key
@@ -9,10 +10,8 @@
 # self-contained, it fetches various Linux Root File System (rootfs) resources
 # from various sources, and be thankful they ever existed.
 #
-
-#
 # @author Ari Setiawan
-# @create 11.07-2023
+# @create 11.07-2023 18:21
 # @github https://github.com/hxAri/Penguin
 #
 # Penguin Copyright (c) 2023 - Ari Setiawan <hxari@proton.me>
@@ -58,8 +57,8 @@ sint="[·]"
 
 # Handle Building common Binary for execute Launch Script.
 # binaryBuilder [distro] [binary] [launch] [folder] [source]
-function binaryBuilder()
-{
+function binaryBuilder() {
+
 	local distro=$1
 	local binary=$2
 	local launch=$3
@@ -308,21 +307,18 @@ function binaryBuilder()
 }
 
 # Array joins.
-function joins()
-{
+function joins() {
 	echo $(IFS="|" ; echo "$*" )
 }
 
 # Empty block.
-function pass()
-{
+function pass() {
 	return 0
 }
 
 # Fakethings builder.
 # procFakethingBuilder [version|vmstat|stat] [destination]
-function procFakethingBuilder()
-{
+function procFakethingBuilder() {
 	if [[ $1 != "" ]]; then
 		if [[ $2 == "" ]]; then
 			echo -e "..fakething: proc destination can't empty"
@@ -468,20 +464,17 @@ function procFakethingBuilder()
 }
 
 # Prints with prefix app name.
-function puts()
-{
+function puts() {
 	echo -e "\e[1;38;5;112m${appname,,}\e[1;38;5;214m: \e[1;38;5;229m$*\e[0m"
 }
 
 # Prints standard input label.
-function stdin()
-{
+function stdin() {
 	echo -e "$(stdio stdin $@)\x20\e[1;38;5;229m\c"
 }
 
 # Prints standard input/output label.
-function stdio()
-{
+function stdio() {
 	prints=
 	if [[ $1 != "" ]]; then
 		prints="\e[1;32m$1"
@@ -509,8 +502,7 @@ function stdio()
 
 # Readline, get input from user.
 # readline [prefix] [label] [default]
-function readline()
-{
+function readline() {
 	stdin $@
 	if [[ $1 != "" ]]; then
 		if [[ $2 != "" ]]; then
@@ -549,24 +541,23 @@ function readline()
 	fi
 }
 
-# Handle readlind input Action.
+# Handle  readline input Action.
 # readInputAction [distro] [action] [version]
-function readInputAction()
-{
+function readInputAction() {
+
 	local inputAction=
 	local inputSelect=
 	local inputWindow=
 	local inputDesktop=
 	local inputVersion=
-	
+
 	# Handle readline input selection mode.
 	# readInputSelect [distro]
-	function readInputSelect()
-	{
+	function readInputSelect() {
+
 		# Handle readline input desktop environment.
 		# readInputDesktopEnv [distro]
-		function readInputDesktopEnv()
-		{
+		function readInputDesktopEnv() {
 			while [[ $inputDesktop == "" ]]; do
 				readline $1 "desktop" "XFCE"
 				inputDesktop=${inputDesktop^^}
@@ -602,11 +593,10 @@ function readInputAction()
 				esac
 			done
 		}
-		
+
 		# Handle readline input window manager.
 		# readInputWindowManager [distro]
-		function readInputWindowManager()
-		{
+		function readInputWindowManager() {
 			while [[ $inputWindow == "" ]]; do
 				readline $1 "window" "Awesome"
 				inputWindow=${inputWindow,,}
@@ -643,11 +633,21 @@ function readInputAction()
 			select=${inputSelect,,}
 		done
 	}
+
+	# Handle readline input selection mode.
+	# readInputImport [distro]
+	function readInputImport() {
+		while [[ $inputImport == "" ]]; do
+			readline $1 "import"
+			if [[ ! -f $inputImport ]]; then
+				inputImport=
+			fi
+		done
+	}
 	
 	# Handle readline input version.
 	# readInputVersion [distro] [default]
-	function readInputVersion()
-	{
+	function readInputVersion() {
 		if [[ ${1,,} == "ubuntu" ]]; then
 			while [[ $inputVersion == "" ]]; do
 				readline $1 "version" $2
@@ -687,7 +687,7 @@ function readInputAction()
 			version=$inputVersion
 		fi
 		if [[ $action == "import" ]]; then
-			readInputImport
+			readInputImport $1
 			import=$inputImport
 		fi
 		readInputSelect $1
@@ -702,8 +702,7 @@ function readInputAction()
 
 # Handle VNC Viewer Download.
 # vncViewerSetup [source]
-function vncViewerSetup()
-{
+function vncViewerSetup() {
 	if [[ $1 != "" ]]; then
 		if [[ ! -d $1 ]]; then
 			echo "vnc: $1: no such file or directory"
@@ -725,15 +724,15 @@ function vncViewerSetup()
 		chmod +x $1/usr/local/bin/vncserver-start
 		
 		echo -e "..\n..ubuntu: $version: vncserver-stop: downloading"
-		wget -q "https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/vncserver-stop" -P $1r/usr/local/bin > /dev/null
+		wget -q "https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/vncserver-stop" -P $1/usr/local/bin > /dev/null
 		echo -e "..ubuntu: $version: vncserver-stop: allow executable"
 		chmod +x $1/usr/local/bin/vncserver-stop
 	fi
 }
 
 # Handle Alpine Actions.
-function alpine()
-{
+function alpine() {
+
 	# Default Alpine Mode for install.
 	local select=cli
 	
@@ -756,14 +755,12 @@ function alpine()
 	local desktop=XFCE
 	
 	# Handle Building Alpine Binary.
-	function alpineBinary()
-	{
+	function alpineBinary() {
 		binaryBuilder "alpine" $binary $launch $folder $source
 	}
 	
 	# Handle Building Alpine Launcher.
-	function alpineLauncher()
-	{
+	function alpineLauncher() {
 		echo -e "..\n..alpine: $launch: building"
 		cat > $target/$launch <<- EOM
 			#!/usr/bin/env bash
@@ -825,14 +822,13 @@ function alpine()
 	}
 	
 	# Handle Alpine Import.
-	function alpineImport()
-	{
-		echo 0
+	function alpineImport() {
+		local target=$
 	}
 	
 	# Handle Alpine Install.
-	function alpineInstall()
-	{
+	function alpineInstall() {
+
 		# Resolve Alpine Source Destination.
 		case $select in
 			cli) local target=$source/cli ;;
@@ -1018,8 +1014,7 @@ function alpine()
 	}
 	
 	# Handle Alpine Remove.
-	function alpineRemove()
-	{
+	function alpineRemove() {
 		echo 0
 	}
 	
@@ -1060,8 +1055,8 @@ function alpine()
 }
 
 # Handle Arch Linux Actions.
-function arch()
-{
+function arch() {
+
 	# Default Arch Mode for install.
 	local select=cli
 	
@@ -1087,14 +1082,12 @@ function arch()
 	local desktop=XFCE
 	
 	# Handle Building Arch Binary.
-	function archBinary()
-	{
+	function archBinary() {
 		binaryBuilder "arch" $binary $launch $folder $source
 	}
 	
 	# Handle Building Arch Launcher.
-	function archLauncher()
-	{
+	function archLauncher() {
 		echo -e "..\n..arch: $launch: building"
 		cat > $target/$launch <<- EOM
 			#!/usr/bin/env bash
@@ -1162,14 +1155,13 @@ function arch()
 	}
 	
 	# Handle Arch Import.
-	function archImport()
-	{
+	function archImport() {
 		echo 0
 	}
 	
 	# Handle Arch Install.
-	function archInstall()
-	{
+	function archInstall() {
+
 		# Resolve Arch Source Destination.
 		case $select in
 			cli) local target=$source/cli ;;
@@ -1448,8 +1440,7 @@ function arch()
 	}
 	
 	# Handle Arch Remove.
-	function archRemove()
-	{
+	function archRemove() {
 		echo 0
 	}
 	
@@ -1495,8 +1486,8 @@ function arch()
 }
 
 # Handle Debian Actions.
-function debian()
-{
+function debian() {
+
 	# Default Debian Mode for install.
 	local select=cli
 	
@@ -1522,14 +1513,12 @@ function debian()
 	local desktop=XFCE
 	
 	# Handle Building Debian Binary.
-	function debianBinary()
-	{
+	function debianBinary() {
 		binaryBuilder "debian" $binary $launch $folder $source
 	}
 	
 	# Handle Building Debian Launcher.
-	function debianLauncher()
-	{
+	function debianLauncher() {
 		echo -e "..\n..debian: $launch: building"
 		cat > $target/$launch <<- EOM
 			#!/usr/bin/env bash
@@ -1589,14 +1578,13 @@ function debian()
 	}
 	
 	# Handle Debian Import.
-	function debianImport()
-	{
+	function debianImport() {
 		echo 0
 	}
 	
 	# Handle Debian Install.
-	function debianInstall()
-	{
+	function debianInstall() {
+
 		# Resolve Debian Source Destination.
 		case $select in
 			cli) local target=$source/cli ;;
@@ -1838,8 +1826,7 @@ function debian()
 	}
 	
 	# Handle Debian Remove.
-	function debianRemove()
-	{
+	function debianRemove() {
 		echo 0
 	}
 	
@@ -1885,8 +1872,8 @@ function debian()
 }
 
 # Handle Fedora Actions.
-function fedora()
-{
+function fedora() {
+
 	# Default Fedora Mode for install.
 	local select=cli
 	
@@ -1912,14 +1899,12 @@ function fedora()
 	local desktop=XFCE
 	
 	# Handle Building Fedora Binary.
-	function fedoraBinary()
-	{
+	function fedoraBinary() {
 		binaryBuilder "fedora" $binary $launch $folder $source
 	}
 	
 	# Handle Building Fedora Launcher.
-	function fedoraLauncher()
-	{
+	function fedoraLauncher() {
 		echo -e "..\n..fedora: $launch: building"
 		cat > $target/$launch <<- EOM
 			#!/usr/bin/env bash
@@ -1978,14 +1963,13 @@ function fedora()
 	}
 	
 	# Handle Fedora Import.
-	function fedoraImport()
-	{
+	function fedoraImport() {
 		echo 0
 	}
 	
 	# Handle Fedora Install.
-	function fedoraInstall()
-	{
+	function fedoraInstall() {
+
 		# Resolve Fedora Source Destination.
 		case $select in
 			cli) local target=$source/cli ;;
@@ -2257,8 +2241,7 @@ function fedora()
 	}
 	
 	# Handle Fedora Remove.
-	function fedoraRemove()
-	{
+	function fedoraRemove() {
 		echo 0
 	}
 	
@@ -2306,8 +2289,8 @@ function fedora()
 }
 
 # Handle Kali Actions.
-function kali()
-{
+function kali() {
+
 	# Default Kali Mode for install.
 	local select=cli
 	
@@ -2333,14 +2316,12 @@ function kali()
 	local desktop=XFCE
 	
 	# Handle Building Kali Binary.
-	function kaliBinary()
-	{
+	function kaliBinary() {
 		binaryBuilder "kali" $binary $launch $folder $source
 	}
 	
 	# Handle Building Kali Launcher.
-	function kaliLauncher()
-	{
+	function kaliLauncher() {
 		echo -e "..\n..kali: $launch: building"
 		cat > $target/$launch <<- EOM
 			#!/usr/bin/env bash
@@ -2400,14 +2381,13 @@ function kali()
 	}
 	
 	# Handle Kali Import.
-	function kaliImport()
-	{
+	function kaliImport() {
 		echo 0
 	}
 	
 	# Handle Kali Install.
-	function kaliInstall()
-	{
+	function kaliInstall() {
+
 		# Resolve Kali Source Destination.
 		case $select in
 			cli) local target=$source/cli ;;
@@ -2699,8 +2679,7 @@ function kali()
 	}
 	
 	# Handle Kali Remove.
-	function kaliRemove()
-	{
+	function kaliRemove() {
 		echo 0
 	}
 	
@@ -2747,8 +2726,8 @@ function kali()
 }
 
 # Handle Manjaro Actions.
-function manjaro()
-{
+function manjaro() {
+
 	# Default Manjaro Mode for install.
 	local select=cli
 	
@@ -2774,14 +2753,12 @@ function manjaro()
 	local desktop=XFCE
 	
 	# Handle Building Manjaro Binary.
-	function manjaroBinary()
-	{
+	function manjaroBinary() {
 		binaryBuilder "manjaro" $binary $launch $folder $source
 	}
 	
 	# Handle Building Manjaro Launcher.
-	function manjaroLauncher()
-	{
+	function manjaroLauncher() {
 		echo -e "..\n..manjaro: $launch: building"
 		cat > $target/$launch <<- EOM
 			#!/usr/bin/env bash
@@ -2843,14 +2820,13 @@ function manjaro()
 	}
 	
 	# Handle Manjaro Import.
-	function manjaroImport()
-	{
+	function manjaroImport() {
 		echo 0
 	}
 	
 	# Handle Manjaro Install.
-	function manjaroInstall()
-	{
+	function manjaroInstall() {
+
 		# Resolve Manjaro Source Destination.
 		case $select in
 			cli) local target=$source/cli ;;
@@ -3167,8 +3143,7 @@ function manjaro()
 	}
 	
 	# Handle Manjaro Remove.
-	function manjaroRemove()
-	{
+	function manjaroRemove() {
 		echo 0
 	}
 	
@@ -3216,22 +3191,22 @@ function manjaro()
 }
 
 # Handle Nethunter Actions.
-function nethunter()
-{
+function nethunter() {
+
 	# This functionality does not implemented at this time.
 	echo 0
 }
 
 # Handle Parrot Actions.
-function parrot()
-{
+function parrot() {
+
 	# This functionality does not implemented at this time.
 	echo 0
 }
 
 # Handle Ubuntu Actions.
-function ubuntu()
-{
+function ubuntu() {
+
 	# Default Ubuntu Mode for install.
 	local select=cli
 	
@@ -3257,8 +3232,7 @@ function ubuntu()
 	local version=22.04
 	
 	# Handle Building Ubuntu Binary.
-	function ubuntuBinary()
-	{
+	function ubuntuBinary() {
 		echo -e "..\n..ubuntu: /:bin/$binary: building"
 		cat <<- EOF > $termux/files/usr/bin/${binary}
 			#!/usr/bin/env bash
@@ -3484,8 +3458,7 @@ function ubuntu()
 	}
 	
 	# Handle Building Ubuntu Launcher.
-	function ubuntuLauncher()
-	{
+	function ubuntuLauncher() {
 		if [[ $1 != "" ]]; then
 			if [[ ! -d $1 ]]; then
 				echo -e "\n..ubuntu: $1: no such file or directory"
@@ -3676,15 +3649,15 @@ function ubuntu()
 	}
 	
 	# Handle Ubuntu Import.
-	function ubuntuImport()
-	{
+	function ubuntuImport() {
+
 		# Ubuntu Install Source Destination.
 		local source=$target/$version
 	}
 	
 	# Handle Ubuntu Install.
-	function ubuntuInstall()
-	{
+	function ubuntuInstall() {
+
 		# Default Ubuntu Install Source Destination.
 		local source=$target/$version
 		
@@ -4286,8 +4259,8 @@ function ubuntu()
 	}
 	
 	# Handle Ubuntu Remove.
-	function ubuntuRemove()
-	{
+	function ubuntuRemove() {
+
 		# Default Ubuntu Install Source Destination.
 		local source=$target/$version
 		local params=
@@ -4318,8 +4291,9 @@ function ubuntu()
 		ubuntu
 	}
 	
-	# Prints Ubuntu informations.
 	clear
+
+	# Prints Ubuntu informations.
 	echo -e
 	echo -e "$(stdio stdout ubuntu)"
 	echo -e "  $sint Distro Ubuntu"
@@ -4365,10 +4339,10 @@ function ubuntu()
 }
 
 # Handle Void Actions.
-function voidx()
-{
-	# Prints informations.
+function voidx() {
 	clear
+
+	# Prints informations.
 	echo -e
 	echo -e "$(stdio stdout void)"
 	echo -e "  $sint Distro Void"
@@ -4410,13 +4384,15 @@ function voidx()
 }
 
 # Main Program.
-function main()
-{
+function main() {
+
 	clear
 	
+	# Prints informations.
 	echo -e
 	echo -e "$(stdio stdout main)"
 	echo -e "  $sint $appname v$version"
+	echo -e "  [i] Architect ${architect^^}"
 	echo -e "  [i] Author $author"
 	echo -e "  [i] E-Mail $author_email"
 	echo -e "  [i] Github $github"
@@ -4462,8 +4438,61 @@ function main()
 	done
 }
 
-# Trying make directory for save downloaded rootfs.
-mkdir -p $images
+# Check if program doest not run in termux.
+if [[ -d $termux ]]; then
 
-# Starting main program.
-main
+	# Trying make directory for save downloaded rootfs.
+	mkdir -p $images
+
+	# Starting main program.
+	main
+else
+
+	clear
+
+	echo -e
+	echo -e "$(stdio stdout penguin)"
+	echo -e "  $sint $appname v$version"
+	echo -e "      No such file or directory ${termux}"
+	echo -e "      Do you want to change the main directoy [Y/n]"
+	echo -e
+
+	inputChange=
+	inputChange=/self/personal/temporary
+	while [[ $inputChange == "" ]]; do
+		readline "directory" "change"
+		if [[ ${inputChange,,} == "y" ]]; then
+			inputDirectory=
+			while [[ $inputDirectory == "" ]]; do
+				readline "source" "directory"
+				if [[ $inputDirectory == "" ]]; then
+					continue
+				elif [[ -d $inputDirectory ]]; then
+
+					# Update Termux directory.
+					termux=$inputDirectory
+
+					# Update Installation directory.
+					install=$termux/linux
+
+					# Update Rootfs Images stored.
+					images=$install/.rootfs
+
+					break
+				fi
+				inputDirectory=
+			done
+			break
+		elif [[ ${inputChange,,} == "n" ]]; then
+			echo && exit 0
+		else
+			inputChange=
+		fi
+	done
+	
+	# Trying make directory for save downloaded rootfs.
+	mkdir -p $images
+
+	# Starting main program.
+	main
+fi
