@@ -1,0 +1,5 @@
+
+# Avoid some sensitif file
+termux/
+termux/*
+transfer
