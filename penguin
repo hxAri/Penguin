@@ -167,6 +167,8 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
+
+	# Handle Arch Distro Actions.
 	function archDistro() {
 		
 		# Default Arch Mode for install.
@@ -177,7 +179,7 @@ function distro() {
 		local import=
 		
 		# Default Arch Directory.
-		local source=$install/arch
+		local target=$install/arch
 		local folder=arch-fs
 		
 		# Default Arch Executable.
@@ -225,26 +227,96 @@ function distro() {
 			;;
 			import|install) distroInstall ;;
 		esac
-		
 	}
+
+	# Handle Debian Distro Actions.
 	function debianDistro() {
-		pass
+		
+		# Default Debian Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+		
+		# Default Debian Directory.
+		local target=$install/debian
+		local folder=debian-fs
+		
+		# Default Debian Executable.
+		local binary=debian
+		local launch=debian-start
+		
+		# Default Debian Environment for install.
+		local desktop=XFCE
+
+		# Default Debian Window Manager.
+		local window=Awesome
+
+		# Default Ubuntu Version for install.
+		# local version=10.00
+
+		logo
+		echo -e "$(stdio stdout debian)"
+		puts "  $sint Distro Debian"
+		puts "  $sint Developer The Debian"
+		puts "  $sint Available Versions"
+		puts "      [+] Debian v10.00"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Window Manager"
+		puts "          [+] Awesome"
+		puts "          [+] Openbox"
+		puts "          [+] i3"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "          [+] LXQT"
+		puts "          [+] LXDE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+		distroInputAction "debian" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "debian" $binary "cli" ;;
+					desktop) distroRemove "debian" $binary "desktop" $desktop ;;
+					window) distroRemove "debian" $binary "window" $window ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
 	}
+
+	# Handle Fedora Distro Actions.
 	function fedoraDistro() {
 		pass
 	}
+
+	# Handle Kali Distro Actions.
 	function kaliDistro() {
 		pass
 	}
+
+	# Handle Manjaro Distro Actions.
 	function manjaroDistro() {
 		pass
 	}
+
+	# Handle Nethunter Distro Actions.
 	function nethunterDistro() {
 		pass
 	}
+
+	# Handle Parrot Distro Actions.
 	function parrotDistro() {
 		pass
 	}
+
+	# Handle Ubuntu Distro Actions.
 	function ubuntuDistro() {
 
 		# Default Ubuntu Mode for install.
@@ -307,9 +379,12 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
+	
+	# Handle Void Distro Actions.
 	function voidDistro() {
 		pass
 	}
+
 	if [[ $1 != "" ]]; then
 		case ${1,,} in
 			alpine) alpineDistro ;;
@@ -581,8 +656,8 @@ function distroInstall() {
 					exit 1
 				;;
 			esac
-			rootfs="alpine-rootfs-${archname}.${version}.tar.gz"
-			archive="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Alpine/${archname}/alpine-minirootfs-${version}-${archname}.tar.gz?raw=true"
+			rootfs="alpine-rootfs-${archname}.tar.gz"
+			archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Alpine/${archname}/alpine-minirootfs-${version}-${archname}.tar.gz?raw=true"
 		;;
 		arch)
 			if [[ $version != "" && $version != "2021.07.01" ]]; then
@@ -598,9 +673,27 @@ function distroInstall() {
 				;;
 			esac
 			rootfs="arch-rootfs-${archname}.tar.gz"
-			archive="http://os.archlinuxarm.org/os/ArchLinuxARM-${archname}-latest.tar.gz"
+			archurl="http://os.archlinuxarm.org/os/ArchLinuxARM-${archname}-latest.tar.gz"
 		;;
 		debian)
+			if [[ $version != "" && $version != "10.00" ]]; then
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+			case ${architect,,} in
+				aarch64) archname="arm64" ;;
+				arm) archname="armhf" ;;
+				amd64) archname="amd64" ;;
+				x86_64) archname="amd64" ;;	
+				i*86) archname="i386" ;;
+				x86) archname="i386" ;;
+				*)
+					echo -e "$(stdio stderr $distro $version $architect)\n"
+					exit 1
+				;;
+			esac
+				rootfs="debian-rootfs-${archname}.tar.gz"
+				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Debian/${archname}/debian-rootfs-${archname}.tar.xz?raw=true"
 		;;
 		fedora)
 		;;
@@ -736,6 +829,7 @@ function main() {
 	local inputAnswer=
 	local inputQuest=
 	if [[ ! -d $termux ]]; then
+		architect="aarch64"
 		inputAnswer=/self/temporary/termux
 		if [[ ! -d $inputAnswer ]]; then
 			logo
@@ -789,7 +883,7 @@ function penguin() {
 	logo
 	echo "$(stdio stdout penguin)"
 	puts "  $sint $appname v$pversion"
-	puts "  [i] Arch ${architect^^}"
+	puts "  [i] Arch ${architect^}"
 	puts "  [i] Whoami $whoami"
 	puts "  [i] Author $author"
 	puts "  [i] E-Mail $author_email"
