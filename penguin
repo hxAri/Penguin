@@ -93,6 +93,13 @@ declare -A windows=(
 # Square bracket with interpunch.
 sint="[·]"
 
+# Dependency requirements.
+dependencies=(
+	curl
+	proot
+	wget
+)
+
 # Current user previlleges
 whoami=$(whoami)
 
@@ -196,7 +203,7 @@ function distro() {
 		# local version=2021.07.01
 
 		logo
-		echo -e "$(stdio stdout arch)"
+		echo -e "$(stdio stdout distro arch)"
 		puts "  $sint Distro Arch Linux"
 		puts "  $sint Developer Lavente Polyak and others"
 		puts "  $sint Available Versions"
@@ -253,11 +260,11 @@ function distro() {
 		# Default Debian Window Manager.
 		local window=Awesome
 
-		# Default Ubuntu Version for install.
+		# Default Debian Version for install.
 		# local version=10.00
 
 		logo
-		echo -e "$(stdio stdout debian)"
+		echo -e "$(stdio stdout distro debian)"
 		puts "  $sint Distro Debian"
 		puts "  $sint Developer The Debian"
 		puts "  $sint Available Versions"
@@ -293,27 +300,194 @@ function distro() {
 
 	# Handle Fedora Distro Actions.
 	function fedoraDistro() {
-		pass
+		
+		# Default Fedora Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+
+		# Identify if distro is parta.
+		local onpart=true
+		
+		# Default Fedora Directory.
+		local target=$install/fedora
+		local folder=fedora-fs
+		
+		# Default Fedora Executable.
+		local binary=fedora
+		local launch=fedora-start
+		
+		# Default Fedora Environment for install.
+		local desktop=XFCE
+		
+		# Default Fedora Window Manager.
+		local window=Awesome
+
+		# Default Fedora Version for install.
+		# local version=33
+
+		logo
+		echo -e "$(stdio stdout distro fedora)"
+		puts "  $sint Distro Fedora"
+		puts "  $sint Developer Fedora Project"
+		puts "  $sint Available Versions"
+		puts "      [+] Fedora v33"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Window Manager"
+		puts "          [+] Awesome"
+		puts "          [+] Openbox"
+		puts "          [+] i3"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "          [+] LXQT"
+		puts "          [+] LXDE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+		distroInputAction "fedora" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "fedora" $binary "cli" ;;
+					desktop) distroRemove "fedora" $binary "desktop" $desktop ;;
+					window) distroRemove "fedora" $binary "window" $window ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
 	}
 
 	# Handle Kali Distro Actions.
 	function kaliDistro() {
-		pass
+		
+		# Default Kali Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+		
+		# Default Kali Directory.
+		local target=$install/kali
+		local folder=kali-fs
+		
+		# Default Kali Executable.
+		local binary=kali
+		local launch=kali-start
+
+		# Default Kali Environment for install.
+		local desktop=XFCE
+		
+		# Default Kali Window Manager.
+		local window=Awesome
+
+		# Default Kali Version for install.
+		# local version=21.2
+		
+		logo
+		echo -e "$(stdio stdout distro kali)"
+		puts "  $sint Distro Kali Linux"
+		puts "  $sint Developer Offensive Security"
+		puts "  $sint Available Versions"
+		puts "      [+] Kali Linux v21.2"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Window Manager"
+		puts "          [+] Awesome"
+		puts "          [+] Openbox"
+		puts "          [+] i3"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "          [+] LXQT"
+		puts "          [+] LXDE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+		distroInputAction "kali" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "kali" $binary "cli" ;;
+					desktop) distroRemove "kali" $binary "desktop" $desktop ;;
+					window) distroRemove "kali" $binary "window" $window ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
 	}
 
 	# Handle Manjaro Distro Actions.
 	function manjaroDistro() {
-		pass
+		
+		# Default Manjaro Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+
+		# Identify if distro is parta.
+		local onpart=true
+		
+		# Default Manjaro Directory.
+		local target=$install/manjaro
+		local folder=manjaro-fs
+		
+		# Default Manjaro Executable.
+		local binary=manjaro
+		local launch=manjaro-start
+		
+		# Default Manjaro Environment for install.
+		local desktop=XFCE
+		
+		# Default Manjaro Window Manager.
+		local window=Awesome
+
+		# Default Manjaro Version for install.
+		# local version=21
+
+		logo
+		echo "$(stdio stdout manjaro)"
+		puts "  $sint Distro Manjaro"
+		puts "  $sint Developer Manjaro GmbH & Co. KG"
+		puts "  $sint Available Versions"
+		puts "      [+] Manjaro v21"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Window Manager"
+		puts "          [+] Awesome"
+		puts "          [+] Openbox"
+		puts "          [+] i3"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "          [+] LXQT"
+		puts "          [+] LXDE"
+		puts "          [+] MATE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+
 	}
 
 	# Handle Nethunter Distro Actions.
 	function nethunterDistro() {
-		pass
+		penguin
 	}
 
 	# Handle Parrot Distro Actions.
 	function parrotDistro() {
-		pass
+		penguin
 	}
 
 	# Handle Ubuntu Distro Actions.
@@ -344,7 +518,7 @@ function distro() {
 		local version=22.04
 		
 		logo
-		echo -e "$(stdio stdout ubuntu)"
+		echo -e "$(stdio stdout distro ubuntu)"
 		puts "  $sint Distro Ubuntu"
 		puts "  $sint Developer Canonical"
 		puts "  $sint Available Versions"
@@ -382,7 +556,28 @@ function distro() {
 	
 	# Handle Void Distro Actions.
 	function voidDistro() {
-		pass
+		
+		logo
+		echo "$(stdio stdout void)"
+		puts "  $sint Distro Void"
+		puts "  $sint Developer Void Linux Team"
+		puts "  $sint Available Versions"
+		puts "      [+] Void Rolling Release"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Window Manager"
+		puts "          [+] Awesome"
+		puts "          [+] Openbox"
+		puts "          [+] i3"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "          [+] LXQT"
+		puts "          [+] LXDE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
 	}
 
 	if [[ $1 != "" ]]; then
@@ -696,10 +891,49 @@ function distroInstall() {
 				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Debian/${archname}/debian-rootfs-${archname}.tar.xz?raw=true"
 		;;
 		fedora)
+			if [[ $version != "" && $version != "33" ]]; then
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+			archurl=(
+				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partaa"
+				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partab"
+			)
 		;;
 		kali)
+			if [[ $version != "" && $version != "21.2" ]]; then
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+			case ${architect,,} in
+				aarch64) archname="arm64" ;;
+				arm) archname="armhf" ;;
+				amd64) archname="amd64" ;;
+				x86_64) archname="amd64" ;;	
+				i*86) archname="i386" ;;
+				x86) archname="i386" ;;
+				*)
+					echo -e "$(stdio stderr $distro $version $architect)\n"
+					exit 1
+				;;
+			esac
+			rootfs="kali-rootfs-${archname}.tar.xz"
+			if [[ $archname == "arm64" ]]; then
+				archurl="https://github.com/AndronixApp/AndronixOrigin/releases/download/kali-arm64-tarball/kali-rootfs-arm64.tar.xz"
+			else
+				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Kali/${archname}/kali-rootfs-${archname}.tar.xz?raw=true"
+			fi
 		;;
 		manjaro)
+			if [[ $version != "" && $version != "21" ]]; then
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+			archurl=(
+				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partaa"
+				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partab"
+				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partac"
+			)
 		;;
 		nethunter)
 		;;
@@ -827,7 +1061,41 @@ function logo() {
 # Main application.
 function main() {
 	local inputAnswer=
+	local inputInstall=
 	local inputQuest=
+	for dependency in ${dependencies[@]}; do
+		if ! which $dependency >/dev/null; then
+			logo
+			echo "$(stdio stderr required installed $dependency)"
+			while [[ $inputAsk == "" ]]; do
+				readline "main" "install" "Y"
+				if [[ ${inputInstall,,} == "y" ]]; then
+					if which tsu >/dev/null; then
+						tsu pkg install $dependency
+						if [[ $? -ne 0 ]]; then
+							echo -e "$(stdio stderr main tsu error)\n"
+							exit 1
+						fi
+					elif which sudo >/dev/null; then
+						sudo apt install $dependency
+						if [[ $? -ne 0 ]]; then
+							echo -e "$(stdio stderr main sudo error)\n"
+							exit 1
+						fi
+					else
+						pkg install $dependency
+						if [[ $? -ne 0 ]]; then
+							echo -e "$(stdio stderr main failed install)\n"
+							exit 1
+						fi
+					fi
+				else
+					echo -e "$(stdio stderr main aborted)\n"
+					exit 1
+				fi
+			done
+		fi
+	done
 	if [[ ! -d $termux ]]; then
 		architect="aarch64"
 		inputAnswer=/self/temporary/termux
