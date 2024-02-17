@@ -1,0 +1,931 @@
+#!/usr/bin/env bash
+
+#
+# Penguin
+#
+# Shell utility to install Linux on Termux.
+# Please report any issues or bugs you find while using this tool.
+# If there is an outdated distro installation, or an outdated gpg key
+# it is purely not this script's fault because, this tool is not completely
+# self-contained, it fetches various Linux Root File System (rootfs) resources
+# from various sources, and be thankful they ever existed.
+#
+# @author Ari Setiawan
+# @create 11.07-2023 18:21
+# @github https://github.com/hxAri/Penguin
+#
+# Penguin Copyright (c) 2023 - Ari Setiawan <hxari@proton.me>
+# Penguin Licence under GNU General Public Licence v3
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+
+
+# Application name.
+appname=Penguin
+
+# Application author.
+author="Ari Setiawan (hxAri)"
+author_email="hxari@proton.me"
+
+# Application version.
+pversion=1.0.0
+
+# Application repository.
+github=https://github.com/hxAri/$appname
+issues=https://github.com/hxAri/$appname/issues
+
+# Termux directory.
+termux=/data/data/com.termux
+
+# Installation directory.
+install=/data/data/com.termux/linux
+
+# Rootfs Images stored.
+images=$install/.rootfs
+
+# Termux architecture.
+architect=$(dpkg --print-architecture)
+
+declare -A architects=(
+	[alpine-3.10]=
+	[arch-2021.07.01]=
+	[debian-10.00]=
+	[fedora-33]=
+	[kali-21.2]="aarch64;arm64;arm;amd64;x86_64;amd64;i*86;i386;x86"
+	[manjaro-21]=
+	[nethunter-]="arm64-v8a;arm64;armeabi;armeabi-v7a;armhf"
+	[parrot]="amd64;arm64;armhf;i386"
+	[ubuntu]=
+	[void]=
+)
+declare -A desktops=(
+	[alpine-3.10]="xfce"
+	[arch-2021.07.01]="xfce;lxde"
+	[debian-10.00]="xfce;lxqt;lxde"
+	[fedora-33]="xfce;lxqt;lxde"
+	[kali-21.2]="xfce;lxqt;lxde"
+	[manjaro-21]="xfce;lxqt;lxde;mate"
+	[nethunter]=
+	[parrot]=
+	[ubuntu]="xfce;lxqt;lxde"
+	[void]="xfce;lxqt;lxde"
+)
+declare -A windows=(
+	[alpine-3.10]=
+	[arch-2021.07.01]="awesome;openbox;i3"
+	[debian-10.00]="awesome;openbox;i3"
+	[fedora-33]="awesome;openbox;i3"
+	[kali-21.2]="awesome;openbox;i3"
+	[manjaro-21]="awesome;openbox;i3"
+	[nethunter]=
+	[parrot]=
+	[ubuntu-22.04]="awesome;openbox;i3"
+	[void]="awesome;openbox;i3"
+)
+
+# Square bracket with interpunch.
+sint="[·]"
+
+# Current user previlleges
+whoami=$(whoami)
+
+
+# For compatibility system.
+if ! which puts >/dev/null; then
+	function puts() {
+		echo -e "\xb[0m$@"
+	}
+fi
+
+
+# Handle disto action.
+# distro [distro-name]
+function distro() {
+
+	# Set distro by parameter.
+	local distro=${1,,}
+
+	# Handle Alpine Distro Actions.
+	function alpineDistro() {
+		
+		# Default Alpine Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+		
+		# Default Alpine Directory.
+		local target=$install/alpine
+		local folder=alpine-fs
+		
+		# Default Alpine Executable.
+		local binary=alpine
+		local launch=alpine-start
+		
+		# Default Alpine Environment for install.
+		local desktop=XFCE
+
+		# Default Alpine Window Manager.
+		local window=Awesome
+
+		# Default Alpine Version for install.
+		# local version=3.10.3
+		
+		logo
+		echo "$(stdio stdout distro alpine)"
+		puts "  $sint Distro Alpine"
+		puts "  $sint Developer Alpine Linux Development Team"
+		puts "  $sint Available Versions"
+		puts "      [+] Alpine v3.10.3"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+		distroInputAction "alpine" "install"
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "alpine" $binary "cli" ;;
+					desktop) distroRemove "alpine" $binary "desktop" $desktop ;;
+					window) distroRemove "alpine" $binary "window" $window ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
+	}
+	function archDistro() {
+		
+		# Default Arch Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+		
+		# Default Arch Directory.
+		local source=$install/arch
+		local folder=arch-fs
+		
+		# Default Arch Executable.
+		local binary=arch
+		local launch=arch-start
+
+		# Default Arch Environment for install.
+		local desktop=XFCE
+		
+		# Default Arch Window Manager.
+		local window=Awesome
+		
+		# Default Ubuntu Version for install.
+		# local version=2021.07.01
+
+		logo
+		echo -e "$(stdio stdout arch)"
+		puts "  $sint Distro Arch Linux"
+		puts "  $sint Developer Lavente Polyak and others"
+		puts "  $sint Available Versions"
+		puts "      [+] Arch Linux v2021.07.01"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Window Manager"
+		puts "          [+] Awesome"
+		puts "          [+] Openbox"
+		puts "          [+] i3"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "          [+] LXDE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+		distroInputAction "arch" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "arch" $binary "cli" ;;
+					desktop) distroRemove "arch" $binary "desktop" $desktop ;;
+					window) distroRemove "arch" $binary "window" $window ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
+		
+	}
+	function debianDistro() {
+		pass
+	}
+	function fedoraDistro() {
+		pass
+	}
+	function kaliDistro() {
+		pass
+	}
+	function manjaroDistro() {
+		pass
+	}
+	function nethunterDistro() {
+		pass
+	}
+	function parrotDistro() {
+		pass
+	}
+	function ubuntuDistro() {
+
+		# Default Ubuntu Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+		
+		# Default Ubuntu Directory.
+		local target=$install/ubuntu
+		local folder=ubuntu-fs
+		
+		# Default Ubuntu Executable.
+		local binary=ubuntu
+		local launch=ubuntu-start
+		
+		# Default Ubuntu Environment for install.
+		local desktop=XFCE
+		
+		# Default Ubuntu Window Manager for install.
+		local window=Awesome
+		
+		# Default Ubuntu Version for install.
+		local version=22.04
+		
+		logo
+		echo -e "$(stdio stdout ubuntu)"
+		puts "  $sint Distro Ubuntu"
+		puts "  $sint Developer Canonical"
+		puts "  $sint Available Versions"
+		puts "      [+] Ubuntu v22.04"
+		puts "      [+] Ubuntu v20.04"
+		puts "      [+] Ubuntu v18.04"
+		puts "  $sint Available Install"
+		puts "      [+] CLI Only"
+		puts "      [+] Window Manager"
+		puts "          [+] Awesome"
+		puts "          [+] Openbox"
+		puts "          [+] i3"
+		puts "      [+] Desktop Environment"
+		puts "          [+] XFCE"
+		puts "          [+] LXQT"
+		puts "          [+] LXDE"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+		distroInputAction "ubuntu" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "ubuntu" $binary "cli" $version;;
+					desktop) distroRemove "ubuntu" $binary "desktop" $desktop $version ;;
+					window) distroRemove "ubuntu" $binary "window" $window $version ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
+	}
+	function voidDistro() {
+		pass
+	}
+	if [[ $1 != "" ]]; then
+		case ${1,,} in
+			alpine) alpineDistro ;;
+			arch) archDistro ;;
+			debian) debianDistro ;;
+			fedora) fedoraDistro ;;
+			kali) kaliDistro ;;
+			manjaro) manjaroDistro ;;
+			nethunter) nethunterDistro ;;
+			parrot) parrotDistro ;;
+			ubuntu) ubuntuDistro ;;
+			void) voidDistro ;;
+			*)
+				echo -e "$(stdio stderr distro unknown $1)\n"
+				exit 1
+			;;
+		esac
+	else
+		echo -e "$(stdio stderr distro required)\n"
+		exit 1
+	fi
+}
+
+# Handle readline distro input Action.
+# distroInputAction [distro] [action] [version]
+function distroInputAction() {
+
+	local inputAction=
+	local inputSelect=
+	local inputWindow=
+	local inputDesktop=
+	local inputVersion=
+
+	# Handle readline distro input selection mode.
+	# distroInputSelect [distro]
+	function distroInputSelect() {
+
+		# Handle readline distro input desktop environment.
+		# distroInputDesktopEnv [distro]
+		function distroInputDesktopEnv() {
+			while [[ $inputDesktop == "" ]]; do
+				readline $1 "desktop" "XFCE"
+				inputDesktop=${inputDesktop^^}
+				case $inputDesktop in
+					1|XFCE)
+						inputDesktop=xfce
+					;;
+					2|LXQT)
+						inputDesktop=lxqt
+						case ${1,,} in
+							alpine|arch)
+								inputDesktop=
+							;;
+						esac
+					;;
+					3|LXDE)
+						inputDesktop=lxde
+						case ${1,,} in
+							alpine)
+								inputDesktop=
+							;;
+						esac
+					;;
+					4|MATE)
+						inputDesktop=mate
+						if [[ ${1,,} != "manjaro" ]]; then
+							inputDesktop=
+						fi
+					;;
+					*)
+						inputDesktop=
+					;;
+				esac
+			done
+		}
+
+		# Handle readline distro input window manager.
+		# distroInputWindowManager [distro]
+		function distroInputWindowManager() {
+			while [[ $inputWindow == "" ]]; do
+				readline $1 "window" "Awesome"
+				inputWindow=${inputWindow,,}
+				case $inputWindow in
+					1|awesome) inputWindow=awesome ;;
+					2|openbox) inputWindow=openbox ;;
+					3|i3) inputWindow=i3 ;;
+					*) inputDesktop= ;;
+				esac
+			done
+		}
+		
+		while [[ $inputSelect == "" ]]; do
+			readline $1 "select" "cli"
+			inputSelect=${inputSelect,,}
+			case $inputSelect in
+				1|cli) inputSelect=cli ;;
+				2|window)
+					inputSelect=window
+					if [[ ${1,,} != "alpine" ]]; then
+						distroInputWindowManager $1 $3
+						window=$inputWindow
+					else
+						inputSelect=
+					fi
+				;;
+				3|desktop)
+					inputSelect=desktop
+					distroInputDesktopEnv $1 $3
+					desktop=$inputDesktop
+				;;
+				*) inputSelect= ;;
+			esac
+			select=${inputSelect,,}
+		done
+	}
+
+	# Handle readline distro input selection mode.
+	# distroInputImport [distro]
+	function distroInputImport() {
+		while [[ $inputImport == "" ]]; do
+			readline $1 "import"
+			if [[ ! -f $inputImport ]]; then
+				inputImport=
+			fi
+		done
+		distroInputSelect $1
+	}
+	
+	# Handle readline distro input version.
+	# distroInputVersion [distro] [default]
+	function distroInputVersion() {
+		if [[ ${1,,} == "ubuntu" ]]; then
+			while [[ $inputVersion == "" ]]; do
+				readline $1 "version" $2
+				case $inputVersion in
+					1|22|22.04) inputVersion=22.04 ;;
+					2|20|20.04) inputVersion=20.04 ;;
+					3|18|18.04) inputVersion=18.04 ;;
+					*)
+						inputVersion=
+						continue
+					;;
+				esac
+				version=$inputVersion
+			done
+		fi
+	}
+	
+	puts
+	stdio stdin $1 action
+	while [[ $inputAction == "" ]]; do
+		readline $1 "action" $2
+		case ${inputAction,,} in
+			1|install) action=install ;;
+			2|import) action=import ;;
+			3|remove) action=remove ;;
+			4|cancel) action=cancel ;;
+			*)
+				inputAction=
+				continue
+			;;
+		esac
+	done
+	if [[ $action != "cancel" ]]; then
+		if [[ ${1,,} == "ubuntu" ]]; then
+			distroInputVersion $1 $3
+			version=$inputVersion
+		fi
+		if [[ $action == "import" ]]; then
+			distroInputImport $1
+			import=$inputImport
+		fi
+		distroInputSelect $1
+		select=$inputSelect
+		if [[ $select == "window" ]]; then
+			window=$inputWindow
+		elif [[ $select == "desktop" ]]; then
+			desktop=$inputDesktop
+		fi
+	fi
+}
+
+# Handle distro install.
+function distroInstall() {
+
+	# Distro Install Source Destination.
+	local target=
+
+	# Distro RootFS name based on version number.
+	local rootfs=
+
+	# Distro Archive download url.
+	local archive=
+	local archurl=
+	local archname=
+
+	if [[ $distro == "" ]]; then
+		echo -e "$(stdio stderr distro required)\n"
+		exit 1
+	elif [[ $version != "" ]]; then
+		target=$source/$version
+		rootfs=$distro-rootfs.$version.tar.gz
+	else
+		target=$source
+		rootfs=$distro-rootfs.tar.gz
+	fi
+
+	case ${select,,} in
+		cli) local target=$source/cli ;;
+		desktop)
+			local exists=
+			local target=$source/desktop/$desktop
+			if [[ ${desktops[$distro]} != "" ]]; then
+				case ${desktop,,} in
+					xfce) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 1) ;;
+					lxde) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 2) ;;
+					lxqt) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 3) ;;
+					mate) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 4) ;;
+				esac
+				if [[ $exists == "" ]]; then
+					echo -e "$(stdio stderr $distro $desktop)\n"
+					exit 1
+				fi
+			else
+				echo -e "$(stdio stderr $distro $select)\n"
+				exit 1
+			fi
+		;;
+		desktop)
+			local exists=
+			local target=$source/window/$window
+			if [[ ${windows[$distro]} != "" ]]; then
+				case ${window,,} in
+					xfce) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 1) ;;
+					lxde) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 2) ;;
+					lxqt) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 3) ;;
+					mate) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 4) ;;
+				esac
+				if [[ $exists == "" ]]; then
+					echo -e "$(stdio stderr $distro $window)\n"
+					exit 1
+				fi
+			else
+				echo -e "$(stdio stderr $distro $select)\n"
+				exit 1
+			fi
+		;;
+		*)
+			echo -e "$(stdio stderr unknown mode $select)\n"
+			exit 1
+		;;
+	esac
+	
+	case ${distro,,} in
+		alpine)
+			if [[ $version != "" && $version != "3.10.3" ]]; then
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+			case ${architect,,} in
+				aarch64) archname="aarch64" ;;
+				arm) archname="armhf" ;;
+				amd64) archname="x86_64" ;;
+				x86_64) archname="x86_64" ;;	
+				i*86) archname="x86" ;;
+				x86) archname="x86" ;;
+				*)
+					echo -e "$(stdio stderr $distro $version $architect)\n"
+					exit 1
+				;;
+			esac
+			rootfs="alpine-rootfs-${archname}.${version}.tar.gz"
+			archive="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Alpine/${archname}/alpine-minirootfs-${version}-${archname}.tar.gz?raw=true"
+		;;
+		arch)
+			if [[ $version != "" && $version != "2021.07.01" ]]; then
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+			case ${architect,,} in
+				aarch64) archname="aarch64" ;;
+				arm) archname="armv7" ;;
+				*)
+					echo -e "$(stdio stderr $distro $version $architect)\n"
+					exit 1
+				;;
+			esac
+			rootfs="arch-rootfs-${archname}.tar.gz"
+			archive="http://os.archlinuxarm.org/os/ArchLinuxARM-${archname}-latest.tar.gz"
+		;;
+		debian)
+		;;
+		fedora)
+		;;
+		kali)
+		;;
+		manjaro)
+		;;
+		nethunter)
+		;;
+		parrot)
+		;;
+		ubuntu)
+			archname="arm64"
+			if [[ $version == 22.04 ]]; then
+				if [[ ${architect,,} != aarch64 ]]; then
+					echo -e "$(stdio stderr $distro $version $architect)\n"
+					exit 1
+				fi
+				rootfs="ubuntu-rootfs-${archname}.${version}.tar.gz"
+				archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu22/jammy-${archname}.tar.gz"
+			elif [[ $version == 20.03 ]]; then
+				case ${architect,,} in
+					aarch64) archname="arm64" ;;
+					arm) archname="armhf" ;;
+					amd64) archname="amd64" ;;
+					x86_64) archname="amd64" ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+				rootfs="ubuntu-rootfs-${archname}.${version}.tar.gz"
+				archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu20/focal-${archname}.tar.gz"
+			elif [[ $version == 18.04 ]]; then
+				case ${architect,,} in
+					aarch64) archname="arm64" ;;
+					arm) archname="armhf" ;;
+					amd64) archname="amd64" ;;
+					x86_64) archname="amd64" ;;
+					i*86) archname="i386" ;;
+					x86) archname="i386" ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+				rootfs="ubuntu-rootfs-${archname}.${version}.tar.xz"
+				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Ubuntu/${archname}/ubuntu-rootfs-${archname}.tar.xz?raw=true"
+			else
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+		;;
+		void)
+		;;
+		*)
+			echo -e "$(stdio stderr unknown distro $distro)\n"
+			exit 1
+		;;
+	esac
+	puts $rootfs
+	puts $archurl
+	puts $archive
+}
+
+# Handle distro remove installation.
+# distroRemove [distro] [binary] [mode] [desktop|window] [version]
+function distroRemove() {
+	local inputAsk=
+	local pathname=
+	if [[ $3 == "cli" ]]; then
+		if [[ $5 != "" ]]; then
+			pathname=$source/$5/cli
+		else
+			pathname=$source/cli
+		fi
+	elif [[ $3 == "desktop" ]]; then
+		if [[ $5 != "" ]]; then
+			pathname=$source/$5/desktop/${4,,}
+		else
+			pathname=$source/desktop/${4,,}
+		fi
+	elif [[ $3 == "window" ]]; then
+		if [[ $5 != "" ]]; then
+			pathname=$source/$5/window/${4,,}
+		else
+			pathname=$source/window/${4,,}
+		fi
+	else
+		echo -e "$(stdio stderr mode unknown $3)\n"
+		exit 1
+	fi
+	logo
+	echo "$(stdio stdout remove ${1^})"
+	puts "  $sint Deletion of ${1^}"
+	puts "  [?] Do you want to delete the binary executable [Y/n]"
+	puts 
+	readline $1 "ask" "Y"
+	if [[ ${inputAsk,,} == "y" ]]; then
+		if [[ -f $termux/files/usr/bin/$2 ]]; then
+			rm $termux/files/usr/bin/$2
+			if [[ $? -eq 0 ]]; then
+				echo "$(stdio stdout removed $termux/files/usr/bin/$2)"
+			else
+				echo "$(stdio stderr failed remove $termux/files/usr/bin/$2)"
+			fi
+		else
+			echo "$(stdio stderr none $termux/files/usr/bin/$2)"
+		fi
+	fi
+	if [[ -d $pathname ]]; then
+		rm -rf $pathname
+		if [[ $? -eq 0 ]]; then
+			echo "$(stdio stdout removed $pathname)"
+		else
+			echo "$(stdio stderr failed remove $pathname)"
+		fi
+	else
+		echo "$(stdio stderr none $pathname)"
+	fi
+	stdin $1 "back"
+	read inputBack
+}
+
+# Display application logo.
+function logo() {
+	clear
+	puts ""
+}
+
+# Main application.
+function main() {
+	local inputAnswer=
+	local inputQuest=
+	if [[ ! -d $termux ]]; then
+		inputAnswer=/self/temporary/termux
+		if [[ ! -d $inputAnswer ]]; then
+			logo
+			echo "$(stdio stdout main)"
+			puts "  $sint $appname v$version"
+			puts "      No such file or directory ${termux}"
+			puts "      Do you want to change the main directoy [Y/n]"
+			puts
+			while [[ $inputQuest == "" ]]; do
+				readline "main" "quest" "Y"
+				inputQuest=${inputQuest,,}
+				if [[ $inputQuest == "y" ]]; then
+					inputAnswer=
+					while [[ $inputAnswer == "" ]]; do
+						readline "main" "source"
+						if [[ $inputAnswer == "" ]]; then
+							continue
+						elif [[ -d $inputAnswer ]]; then
+							termux=$inputAnswer
+							install=$termux/linux
+							images=$install/.rootfs
+							break
+						fi
+						inputAnswer=
+					done
+					break
+				elif [[ $inputQuest == "n" ]]; then
+					echo -e "$(stdio stderr main aborted)\n"
+					exit 1
+				else
+					inputQuest=
+				fi
+			done
+		else
+			termux=$inputAnswer
+			install=$termux/linux
+			images=$install/.rootfs
+		fi
+	fi
+	mkdir -p $images
+	penguin
+}
+
+# Empty block function
+function pass() {
+	return 0
+}
+
+# Display all available Linux Distros
+function penguin() {
+	logo
+	echo "$(stdio stdout penguin)"
+	puts "  $sint $appname v$pversion"
+	puts "  [i] Arch ${architect^^}"
+	puts "  [i] Whoami $whoami"
+	puts "  [i] Author $author"
+	puts "  [i] E-Mail $author_email"
+	puts "  [i] Github $github"
+	puts "  [!] Issues $issues"
+	puts "  [+] Distro"
+	puts "      [1] Alpine"
+	puts "      [2] Arch Linux"
+	puts "      [3] Debian"
+	puts "      [4] Fedora"
+	puts "      [5] Kali Linux"
+	puts "      [6] Manjaro"
+	puts "      [7] Parrot OS"
+	puts "      [8] Ubuntu"
+	puts "      [9] Void"
+	puts
+	local iter=1
+	local keysets=()
+	local inputDistro=
+	while [[ $inputDistro == "" ]]; do
+		readline "penguin" "distro"
+		inputDistro=${inputDistro,,}
+		case $inputDistro in
+			alpine|arch|debian|fedora|kali|manjaro|parrot|ubuntu|void)
+				distro $inputDistro;
+				break
+			;;
+			1|2|3|4|5|6|7|8|9)
+				case $inputDistro in
+					1) inputDistro=alpine ;;
+					2) inputDistro=arch ;;
+					3) inputDistro=debian ;;
+					4) inputDistro=fedora ;;
+					5) inputDistro=kali ;;
+					6) inputDistro=manjaro ;;
+					7) inputDistro=parrot ;;
+					8) inputDistro=ubuntu ;;
+					9) inputDistro=void ;;
+				esac
+				distro $inputDistro;
+				break
+			;;
+			0|exit)
+				echo -e "$(stdio stdout penguin closed)\n"
+				exit 0
+			;;
+			*)
+				inputDistro=
+			;;
+		esac
+	done
+}
+
+# Readline, get input from user.
+# readline [prefix] [label] [default]
+function readline() {
+	stdin $@
+	if [[ $1 != "" ]]; then
+		if [[ $2 != "" ]]; then
+			read input
+			if [[ $3 != "" ]]; then
+				if [[ $input == "" ]]; then
+					input=$3
+				fi
+			fi
+			if [[ $input != "" ]]; then
+				eval "input${2^}=$input"
+				echo -e "\x20\x20\c"
+				echo -e "\e[1;32mstdin\c"
+				echo -e "\e[1;38;5;70m<\c"
+				echo -e "\e[1;38;5;112m$2\c"
+				echo -e "\e[1;38;5;70m<\c"
+				echo -e "\e[1;38;5;120m$input\c"
+				echo -e "\e[1;38;5;70m>>"
+			fi
+		else
+			read input
+			if [[ $input != "" ]]; then
+				echo -e "\x20\x20\c"
+				echo -e "\e[1;32mstdin\c"
+				echo -e "\e[1;38;5;70m<\c"
+				echo -e "\e[1;38;5;112m$1\c"
+				echo -e "\e[1;38;5;70m<\c"
+				echo -e "\e[1;38;5;120m$input\c"
+				echo -e "\e[1;38;5;70m>>\c"
+			fi
+		fi
+	else
+		read input
+		echo -e "\x20\x20\c"
+		echo -e "\e[1;32mstdio\c"
+		echo -e "\e[1;38;5;70m<"
+		echo -e "\e[1;38;5;112min\c"
+		echo -e "\e[1;38;5;214m:\c"
+		echo -e "\e[1;38;5;70m=\c"
+		echo -e "\e[1;38;5;20m$input\c"
+		echo -e "\e[1;38;5;70m>"
+	fi
+}
+
+# Prints standard input label.
+# stdin [label] [label] [value]
+function stdin() {
+	echo -e "$(stdio stdin $@)\x20\e[1;38;5;229m\c"
+}
+
+# Prints standard input/output label.
+# stdio [i/o] [label] [label] [value]
+function stdio() {
+	prints=
+	prefix="\e[1;32m"
+	if [[ $1 != "" ]]; then
+		if [[ ${1,,} == "stderr" ]]; then
+			prefix="\e[1;31m"
+		fi
+		prints="${prefix}$1"
+		if [[ $2 != "" ]]; then
+			prints+="\e[1;38;5;70m<"
+			prints+="\e[1;38;5;112m$2"
+			prints+="\e[1;38;5;70m>"
+			if [[ $3 != "" ]]; then
+				prints="${prefix}$1"
+				prints+="\e[1;38;5;70m<"
+				prints+="\e[1;38;5;112m$2"
+				prints+="\e[1;38;5;70m<"
+				prints+="\e[1;38;5;190m$3"
+				if [[ $4 != "" ]]; then
+					prints+="\e[1;38;5;214m:"
+					prints+="\e[1;38;5;70m="
+					prints+="\e[1;38;5;120m$4"
+				fi
+				prints+="\e[1;38;5;70m>>"
+			fi
+		fi
+		echo -e "\x20\x20$prints\e[0m"
+	fi
+}
+
+main
