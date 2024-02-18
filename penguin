@@ -65,28 +65,52 @@ declare -A architects=(
 	[ubuntu]=
 	[void]=
 )
+# declare -A desktops=(
+# 	[alpine-3.10]="xfce"
+# 	[arch-2021.07.01]="xfce;lxde"
+# 	[debian-10.00]="xfce;lxqt;lxde"
+# 	[fedora-33]="xfce;lxqt;lxde"
+# 	[kali-21.2]="xfce;lxqt;lxde"
+# 	[manjaro-21]="xfce;lxqt;lxde;mate"
+# 	[nethunter]=
+# 	[parrot]=
+# 	[ubuntu]="xfce;lxqt;lxde"
+# 	[void]="xfce;lxqt;lxde"
+# )
 declare -A desktops=(
-	[alpine-3.10]="xfce"
-	[arch-2021.07.01]="xfce;lxde"
-	[debian-10.00]="xfce;lxqt;lxde"
-	[fedora-33]="xfce;lxqt;lxde"
-	[kali-21.2]="xfce;lxqt;lxde"
-	[manjaro-21]="xfce;lxqt;lxde;mate"
+	[alpine]="xfce"
+	[arch]="xfce;lxde"
+	[debian]="xfce;lxqt;lxde"
+	[fedora]="xfce;lxqt;lxde"
+	[kali]="xfce;lxqt;lxde"
+	[manjaro]="xfce;lxqt;lxde;mate"
 	[nethunter]=
 	[parrot]=
 	[ubuntu]="xfce;lxqt;lxde"
 	[void]="xfce;lxqt;lxde"
 )
+# declare -A windows=(
+# 	[alpine-3.10]=
+# 	[arch-2021.07.01]="awesome;openbox;i3"
+# 	[debian-10.00]="awesome;openbox;i3"
+# 	[fedora-33]="awesome;openbox;i3"
+# 	[kali-21.2]="awesome;openbox;i3"
+# 	[manjaro-21]="awesome;openbox;i3"
+# 	[nethunter]=
+# 	[parrot]=
+# 	[ubuntu-22.04]="awesome;openbox;i3"
+# 	[void]="awesome;openbox;i3"
+# )
 declare -A windows=(
-	[alpine-3.10]=
-	[arch-2021.07.01]="awesome;openbox;i3"
-	[debian-10.00]="awesome;openbox;i3"
-	[fedora-33]="awesome;openbox;i3"
-	[kali-21.2]="awesome;openbox;i3"
-	[manjaro-21]="awesome;openbox;i3"
+	[alpine]=
+	[arch]="awesome;openbox;i3"
+	[debian]="awesome;openbox;i3"
+	[fedora]="awesome;openbox;i3"
+	[kali]="awesome;openbox;i3"
+	[manjaro]="awesome;openbox;i3"
 	[nethunter]=
 	[parrot]=
-	[ubuntu-22.04]="awesome;openbox;i3"
+	[ubuntu]="awesome;openbox;i3"
 	[void]="awesome;openbox;i3"
 )
 
@@ -95,8 +119,11 @@ sint="[·]"
 
 # Dependency requirements.
 dependencies=(
+	cat
 	curl
+	cut
 	proot
+	tar
 	wget
 )
 
@@ -477,7 +504,18 @@ function distro() {
 		puts "      [2] Import"
 		puts "      [3] Remove"
 		puts "      [4] Cancel"
-
+		distroInputAction "manjaro" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "manjaro" $binary "cli" ;;
+					desktop) distroRemove "manjaro" $binary "desktop" $desktop ;;
+					window) distroRemove "manjaro" $binary "window" $window ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
 	}
 
 	# Handle Nethunter Distro Actions.
@@ -600,6 +638,1294 @@ function distro() {
 	else
 		echo -e "$(stdio stderr distro required)\n"
 		exit 1
+	fi
+}
+
+# Handle fix distro acrhive url.
+# distroArchive [distro-name]
+function distroArchive() {
+	local distro=$1
+	if [[ ! -f $import ]]; then
+		case ${distro,,} in
+			alpine)
+				if [[ $version != "" && $version != "3.10.3" ]]; then
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+				case ${architect,,} in
+					aarch64) archname="aarch64" ;;
+					arm) archname="armhf" ;;
+					amd64) archname="x86_64" ;;
+					x86_64) archname="x86_64" ;;	
+					i*86) archname="x86" ;;
+					x86) archname="x86" ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+				rootfs="alpine-rootfs-${archname}.tar.gz"
+				archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Alpine/${archname}/alpine-minirootfs-${version}-${archname}.tar.gz?raw=true"
+			;;
+			arch)
+				if [[ $version != "" && $version != "2021.07.01" ]]; then
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+				case ${architect,,} in
+					aarch64) archname="aarch64" ;;
+					arm) archname="armv7" ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+				rootfs="arch-rootfs-${archname}.tar.gz"
+				archurl="http://os.archlinuxarm.org/os/ArchLinuxARM-${archname}-latest.tar.gz"
+			;;
+			debian)
+				if [[ $version != "" && $version != "10.00" ]]; then
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+				case ${architect,,} in
+					aarch64) archname="arm64" ;;
+					arm) archname="armhf" ;;
+					amd64) archname="amd64" ;;
+					x86_64) archname="amd64" ;;	
+					i*86) archname="i386" ;;
+					x86) archname="i386" ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+					rootfs="debian-rootfs-${archname}.tar.gz"
+					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Debian/${archname}/debian-rootfs-${archname}.tar.xz?raw=true"
+			;;
+			fedora)
+				if [[ $version != "" && $version != "33" ]]; then
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+				if [[ ${architect,,} == "aarch64" ]]; then
+					declare -A archurl=(
+						[partaa]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partaa"
+						[partab]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partab"
+					)
+				else
+					case ${architect,,} in
+						arm) archname="armhf" ;;
+						amd64) archname="amd64" ;;
+						x86_64) archname="amd64" ;;
+						*)
+							echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+						;;
+					esac
+					rootfs=rootfs="fedora-rootfs-${archname}.tar.gz"
+					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Fedora/${archname}/fedora-rootfs-${archname}.tar.xz?raw=true"
+				fi
+			;;
+			kali)
+				if [[ $version != "" && $version != "21.2" ]]; then
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+				case ${architect,,} in
+					aarch64) archname="arm64" ;;
+					arm) archname="armhf" ;;
+					amd64) archname="amd64" ;;
+					x86_64) archname="amd64" ;;	
+					i*86) archname="i386" ;;
+					x86) archname="i386" ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+				rootfs="kali-rootfs-${archname}.tar.xz"
+				if [[ $archname == "arm64" ]]; then
+					archurl="https://github.com/AndronixApp/AndronixOrigin/releases/download/kali-arm64-tarball/kali-rootfs-arm64.tar.xz"
+				else
+					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Kali/${archname}/kali-rootfs-${archname}.tar.xz?raw=true"
+				fi
+			;;
+			manjaro)
+				if [[ $version != "" && $version != "21" ]]; then
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+				declare -A archurl=(
+					[partaa]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partaa"
+					[partab]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partab"
+					[partac]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partac"
+				)
+			;;
+			nethunter) ;;
+			parrot) ;;
+			ubuntu)
+				archname="arm64"
+				if [[ $version == 22.04 ]]; then
+					if [[ ${architect,,} != aarch64 ]]; then
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					fi
+					rootfs="ubuntu-rootfs-${archname}.${version}.tar.gz"
+					archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu22/jammy-${archname}.tar.gz"
+				elif [[ $version == 20.03 ]]; then
+					case ${architect,,} in
+						aarch64) archname="arm64" ;;
+						arm) archname="armhf" ;;
+						amd64) archname="amd64" ;;
+						x86_64) archname="amd64" ;;
+						*)
+							echo -e "$(stdio stderr $distro $version $architect)\n"
+							exit 1
+						;;
+					esac
+					rootfs="ubuntu-rootfs-${archname}.${version}.tar.gz"
+					archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu20/focal-${archname}.tar.gz"
+				elif [[ $version == 18.04 ]]; then
+					case ${architect,,} in
+						aarch64) archname="arm64" ;;
+						arm) archname="armhf" ;;
+						amd64) archname="amd64" ;;
+						x86_64) archname="amd64" ;;
+						i*86) archname="i386" ;;
+						x86) archname="i386" ;;
+						*)
+							echo -e "$(stdio stderr $distro $version $architect)\n"
+							exit 1
+						;;
+					esac
+					rootfs="ubuntu-rootfs-${archname}.${version}.tar.xz"
+					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Ubuntu/${archname}/ubuntu-rootfs-${archname}.tar.xz?raw=true"
+				else
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+			;;
+			void) ;;
+			*)
+				echo -e "$(stdio stderr unknown distro $distro)\n"
+				exit 1
+			;;
+		esac
+		if [[ ! -f ${images}/${distro}/${rootfs} ]]; then
+			if [[ $onpart ]]; then
+				for part in ${!archurl[@]}; do
+					if [[ ! -f ${images}/${distro}/${distro}.${part} ]]; then
+						echo -e "$(stdio stdout downloading ${distro}.${part})"
+						wget -qO- --tries=20 "${archurl[$part]}" --show-progress --progress=bar:force:noscroll -O "${images}/${distro}/${distro}.${part}"
+						if [[ $? -ne 0 ]]; then
+							echo -e "$(stdio stderr download distro ${images}/${distro}/${distro}.${part})\n"
+							exit 1
+						fi
+					fi
+				done
+				echo "$(stdio stdout building $distro $rootfs)"
+				cat ${images}/${distro}/${distro}.parta* > $images/$rootfs
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr building $distro $rootfs)\n"
+					exit 1
+				fi
+				for part in ${!archurl[@]}; do
+					inputRemove=
+					readline "remove" ${distro}/${distro}.${part} "Y"
+					if [[ ${inputRemove,,} == "y" ]]; then
+						rm ${images}/${distro}/${distro}.${part}
+						if [[ $? -ne 0 ]]; then
+							echo -e "$(stdio stderr remove ${distro}/${distro}.${part})\n"
+							readline "remove" "skip" "Y"
+							if [[ ${inputSkip,,} == "n" ]]; then
+								echo -e "$(stdio stderr remove aborted)\n"
+								exit 1
+							fi
+						fi
+					fi
+				done
+			else
+				echo -e "$(stdio stdout downloading $rootfs)"
+				wget -qO- --tries=20 "$archurl" --show-progress --progress=bar:force:noscroll -O "${images}/${distro}/${rootfs}"
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr download distro ${images}/${distro}/${rootfs})\n"
+					exit 1
+				fi
+			fi
+		fi
+	else
+		rootfs=$import
+	fi
+}
+
+# Handle building distro binary executable.
+# distroBinary [distro-name] [binary] [launch] [folder] [source]
+function distroBinary() {
+	pass
+}
+
+# Handle fix distro configuration.
+# distroConfig [distro-name]
+function distroConfig() {
+	local distro=$1
+	local params=
+	local inputSkip=
+	case ${distro,,} in
+		alpine)
+			
+			echo "$(stdio stdout $distro creating /:etc/fstab)"
+			echo "" > $source/$folder/etc/fstab
+			
+			echo "$(stdio stdout $distro removing /:etc/resolv.conf)"
+			rm -rf $source/$folder/etc/resolv.conf
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr remove $folder/etc/resolv.conf)"
+				inputRemove=
+				readline "remove" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr remove aborted)\n"
+					exit 1
+				fi
+			fi
+			
+			echo "$(stdio stdout $distro creating /:etc/resolf.conf)"
+			echo "nameserver 8.8.8.8" > $source/$folder/etc/resolv.conf
+			
+			echo "$(stdio stdout $distro updating)"
+			bash $source/$launch apk update
+
+			echo "$(stdio stdout $distro installing bash)"
+			bash $source/$launch apk add --no-cache bash
+			
+			echo "$(stdio stdout $distro seding /:etc/passwd)"
+			sed -i "s/ash/bash/g" $source/$folder/etc/passwd
+			
+			echo "$(stdio stdout $distro seding $launch)"
+			sed -i "s/bin\/sh/bin\/bash/g" $source/$launch
+			
+			if [[ ${select,,} == "desktop" ]]; then
+				params=$desktop
+				echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+				rm -rf $source/$folder/root/.bash_profile
+				if [[ $? -ne 0 ]]; then
+					echo "$(stdio stderr remove $folder/:root/.bash_profile)"
+					inputRemove=
+					readline "remove" "skip" "Y"
+					if [[ ${inputSkip,,} == "n" ]]; then
+						echo -e "$(stdio stderr remove aborted)\n"
+						exit 1
+					fi
+				fi
+				echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+				cat <<- EOF > $target/$folder/root/.bash_profile
+					#!/usr/bin/env bash
+					
+					# Downloading Desktop Environment Setup file.
+					wget https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Alpine/alpine-${desktop,,}.sh -O /root/${desktop,,}.sh
+					
+					# Executing Desktop Environment Setup file..
+					bash /root/${desktop,,}.sh
+					
+					# Removing Desktop Environment Setup file.
+					echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+					rm -rf /root/${desktop,,}.sh
+					
+					clear
+				EOF
+				echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+				chmod +x $target/$folder/root/.bash_profile
+			fi
+			sleep 2.4
+		;;
+		arch)
+			echo "$(stdio stdout $distro downloading resolv.conf)"
+			wget "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/resolv.conf" -P $target/$folder/root
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr download resolv.conf)"
+				inputRemove=
+				readline "download" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr download aborted)\n"
+					exit 1
+				fi
+			fi
+			
+			echo "$(stdio stdout $distro downloading additional.sh)"
+			wget "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/additional.sh" -P $target/$folder/root
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr download additional.sh)"
+				inputRemove=
+				readline "download" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr download aborted)\n"
+					exit 1
+				fi
+			fi
+			
+			if [[ -d $source/$folder/proc ]]; then
+				chmod 755 $source/$folder/proc
+				mkdir -p $source/$folder/proc/fakethings
+				if [[ $? -ne 0 ]]; then
+					echo "$(stdio stderr makedir $folder/proc/fakethings)"
+					inputRemove=
+					readline "makedir" "skip" "Y"
+					if [[ ${inputSkip,,} == "n" ]]; then
+						echo -e "$(stdio stderr makedir aborted)\n"
+						exit 1
+					fi
+				fi
+				if [[ ! -f $source/$folder/proc/fakethings/version ]]; then
+					distroProcVersion $source/$folder
+				fi
+				if [[ ! -f $source/$folder/proc/fakethings/vmstat ]]; then
+					distroProcVmstat $source/$folder
+				fi
+				if [[ ! -f $source/$folder/proc/fakethings/stat ]]; then
+					distroProcStat $source/$folder
+				fi
+			fi
+
+			echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+			rm -rf $source/$folder/root/.bash_profile
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr remove $folder/:root/.bash_profile)"
+				inputRemove=
+				readline "remove" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr remove aborted)\n"
+					exit 1
+				fi
+			fi
+
+			case ${select,,} in
+				cli)
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Executing additional script.
+						bash /root/additional.sh
+						clear
+						
+						echo -e "$(stdio stdout $distro removing additional.sh)"
+						rm -rf /root/additional.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+					EOF
+				;;
+				desktop)
+					params=$desktop
+					case ${desktop,,} in
+						xfce)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/XFCE4"
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+								"xfce4_de.sh"
+							)
+						;;
+						lxqt)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXQT"
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+								"lxqt_de.sh"
+							)
+						;;
+						lxde)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXDE"
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+								"lxde_de.sh"
+							)
+						;;
+					esac
+					
+					echo "$(stdio stdout $distro desktop setup)"
+					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
+					wget --tries=20 ${rinku[1]}/${rinku[2]} -O $source/$folder/root/${desktop}.sh
+					
+					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+					chmod +x $source/$folder/root/${desktop}.sh
+
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Executing additional script.
+						bash /root/additional.sh
+						clear
+						
+						echo -e "..arch: additional.sh: removing"
+						rm -rf /root/additional.sh
+						
+						# Installing required packages.
+						pacman -Syyuu --noconfirm && pacman -S wget sudo screenfetch --noconfirm 
+						clear
+						
+						if [[ ! -f /root/${desktop}.sh ]]; then
+							echo -e "$(stdio stdout $distro downlaoding ${desktop}.sh)"
+							wget --tries=20 ${rinku[1]}/${rinku[2]} -O /root/${desktop}.sh
+						fi
+						
+						# Executing Desktop Environment Setup file..
+						bash /root/${rinku[1]}.sh
+						clear
+						
+						if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+							echo -e "$(stdio stdout $distro downloading vncserver-start)"
+							wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro chmod+x vncserver-start)"
+							chmod +x /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro downloading vncserver-stop)"
+							wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+							
+							echo -e "$(stdio stdout $distro chmod+x vncserver-stop)"
+							chmod +x /usr/local/bin/vncserver-stop
+						fi
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							pacman -S tigervnc --noconfirm > /dev/null
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro installing firefox)"
+						pacman -S firefox --noconfirm
+						
+						echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+						rm -rf /root/${desktop}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Arch Linux" && echo
+						sleep 2.4
+					EOF
+				;;
+				window)
+					params=$window
+					declare -A rinku=(
+						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman"
+						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/Pacman"
+					)
+					
+					echo "$(stdio stdout $distro window setup)"
+					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
+					wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
+					
+					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+					chmod +x $source/$folder/root/${window}.sh
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Executing additional script.
+						bash /root/additional.sh
+						clear
+						
+						echo -e "$(stdio stdout $distro removing additional.sh)"
+						rm -rf /root/additional.sh
+						
+						# Installing required packages.
+						pacman -Syyuu --noconfirm && pacman -S wget sudo screenfetch --noconfirm
+						clear
+						
+						if [[ ! -f /root/${window}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${window}.sh)"
+							wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+						fi
+						
+						# Executing Window Manager Setup file..
+						bash /root/${window}.sh
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							pacman -S tigervnc --noconfirm > /dev/null
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro removing ${window}.sh)"
+						rm -rf /root/${window}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Arch Linux" && echo
+						sleep 2.4
+					EOF
+				;;
+			esac
+			echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+			chmod +x $target/$folder/root/.bash_profile
+			sleep 2.4
+		;;
+		debian)
+			case ${select,,} in
+				cli) ;;
+				desktop)
+					params=$desktop
+					case ${desktop,,} in
+						xfce)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
+								"xfce4_de.sh"
+							)
+						;;
+						lxqt)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT"
+								"lxqt_de.sh"
+							)
+						;;
+						lxde)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE"
+								"lxde_de.sh"
+							)
+						;;
+					esac
+					
+					echo "$(stdio stdout $distro desktop setup)"
+					echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+					
+					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
+					wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
+					
+					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+					chmod +x $source/$folder/root/${desktop}.sh
+					
+					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+					rm -rf $source/$folder/root/.bash_profile
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr remove $folder/:root/.bash_profile)"
+						inputRemove=
+						readline "remove" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr remove aborted)\n"
+							exit 1
+						fi
+					fi
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Updating packages.
+						apt update -y
+						
+						# Installing required packages.
+						apt install sudo nano wget bash screenfetch -y
+						clear
+						
+						if [[ ! -f /root/${desktop}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
+							wget -qO- --tries=20 "${rinku[0]}/${rinku[1]}" --show-progress --progress=bar:force:noscroll -O /root/${desktop}.sh
+						fi
+						
+						# Executing Desktop Environment Setup file..
+						bash /root/${desktop}.sh
+						clear
+						
+						if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+							echo -e "$(stdio stdout $distro downloading vncserver-start)"
+							wget -qO- --tries=20 ${rinku[0]}/vncserver-start --show-progress --progress=bar:force:noscroll -O /usr/local/bin/vncserver-start
+							echo -e "$(stdio stdout $distro chmod+x vncserver-start)"
+							chmod +x /usr/local/bin/vncserver-start
+						fi
+						if [[ ! -f /usr/local/bin/vncserver-stop ]]; then
+							echo -e "$(stdio stdout $distro downloading vncserver-stop)"
+							wget -qO- --tries=20 ${rinku[0]}/vncserver-stop --show-progress --progress=bar:force:noscroll -O /usr/local/bin/vncserver-stop
+							echo -e "$(stdio stdout $distro chmod+x vncserver-stop)"
+							chmod +x /usr/local/bin/vncserver-stop
+						fi
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							apt install tigervnc-standalone-server -y
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro installing firefox)"
+						apt install firefox-esr -y
+						
+						echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+						rm -rf /root/${desktop}.sh
+
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Debian" && echo
+						sleep 2.4
+					EOF
+					
+					echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+					chmod +x $target/$folder/root/.bash_profile
+				;;
+				window)
+					params=$window
+					declare -A rinku=(
+						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
+						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
+					)
+					
+					echo "$(stdio stdout $distro window setup)"
+					echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+					
+					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
+					wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${window}.sh
+
+					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+					chmod +x $source/$folder/root/${window}.sh
+					
+					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+					rm -rf $source/$folder/root/.bash_profile
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr remove $folder/:root/.bash_profile)"
+						inputRemove=
+						readline "remove" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr remove aborted)\n"
+							exit 1
+						fi
+					fi
+
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Updating packages.
+						apt update -y
+						
+						# Installing required packages.
+						apt install sudo nano bash wget screenfetch -y
+						clear
+						
+						if [[ ! -f /root/${window}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${window}.sh)"
+							wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O /root/${window}.sh
+						fi
+						
+						# Executing Window Manager Setup file..
+						bash /root/${window}.sh
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							apt install tigervnc-standalone-server -y
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro removing ${window.sh})"
+						rm -rf /root/${window}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Debian" && echo
+						sleep 2.4
+					EOF
+					
+					echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+					chmod +x $target/$folder/root/.bash_profile
+				;;
+			esac
+			sleep 2.4
+		;;
+		fedora)
+			case ${archurl,,} in
+				armhf|amd64|amd64)
+					echo "$(stdio stdout $distro setting server)"
+					echo "$(stdio stdout $distro creating /:etc/hosts)"
+					echo "127.0.0.1 localhost" > $source/$folder/etc/hosts
+					echo "$(stdio stdout $distro creating /:etc/resolv.conf)"
+					echo "nameserver 8.8.8.8" > $source/$folder/etc/resolv.conf
+					echo "nameserver 8.8.4.4" >> $target/$folder/etc/resolv.conf
+				;;
+			esac
+			case ${select,,} in
+				cli) ;;
+				desktop)
+					params=$desktop
+					case ${desktop,,} in
+						xfce)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Fedora/XFCE4"
+								"xfce4_de.sh"
+							)
+						;;
+						lxqt)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Fedora/LXQT"
+								"lxqt_de.sh"
+							)
+						;;
+						lxde)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Fedora/LXDE"
+								"lxde_de.sh"
+							)
+						;;
+					esac
+					
+					echo "$(stdio stdout $distro desktop setup)"
+					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
+					wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
+
+					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+					chmod +x $source/$folder/root/${desktop}.sh
+					
+					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+					rm -rf $source/$folder/root/.bash_profile
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Installing required packages.
+						yum install wget screenfetch -y
+						clear
+
+						if [[ ! -f /root/${desktop}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
+							wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O /root/${desktop}.sh
+						fi
+						
+						# Executing Desktop Environment Setup file..
+						bash /root/${desktop}.sh
+						clear
+						
+						if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+							echo -e "$(stdio stdout $distro downloading vncviewer-start)"
+							wget -qO- --tries=20 ${rinku[0]}/vncserver-start --show-progress --progress=bar:force:noscroll -O /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro chmod+x vncviewer-start)"
+							chmod +x /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro downloading vncviewer-stop)"
+							wget -qO- --tries=20 ${rinku[0]}/vncserver-stop --show-progress --progress=bar:force:noscroll -O /usr/local/bin/vncserver-stop
+							
+							echo -e "$(stdio stdout $distro chmod+x vncviewer-stop)"
+							chmod +x /usr/local/bin/vncserver-stop
+						fi
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							yum install tigervnc-server -y
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro installing firefox)"
+						yum install firefox -y
+						
+						echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+						rm -rf /root/${desktop}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Fedora" && echo
+						sleep 2.4
+					EOF
+					
+					echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+					chmod +x $source/$folder/root/.bash_profile
+				;;
+				window)
+					params=$window
+					declare -A rinku=(
+						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/DNF"
+						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/DNF"
+					)
+					
+					echo "$(stdio stdout $distro window setup)"
+					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
+					wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll  -O $source/$folder/root/${window}.sh
+
+					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+					chmod +x $source/$folder/root/${window}.sh
+					
+					echo "$(stdio stdout $distro creating /:root/.bahs_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Installing required packages.
+						dnf install wget nano screenfetch -y
+						clear
+						
+						if [[ ! -f /root/${window}.sh ]]; then
+							echo "$(stdio stdout $distro downloading ${window}.sh)"
+							wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O /root/${window}.sh
+						fi
+						
+						# Executing Window Manager Setup file..
+						bash /root/${window}.sh
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							dnf install tigervnc-server -y
+						fi
+						clear
+						
+						echo "$(stdio stdout $distro removing ${window}.sh)"
+						rm -rf /root/${window}.sh
+						
+						echo "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Fedora" && echo
+						sleep 2.4
+					EOF
+					
+					echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+					chmod +x $target/$folder/root/.bash_profile
+				;;
+			esac
+			sleep 2.4
+		;;
+		kali)
+
+			echo "$(stdio stdout $distro patching mirrorlist)"
+			echo "deb [trusted=yes] http://http.kali.org/kali kali-rolling penguin contrib non-free" > $source/$folder/etc/apt/sources.list
+			
+			echo "$(stdio stdout $distro downloading /:etc/apt/trusted.gph.d/kali-archive-keyring.asc)"
+			wget -qO- --tries=20 "https://archive.kali.org/archive-key.asc" --show-progress --progress=bar:force:noscroll -O $source/$folder/etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+
+			echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+			rm -rf $source/$folder/root/.bash_profile
+			
+			if [[ ${select,,} != "cli" ]]; then
+				echo "$(stdio stdout $distro creating /:root/.bash_logout)"
+				cat <<- EOF > $source/$folder/root/.bash_logout
+					#!/usr/bin/env bash
+					
+					# Stopping VNC Server.
+					vncserver-stop
+					
+					# Kill all dbus and ssh process.
+					pkill dbus*
+					pkill ssh*
+				EOF
+				echo "$(stdio stdout $distro chmod+x /:root/.bash_logout)"
+				chmod +x $source/$folder/root/.bash_logout
+			fi
+
+			case ${select,,} in
+				cli)
+					echo "$(stdio stdout $distro craeting /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Add key for avoid outdated GPG Key alert.
+						echo -e "$(stdio stdout $distro adding gpg-key)"
+						apt-key add /etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+					EOF
+				;;
+				desktop)
+					params=$desktop
+					case ${desktop,,} in
+						xfce)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
+								"xfce4_de.sh"
+							)
+						;;
+						lxqt)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT"
+								"lxqt_de.sh"
+							)
+						;;
+						lxde)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE"
+								"lxde_de.sh"
+							)
+						;;
+					esac
+					
+					echo "$(stdio stdout $distro desktop setup)"
+					echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+					
+					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
+					wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
+
+					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+					chmod +x $source/$folder/root/${desktop}.sh
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Add key for avoid outdated GPG Key alert.
+						echo -e "$(stdio stdout $distro adding gpg-key)"
+						apt-key add /etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+						
+						# Updating packages.
+						apt update -y
+						
+						# Installing required packages.
+						apt install sudo nano wget bash screenfetch dbus-x11 -y
+						clear
+						
+						if [[ ! -f /root/${desktop}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
+							wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O /root/${desktop}.sh
+						fi
+						
+						# Executing Desktop Environment Setup file..
+						bash /root/${desktop}.sh
+						clear
+						
+						if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+							echo -e "$(stdio stdout $distro downloading vncviewer-start)"
+							wget -qO- --tries=20 ${rinku[0]}/vncserver-start --show-progress --progress=bar:force:noscroll -O /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro chmod +x vncviewer-start)"
+							chmod +x /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro downloading vncviewer-stop)"
+							wget -qO- --tries=20 ${rinku[0]}/vncserver-stop --show-progress --progress=bar:force:noscroll -O /usr/local/bin/vncserver-stop
+							
+							echo -e "$(stdio stdout $distro chmod+x vncviewer-stop)"
+							chmod +x /usr/local/bin/vncserver-stop
+						fi
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							apt install tigervnc-standalone-server -y
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro installing firefox)"
+						apt install firefox-esr -y
+						
+						echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+						rm -rf /root/${desktop}.sh
+						
+						echo "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Kali Linux" && echo
+						sleep 2.4
+					EOF
+				;;
+				window)
+					params=$window
+					declare -A rinku=(
+						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
+						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
+					)
+					
+					echo "$(stdio stdout $distro window setup)"
+					echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+					
+					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
+					wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${window}.sh
+
+					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+					chmod +x $source/$folder/root/${window}.sh
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Add key for avoid outdated GPG Key alert.
+						echo -e "$(stdio stdout $distro adding gpg-key)"
+						apt-key add /etc/apt/trusted.gpg.d/kali-archive-keyring.asc
+						
+						# Updating packages.
+						apt update -y
+						
+						# Installing required packages.
+						apt install sudo nano bash wget screenfetch -y
+						clear
+						
+						if [[ ! -f /root/${window}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${window}.sh)"
+							wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O /root/${window}.sh
+						fi
+						
+						# Executing Window Manager Setup file..
+						bash /root/${window}.sh
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							apt install tigervnc-standalone-server -y
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro removing ${window}.sh)"
+						rm -rf /root/${window}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Kali Linux" && echo
+						sleep 2.4
+					EOF
+				;;
+			esac
+			echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+			chmod +x $source/$folder/root/.bash_profile
+			sleep 2.4
+		;;
+		manjaro)
+
+			echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+			rm -rf $source/$folder/root/.bash_profile
+
+			echo "$(stdio stdout $distro removing /:etc/resolv.conf)"
+			rm -rf $target/$folder/etc/resolv.conf
+			
+			echo "$(stdio stdout $distro creating /:etc/resolve.conf)"
+			echo "nameserver 1.1.1.1" > $target/$folder/etc/resolv.conf
+			
+			echo "$(stdio stdout $distro creating /:usr/local/bin/fix-repo)"
+			echo "pacman -Syyuu --noconfirm && pacman-key --init && pacman-key --populate && pacman -Syu --noconfirm" > $target/$folder/usr/local/bin/fix-repo
+			
+			echo "$(stdio stdout $distro chmod+x /:usr/local/bin/fix-repo)"
+			chmod +x $target/$folder/usr/local/bin/fix-repo
+			
+			echo "$(stdio stdout $distro creating /:etc/pacman.d/mirrorlist)"
+			cat <<- EOL > $target/$folder/etc/pacman.d/mirrorlist
+				##
+				## Manjaro Linux repository mirrorlist
+				## Generated on 02 May 2020 14:22
+				##
+				## Use pacman-mirrorP
+					echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vnviewer-stop)"
+					chmod +x $source/$folder/usr/local/bin/vncserver-stop
+					
+					echo "$(stdio stdout $distro downlaoding /:root/${desktop}.sh)"
+					wget --tries=20 ${rinku[1]}/${rinku[2]} -O $source/$folder/root/${desktop}.sh
+
+					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+					chmod +x $source/$folder/root/${desktop}.sh
+					
+					echo "$(stdio stdout $distro downloading /:root/.vnc/xstartup)"
+					wget --tries=20 "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Pacman/Manjaro/${desktop^^}/xstartup" -O $source/$folder/root/.vnc/xstartup
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Fixing repository.
+						fix-repo
+						clear
+						
+						if [[ ! -f /root/${desktop}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
+							wget --tries=20 ${rinku[1]}/${rinku[2]} -O /root/${desktop}.sh
+						fi
+						
+						# Executing Desktop Environment Setup file..
+						bash /root/${desktop}.sh
+						clear
+						
+						if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+							echo -e "$(stdio stdout $distro downloading vncviewer-start)"
+							wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro chmod+x vncviewer-start)"
+							chmod +x /usr/local/bin/vncserver-start
+							
+							echo -e "$(stdio stdout $distro downloading vncviewer-stop)"
+							wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+							
+							echo -e "$(stdio stdout $distro chmod+x vncviewer-stop)"
+							chmod +x /usr/local/bin/vncserver-stop
+						fi
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							pacman -S tigervnc --noconfirm > /dev/null
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+						rm -rf /root/${desktop}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Clear terminal screen.
+						clear && echo
+						sleep 2.4
+					EOF
+				;;
+				window)
+					params=$window
+					declare -A rinku=(
+						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/Pacman"
+					)
+					
+					echo "$(stdio stdout $distro window stup)"
+					echo "$(stdio stdout $distro downlaoding /:root/${window}.sh)"
+					wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
+
+					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+					chmod +x $source/$folder/root/${window}.sh
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Fixing repository.
+						fix-repo
+						clear
+						
+						if [[ ! -f /root/${window}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${window}.sh)"
+							wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+						fi
+						
+						# Executing Window Manager Setup file..
+						bash /root/${window}.sh
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+							pacman -S tigervnc --noconfirm > /dev/null
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro removing ${window}.sh)"
+						rm -rf /root/${window}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+						
+						# Clear terminal screen.
+						clear && echo
+						sleep 2.4
+					EOF
+				;;
+			esac	
+			echo -e "..manjaro: .bash_profile: allow executable"
+			chmod +x $source/$folder/root/.bash_profile
+			sleep 2.4
+		;;
+		nethunter) ;;
+		parrot) ;;
+		ubuntu)
+			if [[ $version == 22.04 ]]; then
+				pass
+			elif [[ $version == 20.03 ]]; then
+				pass
+			elif [[ $version == 18.04 ]]; then
+				pass
+			else
+				echo -e "$(stdio stderr distro $distro $version)\n"
+				exit 1
+			fi
+			sleep 2.4
+		;;
+		void) ;;
+		*)
+			echo -e "$(stdio stderr unknown distro $distro)\n"
+			exit 1
+		;;
+	esac
+	if [[ ! -f $termux/files/usr/bin/$binary ]]; then
+		distroBinary $distro $binary $launch $folder $source
+	fi
+	if [[ ! -f $source/$launch ]]; then
+		distroLauncher $distro $launch
+	fi
+	# wget -qO- --tries=20 - --show-progress --progress=bar:force:noscroll -O 
+}
+
+# Handle fix distro extraction.
+function distroExtract() {
+	local inputRemove=
+	local inputSkip=
+	if [[ $select == "desktop" ]]; then
+		source+=/desktop/${desktop,,}
+		if [[ ${desktops[$distro]} != "" ]]; then
+			case ${desktop,,} in
+				xfce) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 1) ;;
+				lxde) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 2) ;;
+				lxqt) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 3) ;;
+				mate) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 4) ;;
+			esac
+			if [[ $exists == "" ]]; then
+				echo -e "$(stdio stderr $distro $desktop)\n"
+				exit 1
+			fi
+		else
+			echo -e "$(stdio stderr $distro $select)\n"
+			exit 1
+		fi
+	elif [[ $select == "window" ]]; then
+		source+=/window/${window,,}
+		if [[ ${windows[$distro]} != "" ]]; then
+			case ${window,,} in
+				awesome) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 1) ;;
+				openbox) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 2) ;;
+				i3) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 3) ;;
+			esac
+			if [[ $exists == "" ]]; then
+				echo -e "$(stdio stderr $distro $window)\n"
+				exit 1
+			fi
+		else
+			echo -e "$(stdio stderr $distro $select)\n"
+			exit 1
+		fi
+	elif [[ $select == "cli" ]]; then
+		source+=/cli
+	else
+		echo -e "$(stdio stderr unknown mode $select)\n"
+		exit 1
+	fi
+
+	inputRemove=
+	if [[ -d "$source/$folder" ]]; then
+		puts "  > [a] << Remove previous installation [Y/n]"
+		readline "distro" "remove" "Y"
+		if [[ ${inputRemove,,} == "y" ]]; then
+			rm -rf $source/$folder
+			if [[ $? -ne 0 ]]; then
+				echo -e "$(stdio stderr remove $folder)\n"
+				exit 1
+			fi
+		fi
+	fi
+	if [[ ! -d "$source/$folder" ]]; then
+		mkdir -p "${source}/${distro,,}-binds"
+		if [[ $? -ne 0 ]]; then
+			echo -e "$(stdio stderr makedir $folder)\n"
+			exit 1
+		fi
+		echo -e "$(stdio stdout extract $rootfs)"
+		archive=$rootfs
+		if [[ ! -f $archive ]]; then
+			archive=${images}/${distro}/${rootfs}
+		fi
+		proot --link2symlink tar -xf $archive --exclude=dev -C $source/$folder ||:
+		if [[ $? -ne 0 ]] || [[ ! -d $source/$folder ]]; then
+			echo -e "$(stdio stderr extract $rootfs)\n"
+			exit 1
+		fi
+	fi
+	
+	inputRemove=
+	puts "  > [a] << Remove image rootfs [Y/n]"
+	readline "rootfs" "remove" "Y"
+	if [[ ${inputRemove,,} == "y" ]]; then
+		rm "${archive}"
+		if [[ $? -ne 0 ]]; then
+			echo -e "$(stdio stderr remove $rootfs)\n"
+			readline "remove" "skip" "Y"
+			if [[ ${inputSkip,,} == "n" ]]; then
+				echo -e "$(stdio stderr remove aborted)\n"
+				exit 1
+			fi
+		fi
 	fi
 }
 
@@ -766,7 +2092,8 @@ function distroInputAction() {
 function distroInstall() {
 
 	# Distro Install Source Destination.
-	local target=
+	local source=
+	local exists=
 
 	# Distro RootFS name based on version number.
 	local rootfs=
@@ -776,221 +2103,34 @@ function distroInstall() {
 	local archurl=
 	local archname=
 
+	# Make directory of image for downloaded distro archive.
+	mkdir -p $images/$distro
+
 	if [[ $distro == "" ]]; then
 		echo -e "$(stdio stderr distro required)\n"
 		exit 1
-	elif [[ $version != "" ]]; then
-		target=$source/$version
-		rootfs=$distro-rootfs.$version.tar.gz
-	else
-		target=$source
-		rootfs=$distro-rootfs.tar.gz
 	fi
-
-	case ${select,,} in
-		cli) local target=$source/cli ;;
-		desktop)
-			local exists=
-			local target=$source/desktop/$desktop
-			if [[ ${desktops[$distro]} != "" ]]; then
-				case ${desktop,,} in
-					xfce) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 1) ;;
-					lxde) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 2) ;;
-					lxqt) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 3) ;;
-					mate) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 4) ;;
-				esac
-				if [[ $exists == "" ]]; then
-					echo -e "$(stdio stderr $distro $desktop)\n"
-					exit 1
-				fi
-			else
-				echo -e "$(stdio stderr $distro $select)\n"
-				exit 1
-			fi
-		;;
-		desktop)
-			local exists=
-			local target=$source/window/$window
-			if [[ ${windows[$distro]} != "" ]]; then
-				case ${window,,} in
-					xfce) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 1) ;;
-					lxde) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 2) ;;
-					lxqt) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 3) ;;
-					mate) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 4) ;;
-				esac
-				if [[ $exists == "" ]]; then
-					echo -e "$(stdio stderr $distro $window)\n"
-					exit 1
-				fi
-			else
-				echo -e "$(stdio stderr $distro $select)\n"
-				exit 1
-			fi
-		;;
-		*)
-			echo -e "$(stdio stderr unknown mode $select)\n"
-			exit 1
-		;;
-	esac
+	if [[ $version != "" ]]; then
+		rootfs=$distro-rootfs.$version.tar.gz
+		source=$target/$version
+	else
+		rootfs=$distro-rootfs.tar.gz
+		source=$target
+	fi
+	distroArchive $distro
+	distroExtract $distro
+	distroConfig $distro
 	
-	case ${distro,,} in
-		alpine)
-			if [[ $version != "" && $version != "3.10.3" ]]; then
-				echo -e "$(stdio stderr distro $distro $version)\n"
-				exit 1
-			fi
-			case ${architect,,} in
-				aarch64) archname="aarch64" ;;
-				arm) archname="armhf" ;;
-				amd64) archname="x86_64" ;;
-				x86_64) archname="x86_64" ;;	
-				i*86) archname="x86" ;;
-				x86) archname="x86" ;;
-				*)
-					echo -e "$(stdio stderr $distro $version $architect)\n"
-					exit 1
-				;;
-			esac
-			rootfs="alpine-rootfs-${archname}.tar.gz"
-			archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Alpine/${archname}/alpine-minirootfs-${version}-${archname}.tar.gz?raw=true"
-		;;
-		arch)
-			if [[ $version != "" && $version != "2021.07.01" ]]; then
-				echo -e "$(stdio stderr distro $distro $version)\n"
-				exit 1
-			fi
-			case ${architect,,} in
-				aarch64) archname="aarch64" ;;
-				arm) archname="armv7" ;;
-				*)
-					echo -e "$(stdio stderr $distro $version $architect)\n"
-					exit 1
-				;;
-			esac
-			rootfs="arch-rootfs-${archname}.tar.gz"
-			archurl="http://os.archlinuxarm.org/os/ArchLinuxARM-${archname}-latest.tar.gz"
-		;;
-		debian)
-			if [[ $version != "" && $version != "10.00" ]]; then
-				echo -e "$(stdio stderr distro $distro $version)\n"
-				exit 1
-			fi
-			case ${architect,,} in
-				aarch64) archname="arm64" ;;
-				arm) archname="armhf" ;;
-				amd64) archname="amd64" ;;
-				x86_64) archname="amd64" ;;	
-				i*86) archname="i386" ;;
-				x86) archname="i386" ;;
-				*)
-					echo -e "$(stdio stderr $distro $version $architect)\n"
-					exit 1
-				;;
-			esac
-				rootfs="debian-rootfs-${archname}.tar.gz"
-				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Debian/${archname}/debian-rootfs-${archname}.tar.xz?raw=true"
-		;;
-		fedora)
-			if [[ $version != "" && $version != "33" ]]; then
-				echo -e "$(stdio stderr distro $distro $version)\n"
-				exit 1
-			fi
-			archurl=(
-				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partaa"
-				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Fedora/arm64/fedora.partab"
-			)
-		;;
-		kali)
-			if [[ $version != "" && $version != "21.2" ]]; then
-				echo -e "$(stdio stderr distro $distro $version)\n"
-				exit 1
-			fi
-			case ${architect,,} in
-				aarch64) archname="arm64" ;;
-				arm) archname="armhf" ;;
-				amd64) archname="amd64" ;;
-				x86_64) archname="amd64" ;;	
-				i*86) archname="i386" ;;
-				x86) archname="i386" ;;
-				*)
-					echo -e "$(stdio stderr $distro $version $architect)\n"
-					exit 1
-				;;
-			esac
-			rootfs="kali-rootfs-${archname}.tar.xz"
-			if [[ $archname == "arm64" ]]; then
-				archurl="https://github.com/AndronixApp/AndronixOrigin/releases/download/kali-arm64-tarball/kali-rootfs-arm64.tar.xz"
-			else
-				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Kali/${archname}/kali-rootfs-${archname}.tar.xz?raw=true"
-			fi
-		;;
-		manjaro)
-			if [[ $version != "" && $version != "21" ]]; then
-				echo -e "$(stdio stderr distro $distro $version)\n"
-				exit 1
-			fi
-			archurl=(
-				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partaa"
-				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partab"
-				"https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partac"
-			)
-		;;
-		nethunter)
-		;;
-		parrot)
-		;;
-		ubuntu)
-			archname="arm64"
-			if [[ $version == 22.04 ]]; then
-				if [[ ${architect,,} != aarch64 ]]; then
-					echo -e "$(stdio stderr $distro $version $architect)\n"
-					exit 1
-				fi
-				rootfs="ubuntu-rootfs-${archname}.${version}.tar.gz"
-				archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu22/jammy-${archname}.tar.gz"
-			elif [[ $version == 20.03 ]]; then
-				case ${architect,,} in
-					aarch64) archname="arm64" ;;
-					arm) archname="armhf" ;;
-					amd64) archname="amd64" ;;
-					x86_64) archname="amd64" ;;
-					*)
-						echo -e "$(stdio stderr $distro $version $architect)\n"
-						exit 1
-					;;
-				esac
-				rootfs="ubuntu-rootfs-${archname}.${version}.tar.gz"
-				archurl="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Ubuntu20/focal-${archname}.tar.gz"
-			elif [[ $version == 18.04 ]]; then
-				case ${architect,,} in
-					aarch64) archname="arm64" ;;
-					arm) archname="armhf" ;;
-					amd64) archname="amd64" ;;
-					x86_64) archname="amd64" ;;
-					i*86) archname="i386" ;;
-					x86) archname="i386" ;;
-					*)
-						echo -e "$(stdio stderr $distro $version $architect)\n"
-						exit 1
-					;;
-				esac
-				rootfs="ubuntu-rootfs-${archname}.${version}.tar.xz"
-				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Ubuntu/${archname}/ubuntu-rootfs-${archname}.tar.xz?raw=true"
-			else
-				echo -e "$(stdio stderr distro $distro $version)\n"
-				exit 1
-			fi
-		;;
-		void)
-		;;
-		*)
-			echo -e "$(stdio stderr unknown distro $distro)\n"
-			exit 1
-		;;
-	esac
-	puts $rootfs
-	puts $archurl
-	puts $archive
+	puts "source: $source"
+	puts "rootfs: $rootfs"
+	puts "archname: $archname"
+	puts "archurl: $archurl"
+}
+
+# Handle building distro launcher executable.
+# distroBinary [distro] [launch]
+function distroLauncher() {
+	pass
 }
 
 # Handle distro remove installation.
@@ -1089,6 +2229,7 @@ function main() {
 							exit 1
 						fi
 					fi
+					break
 				else
 					echo -e "$(stdio stderr main aborted)\n"
 					exit 1
@@ -1218,7 +2359,7 @@ function readline() {
 				fi
 			fi
 			if [[ $input != "" ]]; then
-				eval "input${2^}=$input"
+				eval "input${2^}=\"$input\""
 				echo -e "\x20\x20\c"
 				echo -e "\e[1;32mstdin\c"
 				echo -e "\e[1;38;5;70m<\c"
