@@ -943,7 +943,7 @@ function distroConfig() {
 			wget "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/resolv.conf" -P $target/$folder/root
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr download resolv.conf)"
-				inputRemove=
+				inputSkip=
 				readline "download" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr download aborted)\n"
@@ -955,7 +955,7 @@ function distroConfig() {
 			wget "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Installer/Arch/armhf/additional.sh" -P $target/$folder/root
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr download additional.sh)"
-				inputRemove=
+				inputSkip=
 				readline "download" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr download aborted)\n"
@@ -968,7 +968,7 @@ function distroConfig() {
 				mkdir -p $source/$folder/proc/fakethings
 				if [[ $? -ne 0 ]]; then
 					echo "$(stdio stderr makedir $folder/proc/fakethings)"
-					inputRemove=
+					inputSkip=
 					readline "makedir" "skip" "Y"
 					if [[ ${inputSkip,,} == "n" ]]; then
 						echo -e "$(stdio stderr makedir aborted)\n"
@@ -990,7 +990,7 @@ function distroConfig() {
 			rm -rf $source/$folder/root/.bash_profile
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr remove $folder/:root/.bash_profile)"
-				inputRemove=
+				inputSkip=
 				readline "remove" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr remove aborted)\n"
@@ -1044,10 +1044,19 @@ function distroConfig() {
 					echo "$(stdio stdout $distro desktop setup)"
 					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
 					wget --tries=20 ${rinku[1]}/${rinku[2]} -O $source/$folder/root/${desktop}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${desktop}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+						chmod +x $source/$folder/root/${desktop}.sh
+					fi
 					
-					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
-					chmod +x $source/$folder/root/${desktop}.sh
-
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -1064,7 +1073,7 @@ function distroConfig() {
 						clear
 						
 						if [[ ! -f /root/${desktop}.sh ]]; then
-							echo -e "$(stdio stdout $distro downlaoding ${desktop}.sh)"
+							echo -e "$(stdio stdout $distro download ${desktop}.sh)"
 							wget --tries=20 ${rinku[1]}/${rinku[2]} -O /root/${desktop}.sh
 						fi
 						
@@ -1114,10 +1123,19 @@ function distroConfig() {
 					echo "$(stdio stdout $distro window setup)"
 					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
 					wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
-					
-					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
-					chmod +x $source/$folder/root/${window}.sh
-					
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${window}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+						chmod +x $source/$folder/root/${window}.sh
+					fi
+
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -1194,10 +1212,19 @@ function distroConfig() {
 					
 					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
 					wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
-					
-					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
-					chmod +x $source/$folder/root/${desktop}.sh
-					
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${desktop}.sh)"
+						inputSkip=
+						readline "downlaod" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+						chmod +x $source/$folder/root/${desktop}.sh
+					fi
+
 					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 					rm -rf $source/$folder/root/.bash_profile
 					if [[ $? -ne 0 ]]; then
@@ -1276,10 +1303,19 @@ function distroConfig() {
 					
 					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
 					wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${window}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${window}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+						chmod +x $source/$folder/root/${window}.sh
+					fi
 
-					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
-					chmod +x $source/$folder/root/${window}.sh
-					
 					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 					rm -rf $source/$folder/root/.bash_profile
 					if [[ $? -ne 0 ]]; then
@@ -1373,10 +1409,19 @@ function distroConfig() {
 					echo "$(stdio stdout $distro desktop setup)"
 					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
 					wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${desktop}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+						chmod +x $source/$folder/root/${desktop}.sh
+					fi
 
-					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
-					chmod +x $source/$folder/root/${desktop}.sh
-					
 					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 					rm -rf $source/$folder/root/.bash_profile
 					
@@ -1442,10 +1487,19 @@ function distroConfig() {
 					echo "$(stdio stdout $distro window setup)"
 					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
 					wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll  -O $source/$folder/root/${window}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${window}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+						chmod +x $source/$folder/root/${window}.sh
+					fi
 
-					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
-					chmod +x $source/$folder/root/${window}.sh
-					
 					echo "$(stdio stdout $distro creating /:root/.bahs_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -1490,9 +1544,18 @@ function distroConfig() {
 			echo "$(stdio stdout $distro patching mirrorlist)"
 			echo "deb [trusted=yes] http://http.kali.org/kali kali-rolling penguin contrib non-free" > $source/$folder/etc/apt/sources.list
 			
-			echo "$(stdio stdout $distro downloading /:etc/apt/trusted.gph.d/kali-archive-keyring.asc)"
+			echo "$(stdio stdout $distro downloading /:etc/apt/trusted.gpg.d/kali-archive-keyring.asc)"
 			wget -qO- --tries=20 "https://archive.kali.org/archive-key.asc" --show-progress --progress=bar:force:noscroll -O $source/$folder/etc/apt/trusted.gpg.d/kali-archive-keyring.asc
-
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr download /:etc/apt/trusted.gpg.d/kali-achive-keyring.asc)"
+				inputSkip=
+				readline "download" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr download aborted)\n"
+					exit 1
+				fi
+			fi
+			
 			echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 			rm -rf $source/$folder/root/.bash_profile
 			
@@ -1554,10 +1617,19 @@ function distroConfig() {
 					
 					echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
 					wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root.${destop}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+						chmod +x $source/$folder/root/${desktop}.sh
+					fi
 
-					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
-					chmod +x $source/$folder/root/${desktop}.sh
-					
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -1626,6 +1698,15 @@ function distroConfig() {
 					
 					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
 					wget -qO- --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${window}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${window}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					fi
 
 					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
 					chmod +x $source/$folder/root/${window}.sh
@@ -1679,9 +1760,27 @@ function distroConfig() {
 
 			echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 			rm -rf $source/$folder/root/.bash_profile
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr remove /:root/.bash_profile)"
+				inputSkip=
+				readline "remove" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr remove aborted)\n"
+					exit 1
+				fi
+			fi
 
 			echo "$(stdio stdout $distro removing /:etc/resolv.conf)"
 			rm -rf $target/$folder/etc/resolv.conf
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr remove /:etc.resolve.conf)"
+				inputSkip=
+				readline "remove" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr remove aborted)\n"
+					exit 1
+				fi
+			fi
 			
 			echo "$(stdio stdout $distro creating /:etc/resolve.conf)"
 			echo "nameserver 1.1.1.1" > $target/$folder/etc/resolv.conf
@@ -1759,24 +1858,60 @@ function distroConfig() {
 					
 					echo "$(stdio stdout $distro downloading /:usr/local/bin/vnviewer-start)"
 					wget --tries=20 ${rinku[0]}/vncserver-start -O $source/$folder/usr/local/bin/vncserver-start
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:sur/local/bin/vncviewer-start)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					fi
 					
 					echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vnviewer-start)"
 					chmod +x $source/$folder/usr/local/bin/vncserver-start
 					
 					echo "$(stdio stdout $distro downloading /:usr/local/bin/vnviewer-stop)"
 					wget --tries=20 ${rinku[0]}/vncserver-stop -O $source/$folder/usr/local/bin/vncserver-stop
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:usr/local/bin/vncviewer-stop)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					fi
 					
 					echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vnviewer-stop)"
 					chmod +x $source/$folder/usr/local/bin/vncserver-stop
 					
-					echo "$(stdio stdout $distro downlaoding /:root/${desktop}.sh)"
+					echo "$(stdio stdout $distro download /:root/${desktop}.sh)"
 					wget --tries=20 ${rinku[1]}/${rinku[2]} -O $source/$folder/root/${desktop}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/${desktop}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					fi
 
 					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 					chmod +x $source/$folder/root/${desktop}.sh
 					
 					echo "$(stdio stdout $distro downloading /:root/.vnc/xstartup)"
 					wget --tries=20 "https://raw.githubusercontent.com/Techriz/AndronixOrigin/master/Pacman/Manjaro/${desktop^^}/xstartup" -O $source/$folder/root/.vnc/xstartup
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr download /:root/.vnc/xstartup)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr download aborted)\n"
+							exit 1
+						fi
+					fi
 					
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
@@ -1832,7 +1967,7 @@ function distroConfig() {
 					)
 					
 					echo "$(stdio stdout $distro window stup)"
-					echo "$(stdio stdout $distro downlaoding /:root/${window}.sh)"
+					echo "$(stdio stdout $distro download /:root/${window}.sh)"
 					wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
 
 					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
