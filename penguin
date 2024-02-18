@@ -1698,7 +1698,74 @@ function distroConfig() {
 				## Manjaro Linux repository mirrorlist
 				## Generated on 02 May 2020 14:22
 				##
-				## Use pacman-mirrorP
+				## Use pacman-mirrors to modify
+				##
+				
+				## Location  : Germany
+				## Time      : 99.99
+				## Last Sync :
+				Server = https://mirrors.dotsrc.org/manjaro-arm/stable/$repo/$arch
+			EOL
+
+			case ${select,,} in
+				cli)
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# ...
+						pacman-key --init && pacman-key --populate && pacman -Syu --noconfirm
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf /root/.bash_profile
+					EOF
+				;;
+				desktop)
+					params=$desktop
+					case ${desktop,,} in
+						xfce)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/XFCE"
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+								"xfce4_de.sh"
+							)
+						;;
+						lxqt)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXQT"
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+								"lxqt_de.sh"
+							)
+						;;
+						lxde)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/LXDE"
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+								"lxde_de.sh"
+							)
+						;;
+						mate)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro/MATE"
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
+								"mate_de.sh"
+							)
+						;;
+					esac
+					
+					echo "$(stdio stdout $distro desktop setup)"
+					echo "$(stdio stdout $distro makedir /:root/.vnc)"
+					mkdir -p $source/$folder/root/.vnc
+					
+					echo "$(stdio stdout $distro downloading /:usr/local/bin/vnviewer-start)"
+					wget --tries=20 ${rinku[0]}/vncserver-start -O $source/$folder/usr/local/bin/vncserver-start
+					
+					echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vnviewer-start)"
+					chmod +x $source/$folder/usr/local/bin/vncserver-start
+					
+					echo "$(stdio stdout $distro downloading /:usr/local/bin/vnviewer-stop)"
+					wget --tries=20 ${rinku[0]}/vncserver-stop -O $source/$folder/usr/local/bin/vncserver-stop
+					
 					echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vnviewer-stop)"
 					chmod +x $source/$folder/usr/local/bin/vncserver-stop
 					
