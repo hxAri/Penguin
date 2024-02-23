@@ -1500,7 +1500,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/${window}.sh
 					fi
 
-					echo "$(stdio stdout $distro creating /:root/.bahs_profile)"
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
 						
@@ -2006,8 +2006,8 @@ function distroConfig() {
 						sleep 2.4
 					EOF
 				;;
-			esac	
-			echo -e "..manjaro: .bash_profile: allow executable"
+			esac
+			echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
 			chmod +x $source/$folder/root/.bash_profile
 			sleep 2.4
 		;;
@@ -2017,9 +2017,317 @@ function distroConfig() {
 			if [[ $version == 22.04 ]]; then
 				pass
 			elif [[ $version == 20.03 ]]; then
-				pass
+				case ${select,,} in
+					cli) ;;
+					desktop)
+						params=$desktop
+						case ${desktop,,} in
+							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
+							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
+							lxde) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE" ;;
+						esac
+						
+						echo "$(stdio stdout $distro desktop setup)"
+						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+						
+						echo "$(stdio stdout $distro makedir /:var/tmp)"
+						mkdir -p $source/$folder/var/tmp
+
+						echo "$(stdio stdout $distro removing /:usr/local/bin/\*)"
+						rm -rf $source/$folder/usr/local/bin/*
+						
+						echo "$(stdio stdout $distro crating /:etc/hosts)"
+						echo "127.0.0.1 localhost localhost" > $source/$folder/etc/hosts
+						
+						# Setup VNC Viewer
+						vncViewerSetup $distro $source/$folder
+						
+						echo "$(stdio stdout $distro )"
+						
+						echo -e "..ubuntu: $version: $desktop: .hushlogin: creating"
+						touch $source/$folder/root/.hushlogin
+						
+						echo -e "\n..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+						wget --tries=20 $rinku/${desktop}19.sh -O $source/$folder/root/${desktop}.sh
+						echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: allow executable"
+						chmod +x $source/$folder/root/${desktop}.sh
+						
+						echo -e "\n..ubuntu: $version: $desktop: .profile.1: downloading"
+						wget -q https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/.profile -O $source/$folder/root/.profile.1 > /dev/null
+						echo -e "\n..ubuntu: $version: $desktop: .profile: writing"
+						cat $source/$folder/root/.profile.1 >> $source/$folder/root/.profile
+						echo -e "\n..ubuntu: $version: $desktop: .profile: allow executable"
+						chmod +x $source/$folder/root/.profile
+						echo -e "\n..ubuntu: $version: $desktop: .profile.1: removing"
+						rm -rf $source/$folder/root/.profile.1
+						
+						echo -e "\n..ubuntu: $version: $desktop: .bash_profile: removing"
+						rm -rf $source/$folder/root/.bash_profile
+						
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: building"
+						cat <<- EOF > $source/$folder/root/.bash_profile
+							#!/usr/bin/env bash
+							
+							# Remove old resolve configuration.
+							rm -rf /etc/resolv.conf
+							
+							# Create new resolve configuration.
+							echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+							
+							# Installing required packages.
+							apt update -y && apt install sudo wget nano screenfetch -y > /dev/null
+							clear
+							
+							# Create directory for vnc configuration.
+							mkdir -p ~/.vnc
+							
+							if [[ ! -f /root/${desktop}.sh ]]; then
+							    echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+							    wget --tries=20 $rinku/${desktop}19.sh -O /root/${desktop}.sh
+							fi
+							bash /root/${desktop}.sh
+							clear
+							
+							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+							    echo -e "\n..ubuntu: $version: vncserver-start: downloading"
+							    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
+							    echo -e "..ubuntu: $version: vncserver-start: removing"
+							    chmod +x /usr/local/bin/vncserver-start
+							    
+							    echo -e "\n..ubuntu: $version: vncserver-stop: downloading"
+							    wget --tries=20 $rinku/vncserver-stop -O /usr/local/bin/vncserver-stop
+							    echo -e "..ubuntu: $version: vncserver-stop: removing"
+							    chmod +x /usr/local/bin/vncserver-stop
+							fi
+							clear
+							
+							if [[ ! -f /usr/bin/vncserver ]]; then
+							    apt install tigervnc-standalone-server -y
+							fi
+							clear
+							
+							echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: removing"
+							rm -rf /root/${desktop}.sh
+							
+							echo -e "..ubuntu: $version: $desktop: .bash_profile: removing"
+							rm -rf /root/.bash_profile
+							
+							# Displaying screenfetch.
+							clear && screenfetch -A "Ubuntu" && echo
+							sleep 2.4
+						EOF
+						
+						echo -e "..ubuntu: $version: $desktop: .bash_profile: allow executable"
+						chmod +x $source/$folder/root/.bash_profile
+					;;
+					window)
+						params=$window
+						declare -A rinku=(
+							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
+							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
+						)
+						
+						echo -e "\n..ubuntu: $version: window: setup of ${window^} VNC"
+						mkdir -p $source/$folder/var/tmp
+						rm -rf $source/$folder/usr/local/bin/*
+						
+						# Remove old resolve configuration.
+						rm -rf $source/$folder/etc/resolv.conf
+						
+						# Create new resolve configuration.
+						echo "nameserver 1.1.1.1" > $source/$folder/etc/resolv.conf
+						
+						# Setup VNC Viewer
+						vncViewerSetup $source/$folder
+						
+						echo -e "\n..ubuntu: $version: $window: setup apt retry count"
+						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+						
+						echo -e "\n..ubuntu: $version: $window: ${window}.sh: downloading"
+						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
+						echo -e "..ubuntu: $version: $window: ${window}.sh: allow executable"
+						chmod +x $source/$folder/root/${window}.sh
+						
+						echo -e "..ubuntu: $version: $window: .bash_profile: building"
+						cat <<- EOF > $source/$folder/root/.bash_profile
+							#!/usr/bin/env bash
+							
+							# Installing required packages.
+							apt update -y && apt install wget sudo nano screenfetch -y && clear
+							
+							if [[ ! -f /root/${window}.sh ]]; then
+							    echo -e "..ubuntu: $version: $window: ${window}.sh: downloading"
+							    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+							fi
+							bash /root/${window}.sh
+							clear
+							
+							if [[ ! -f /usr/bin/vncserver ]]; then
+							    apt install tigervnc-standalone-server -y
+							fi
+							clear
+							
+							echo -e "..ubuntu: $version: $window: ${window}.sh: removing"
+							rm -rf /root/${window}.sh
+							
+							echo -e "..ubuntu: $version: $window: .bash_profile: removing"
+							rm -rf /root/.bash_profile
+							
+							# Displaying screenfetch.
+							clear && screenfetch -A "Ubuntu" && echo
+							sleep 2.4
+						EOF
+						
+						echo -e "..ubuntu: $version: $window: .bash_profile: allow executable"
+						chmod +x $source/$folder/root/.bash_profile
+					;;
+				esac
 			elif [[ $version == 18.04 ]]; then
-				pass
+				case ${select,,} in
+					cli) ;;
+					desktop)
+						params=$desktop
+						case ${desktop,,} in
+							xfce)
+								local rinku=(
+									"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4"
+									"xfce4_de.sh"
+								)
+							;;
+							lxqt)
+								local rinku=(
+									"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT"
+									"lxqt_de.sh"
+								)
+							;;
+							lxde)
+								local rinku=(
+									"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXDE"
+									"lxde_de.sh"
+								)
+							;;
+						esac
+						
+						# Setup VNC Viewer
+						vncViewerSetup $distro $source/$folder
+						
+						echo "$(stdio stdout $distro desktop setup)"
+						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+						
+						echo "$(stdio stdout $distro creating /:root/.hushlogin)"
+						touch $source/$folder/root/.hushlogin
+						
+						echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
+						wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O $source/$folder/root/${desktop}.sh
+
+						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
+						chmod +x $source/$folder/root/${desktop}.sh
+						
+						echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+						rm -rf $source/$folder/root/.bash_profile
+						
+						echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+						cat <<- EOF > $source/$folder/root/.bash_profile
+							#!/usr/bin/env bash
+							
+							# Installing required packages.
+							apt update -y && apt install sudo wget nano screenfetch -y > /dev/null
+							clear
+							
+							if [[ ! -f /root/${desktop}.sh ]]; then
+								echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
+							    wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O /root/${desktop}.sh
+							fi
+							bash /root/${desktop}.sh
+							clear
+							
+							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+								echo -e "$(stdio stdout $distro downloading /usr/bin/local/vncserver-start)"
+							    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
+
+							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-start)"
+							    chmod +x /usr/local/bin/vncserver-start
+							    
+							    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncserver-stop)"
+							    wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+
+							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-stop)"
+							    chmod +x /usr/local/bin/vncserver-stop
+							fi
+							clear
+							
+							if [[ ! -f /usr/bin/vncserver ]]; then
+							    apt install tigervnc-standalone-server -y
+							fi
+							clear
+							
+							echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+							rm -rf /root/${desktop}.sh
+							
+							echo -e "$(stdio stdout $distro removing .bash_profile)"
+							rm -rf /root/.bash_profile
+							
+							# Displaying screenfetch.
+							clear && screenfetch -A "Ubuntu" && echo
+							sleep 2.4
+						EOF
+						
+						echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+						chmod +x $source/$folder/root/.bash_profile
+					;;
+					window)
+						params=$window
+						declare -A rinku=(
+							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
+							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
+						)
+						
+						# Setup VNC Viewer
+						vncViewerSetup $source/$folder
+						
+						echo "$(stdio stdout $distro window setup)"
+						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
+						
+						echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
+						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
+
+						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+						chmod +x $source/$folder/root/${window}.sh
+						
+						echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+						cat <<- EOF > $source/$folder/root/.bash_profile
+							#!/usr/bin/env bash
+							
+							# Installing required packages.
+							apt update -y && apt install wget sudo nano screenfetch -y && clear
+							
+							if [[ ! -f /root/${window}.sh ]]; then
+								echo -e "$(stdio stdout $distro downloading ${window}.sh)"
+							    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
+							fi
+							bash /root/${window}.sh
+							clear
+							
+							if [[ ! -f /usr/bin/vncserver ]]; then
+							    apt install tigervnc-standalone-server -y
+							fi
+							clear
+							
+							echo -e "$(stdio stout $distro removing ${window}.sh)"
+							rm -rf /root/${window}.sh
+							
+							echo -e "$(stdio stout $distro removing .bash_profile)"
+							rm -rf /root/.bash_profile
+							
+							# Displaying screenfetch.
+							clear && screenfetch -A "Ubuntu" && echo
+							sleep 2.4
+						EOF
+
+						echo "$(stdio stderr $distro chmod+x /:root/.bash_profile)"
+						chmod +x $source/$folder/root/.bash_profile
+					;;
+				esac
 			else
 				echo -e "$(stdio stderr distro $distro $version)\n"
 				exit 1
@@ -2038,6 +2346,8 @@ function distroConfig() {
 	if [[ ! -f $source/$launch ]]; then
 		distroLauncher $distro $launch
 	fi
+	echo "$(stdio stdout $distro installed)"
+	puts ""
 	# wget -qO- --tries=20 - --show-progress --progress=bar:force:noscroll -O 
 }
 
@@ -2631,6 +2941,48 @@ function stdio() {
 		fi
 		echo -e "\x20\x20$prints\e[0m"
 	fi
+}
+
+# Handle VNC Viewer Download.
+# vncViewerSetup [distro-name] [source]
+function vncViewerSetup() {
+	local distro=$1
+	local folder=$2
+	if [[ $1 == "" ]]; then
+		echo -e "$(stdio stderr unknown distro)\n"
+		exit 1
+	fi
+	if [[ $2 == "" ]]; then
+		echo -e "$(stdio stderr unknown required)\n"
+		exit 1
+	elif [[ ! -d $2 ]]; then
+		echo -e "$(stdio stderr source none)\n"
+		exit 1
+	fi
+	
+	echo "$(stdio stdout $distro downloading /:usr/local/bin/vnc)"
+	wget -q "https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/vnc" -P $1/usr/local/bin > /dev/null
+	
+	echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vnc)"
+	chmod +x $1/usr/local/bin/vnc
+	
+	echo "$(stdio stdout $distro downloading /:usr/local/bin/vncpasswd)"
+	wget -q "https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/vncpasswd" -P $1/usr/local/bin > /dev/null
+	
+	echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vncpasswd)"
+	chmod +x $1/usr/local/bin/vncpasswd
+	
+	echo "$(stdio stdout $distro downloading /:usr.local/bin/vncserver-start)"
+	wget -q "https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/vncserver-start" -P $1/usr/local/bin > /dev/null
+	
+	echo "$(stdio stdout $distro chmod+x /:usr.local/bin/vncserver-start)"
+	chmod +x $1/usr/local/bin/vncserver-start
+	
+	echo "$(stdio stdout $distro downloading /:usr/local/bin/vncserver-stop )"
+	wget -q "https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/vncserver-stop" -P $1/usr/local/bin > /dev/null
+	
+	echo "$(stdio stdout $distro chmod+x /:usr/local/bin/vncserver-stop )"
+	chmod +x $1/usr/local/bin/vncserver-stop
 }
 
 # Executing main program.
