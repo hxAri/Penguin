@@ -2633,4 +2633,5 @@ function stdio() {
 	fi
 }
 
+# Executing main program.
 main
