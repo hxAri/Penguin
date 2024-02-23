@@ -2029,7 +2029,7 @@ function distroConfig() {
 						
 						echo "$(stdio stdout $distro desktop setup)"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
-						
+
 						echo "$(stdio stdout $distro makedir /:var/tmp)"
 						mkdir -p $source/$folder/var/tmp
 
@@ -2042,29 +2042,31 @@ function distroConfig() {
 						# Setup VNC Viewer
 						vncViewerSetup $distro $source/$folder
 						
-						echo "$(stdio stdout $distro )"
-						
-						echo -e "..ubuntu: $version: $desktop: .hushlogin: creating"
+						echo "$(stdio stdout $distro creating /:root/.hushlogin)"
 						touch $source/$folder/root/.hushlogin
 						
-						echo -e "\n..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+						echo "$(stdio stdout $distro downloding /:root/${desktop}.sh)"
 						wget --tries=20 $rinku/${desktop}19.sh -O $source/$folder/root/${desktop}.sh
-						echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: allow executable"
+
+						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 						chmod +x $source/$folder/root/${desktop}.sh
 						
-						echo -e "\n..ubuntu: $version: $desktop: .profile.1: downloading"
+						echo "$(stdio stdout $distro downloading /:root/.profile.1)"
 						wget -q https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Rootfs/Ubuntu19/.profile -O $source/$folder/root/.profile.1 > /dev/null
-						echo -e "\n..ubuntu: $version: $desktop: .profile: writing"
+
+						echo "$(stdio stdout $distro creating /:root/.profile)"
 						cat $source/$folder/root/.profile.1 >> $source/$folder/root/.profile
-						echo -e "\n..ubuntu: $version: $desktop: .profile: allow executable"
+
+						echo "$(stdio stdout $distro chmod+x /:root/.profile)"
 						chmod +x $source/$folder/root/.profile
-						echo -e "\n..ubuntu: $version: $desktop: .profile.1: removing"
+
+						echo "$(stdio stdout $distro removing /:root/.profile.1)"
 						rm -rf $source/$folder/root/.profile.1
 						
-						echo -e "\n..ubuntu: $version: $desktop: .bash_profile: removing"
+						echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 						rm -rf $source/$folder/root/.bash_profile
 						
-						echo -e "..ubuntu: $version: $desktop: .bash_profile: building"
+						echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 						cat <<- EOF > $source/$folder/root/.bash_profile
 							#!/usr/bin/env bash
 							
@@ -2072,6 +2074,7 @@ function distroConfig() {
 							rm -rf /etc/resolv.conf
 							
 							# Create new resolve configuration.
+							echo -e "$(stdio stdout $distro creating /etc/resolve.conf)"
 							echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 							
 							# Installing required packages.
@@ -2079,24 +2082,27 @@ function distroConfig() {
 							clear
 							
 							# Create directory for vnc configuration.
+							echo -e "$(stdio stdout $distro makedir .vnc)"
 							mkdir -p ~/.vnc
 							
 							if [[ ! -f /root/${desktop}.sh ]]; then
-							    echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: downloading"
+							    echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
 							    wget --tries=20 $rinku/${desktop}19.sh -O /root/${desktop}.sh
 							fi
 							bash /root/${desktop}.sh
 							clear
 							
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
-							    echo -e "\n..ubuntu: $version: vncserver-start: downloading"
+							    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncserver-start)"
 							    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
-							    echo -e "..ubuntu: $version: vncserver-start: removing"
+
+							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-start)"
 							    chmod +x /usr/local/bin/vncserver-start
 							    
-							    echo -e "\n..ubuntu: $version: vncserver-stop: downloading"
+							    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncserver-stop)"
 							    wget --tries=20 $rinku/vncserver-stop -O /usr/local/bin/vncserver-stop
-							    echo -e "..ubuntu: $version: vncserver-stop: removing"
+							    
+								echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-stop)"
 							    chmod +x /usr/local/bin/vncserver-stop
 							fi
 							clear
@@ -2106,10 +2112,10 @@ function distroConfig() {
 							fi
 							clear
 							
-							echo -e "..ubuntu: $version: $desktop: ${desktop}.sh: removing"
+							echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
 							rm -rf /root/${desktop}.sh
 							
-							echo -e "..ubuntu: $version: $desktop: .bash_profile: removing"
+							echo -e "$(stdio stdout $distro removing .bash_profile)"
 							rm -rf /root/.bash_profile
 							
 							# Displaying screenfetch.
@@ -2117,7 +2123,7 @@ function distroConfig() {
 							sleep 2.4
 						EOF
 						
-						echo -e "..ubuntu: $version: $desktop: .bash_profile: allow executable"
+						echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
