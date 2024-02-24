@@ -35,7 +35,7 @@ author="Ari Setiawan (hxAri)"
 author_email="hxari@proton.me"
 
 # Application version.
-pversion=1.0.0
+pversion=2.0.0
 
 # Application repository.
 github=https://github.com/hxAri/$appname
@@ -2636,7 +2636,7 @@ function distroConfig() {
 		logo
 		$command
 	else
-		echo -e "$(stdin main)" "\c"
+		echo -e "$(stdin main)\c"
 		read inputMain
 		penguin
 	fi
@@ -3107,6 +3107,8 @@ function penguin() {
 	puts "      [7] Parrot OS"
 	puts "      [8] Ubuntu"
 	puts "      [9] Void"
+	puts "  [i] For close the program"
+	puts "  [i] CTRL+C"
 	puts
 	local iter=1
 	local keysets=()
