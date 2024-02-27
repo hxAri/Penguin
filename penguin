@@ -917,7 +917,7 @@ if [[ \\\$1 != \\"\\" ]]; then
                     openbox) window=openbox ;;
                     i3) window=i3 ;;
                     *)
-                        echo -e \"\\\\x20\\\\x20\\\\x1b[1;31mstderr\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;112m$distro\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;190munsupported\\\\x1b[1;38;5;214m:\\\\x1b[1;38;5;70m=\\\\x1b[1;38;5;120mwindow\\\\x1b[1;38;5;70m>>\\\\x1b[0m\"
+                        echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mwindow\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
                         exit 1
                     ;;
                 esac
@@ -931,20 +931,20 @@ if [[ \\\$1 != \\"\\" ]]; then
                     LXQT) desktop=lxqt ;;
                     LXDE) desktop=lxde ;;
                     *)
-                        echo -e \"\\\\x20\\\\x20\\\\x1b[1;31mstderr\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;112m$distro\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;190munsupported\\\\x1b[1;38;5;214m:\\\\x1b[1;38;5;70m=\\\\x1b[1;38;5;120mdesktop\\\\x1b[1;38;5;70m>>\\\\x1b[0m\"
+                        echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mdesktop\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
                         exit 1
                 esac
             fi
         ;;
         *)
-            echo -e \"\\\\x20\\\\x20\\\\x1b[1;31mstderr\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;112m$distro\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;190munsupported\\\\x1b[1;38;5;214m:\\\\x1b[1;38;5;70m=\\\\x1b[1;38;5;120mselection\\\\x1b[1;38;5;70m>>\\\\x1b[0m\"
+            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mselection\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
             exit 1
         ;;
     esac
 fi
 
 # Default ${distro^} Source.
-source=$source/\\\$select
+source=$target/\\\$select
 
 # Resolve ${distro^} Source.
 case \\\$select in
@@ -955,13 +955,13 @@ esac
 if [[ ! -d \\\$source/$folder ]] || [[ ! -d \\\$source/${distro,,}-binds ]] || [[ ! -f \\\$source/$launch ]]; then
     case \\\$select in
         cli)
-            echo -e \"\\\\x20\\\\x20\\\\x1b[1;31mstderr\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;112m$distro\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;190mnone\\\\x1b[1;38;5;214m:\\\\x1b[1;38;5;70m=\\\\x1b[1;38;5;120m\\\$select\\\\x1b[1;38;5;70m>>\\\\x1b[0m\"
+            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190mnone\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120m\\\$select\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
         ;;
         window)
-            echo -e \"\\\\x20\\\\x20\\\\x1b[1;31mstderr\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;112m$distro\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;190m\\\$select\\\\x1b[1;38;5;214m:\\\\x1b[1;38;5;70m=\\\\x1b[1;38;5;120m\\\$window\\\\x1b[1;38;5;70m>>\\\\x1b[0m\"
+            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190m\\\$select\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120m\\\$window\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
         ;;
         desktop)
-            echo -e \"\\\\x20\\\\x20\\\\x1b[1;31mstderr\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;112m$distro\\\\x1b[1;38;5;70m<\\\\x1b[1;38;5;190m\\\$select\\\\x1b[1;38;5;214m:\\\\x1b[1;38;5;70m=\\\\x1b[1;38;5;120m\\\$desktop\\\\x1b[1;38;5;70m>>\\\\x1b[0m\"
+            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190m\\\$select\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120m\\\$desktop\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
         ;;
     esac
     exit 1
@@ -3598,31 +3598,31 @@ exit
 
 function stdio() {
 	prints=
-	prefix="\\\\\\\\x1b[1;32m"
+	prefix="\\\\\\\\\\x1b[1;32m"
 	if [[ $1 != "" ]]; then
 		if [[ ${1,,} == "stderr" ]]; then
-			prefix="\\\\\\\\x1b[1;31m"
+			prefix="\\\\\\\\\\x1b[1;31m"
 		fi
 		prints="${prefix}$1"
 		if [[ $2 != "" ]]; then
-			prints+="\\\\\\\\x1b[1;38;5;70m<"
-			prints+="\\\\\\\\x1b[1;38;5;112m$2"
-			prints+="\\\\\\\\x1b[1;38;5;70m>"
+			prints+="\\\\\\\\\\x1b[1;38;5;70m<"
+			prints+="\\\\\\\\\\x1b[1;38;5;112m$2"
+			prints+="\\\\\\\\\\x1b[1;38;5;70m>"
 			if [[ $3 != "" ]]; then
 				prints="${prefix}$1"
-				prints+="\\\\\\\\x1b[1;38;5;70m<"
-				prints+="\\\\\\\\x1b[1;38;5;112m$2"
-				prints+="\\\\\\\\x1b[1;38;5;70m<"
-				prints+="\\\\\\\\x1b[1;38;5;190m$3"
+				prints+="\\\\\\\\\\x1b[1;38;5;70m<"
+				prints+="\\\\\\\\\\x1b[1;38;5;112m$2"
+				prints+="\\\\\\\\\\x1b[1;38;5;70m<"
+				prints+="\\\\\\\\\\x1b[1;38;5;190m$3"
 				if [[ $4 != "" ]]; then
-					prints+="\\\\\\\\x1b[1;38;5;214m:"
-					prints+="\\\\\\\\x1b[1;38;5;70m="
-					prints+="\\\\\\\\x1b[1;38;5;120m$4"
+					prints+="\\\\\\\\\\x1b[1;38;5;214m:"
+					prints+="\\\\\\\\\\x1b[1;38;5;70m="
+					prints+="\\\\\\\\\\x1b[1;38;5;120m$4"
 				fi
-				prints+="\\\\\\\\x1b[1;38;5;70m>>"
+				prints+="\\\\\\\\\\x1b[1;38;5;70m>>"
 			fi
 		fi
-		echo "\\\\\\\\x20\\\\\\\\x20$prints\\\\\\\\x1b[0m"
+		echo "\\\\\\\\\\x20\\\\\\\\\\x20$prints\\\\\\\\\\x1b[0m"
 	fi
 }
 
