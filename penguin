@@ -2324,7 +2324,7 @@ function distroConfig() {
 						touch $source/$folder/root/.hushlogin
 						
 						echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
-						wget --tries=20 $rinku/${desktop}22.sh -O $source/$folder/root/${desktop}.sh
+						wget -q --tries=20 $rinku/${desktop}22.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
 
 						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 						chmod +x $source/$folder/root/${desktop}.sh
@@ -2528,7 +2528,7 @@ function distroConfig() {
 						touch $source/$folder/root/.hushlogin
 						
 						echo "$(stdio stdout $distro downloding /:root/${desktop}.sh)"
-						wget --tries=20 $rinku/${desktop}19.sh -O $source/$folder/root/${desktop}.sh
+						wget -q --tries=20 $rinku/${desktop}19.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro download /:root/${desktop}.sh)"
 							inputSkip=
@@ -2669,7 +2669,7 @@ function distroConfig() {
 						vncViewerSetup $distro $source/$folder
 						
 						echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
-						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
+						wget -q --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${window}.sh
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro download /:root/${window}.sh)"
 							inputSkip=
@@ -2752,7 +2752,7 @@ function distroConfig() {
 						touch $source/$folder/root/.hushlogin
 						
 						echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
-						wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O $source/$folder/root/${desktop}.sh
+						wget -q --tries=20 ${rinku[0]}/${rinku[1]}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro download /:root/${desktop}.sh)"
 							inputSkip=
@@ -2831,7 +2831,7 @@ function distroConfig() {
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
 						echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
-						wget --tries=20 ${rinku[2]}/${window}.sh -O $source/$folder/root/${window}.sh
+						wget -q --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${window}.sh
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro download /:root/${window}.sh)"
 							inputSkip=
