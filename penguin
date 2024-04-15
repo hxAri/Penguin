@@ -861,7 +861,7 @@ function distroArchive() {
 }
 
 # Handle building distro binary executable.
-# distroBinary [distro-name] [binary] [launch] [folder] [source] [default] [desktop] [window]
+# distroBinary [distro-name] [binary] [launch] [folder] [source] [default] [desktop|window]
 function distroBinary() {
 	
 	local distro=$1
@@ -870,13 +870,34 @@ function distroBinary() {
 	local folder=$4
 	local source=$5
 	local default=$6
-	local select=
+	local multiple=false
+	local versionD=
 	local desktop=
 	local window=
 	
 	echo "$(stdout $distro setup binary)"
 	if [[ $default == "" ]]; then
 		default=cli
+		desktop=xfce
+		window=awesome
+	else
+		case ${default,,} in
+			desktop)
+				desktop=$7
+				window=awesome
+				if [[ $desktop == "" ]]; then
+					desktop=xfce
+				fi
+			;;
+			window)
+				desktop=xfce
+				window=$7
+				if [[ $window == "" ]]; then
+					window=awesome
+				fi
+			;;
+			cli) ;;
+		esac
 	fi
 	if [[ $distro == "" ]]; then
 		echo "$(stderr distro required)"
@@ -897,56 +918,104 @@ function distroBinary() {
 		echo "$(stdout $distro creating $termux/files/usr/bin/${binary})"
 		cat -v <<- EOF > $termux/files/usr/bin/${binary}
 			#!/usr/bin/env bash
+
 echo -e "#!/usr/bin/env bash
+
 # Distro name.
-distro=$distro
+distro=${distro,,}
 
 # Default ${distro^} Selection.
 select=${default,,}
-window=awesome
-desktop=xfce
 
-if [[ \\\$1 != \\"\\" ]]; then
-    case \\\${1,,} in
-        cli) select=cli ;;
-        window)
-            select=window
-            if [[ \\\$2 != \\"\\" ]]; then
-                case \\\${2,,} in
-                    awesome) window=awesome ;;
-                    openbox) window=openbox ;;
-                    i3) window=i3 ;;
-                    *)
-                        echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mwindow\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
-                        exit 1
-                    ;;
-                esac
-            fi
-        ;;
-        desktop)
-            select=desktop
-            if [[ \\\$2 != \\"\\" ]]; then
-                case \\\${2^^} in
-                    XFCE) desktop=xfce ;;
-                    LXQT) desktop=lxqt ;;
-                    LXDE) desktop=lxde ;;
-                    *)
-                        echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mdesktop\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
-                        exit 1
-                esac
-            fi
-        ;;
-        *)
-            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mselection\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
-            exit 1
-        ;;
-    esac
+# Identify if the distro is support multiple versions.
+version=${version}
+
+desktop=${desktop,,}
+window=${window,,}
+
+# Resolve ${distro^} source version.
+if [[ \\\$version != \\"\\" ]]; then
+    if [[ \\\$1 != \\"\\" ]]; then
+        version=\\\$1
+    fi
+        if [[ \\\$2 != \\"\\" ]]; then
+        case \\\${2,,} in
+            cli) select=cli ;;
+            window)
+                select=window
+                if [[ \\\$3 != \\"\\" ]]; then
+                    case \\\${3,,} in
+                        awesome) window=awesome ;;
+                        openbox) window=openbox ;;
+                        i3) window=i3 ;;
+                        *)
+                            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mwindow\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
+                            exit 1
+                        ;;
+                    esac
+                fi
+            ;;
+            desktop)
+                select=desktop
+                if [[ \\\$3 != \\"\\" ]]; then
+                    case \\\${3^^} in
+                        XFCE) desktop=xfce ;;
+                        LXQT) desktop=lxqt ;;
+                        LXDE) desktop=lxde ;;
+                        *)
+                            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mdesktop\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
+                            exit 1
+                    esac
+                fi
+            ;;
+            *)
+                echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mselection\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
+                exit 1
+            ;;
+        esac
+    fi
+    source=$target/\\\$version/\\\$select
+else
+    if [[ \\\$1 != \\"\\" ]]; then
+        case \\\${1,,} in
+            cli) select=cli ;;
+            window)
+                select=window
+                if [[ \\\$2 != \\"\\" ]]; then
+                    case \\\${2,,} in
+                        awesome) window=awesome ;;
+                        openbox) window=openbox ;;
+                        i3) window=i3 ;;
+                        *)
+                            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mwindow\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
+                            exit 1
+                        ;;
+                    esac
+                fi
+            ;;
+            desktop)
+                select=desktop
+                if [[ \\\$2 != \\"\\" ]]; then
+                    case \\\${2^^} in
+                        XFCE) desktop=xfce ;;
+                        LXQT) desktop=lxqt ;;
+                        LXDE) desktop=lxde ;;
+                        *)
+                            echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mdesktop\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
+                            exit 1
+                    esac
+                fi
+            ;;
+            *)
+                echo -e \"\\\\\x20\\\\\x20\\\\\x1b[1;31mstderr\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;112m$distro\\\\\x1b[1;38;5;70m<\\\\\x1b[1;38;5;190munsupported\\\\\x1b[1;38;5;214m:\\\\\x1b[1;38;5;70m=\\\\\x1b[1;38;5;120mselection\\\\\x1b[1;38;5;70m>>\\\\\x1b[0m\"
+                exit 1
+            ;;
+        esac
+    fi
+    source=$target/\\\$select
 fi
 
-# Default ${distro^} Source.
-source=$target/\\\$select
-
-# Resolve ${distro^} Source.
+# Resolve ${distro^} source mode.
 case \\\$select in
     window) source+=/\\\$window ;;
     desktop) source+=/\\\$desktop ;;
@@ -1111,7 +1180,6 @@ bash \\\$source/$launch
 " > $termux/files/usr/bin/$binary
 chmod +x $termux/files/usr/bin/$binary
 exit 0
-
 		EOF
 		exit
 		if which termux-fix-shebang; then
@@ -2297,9 +2365,9 @@ function distroConfig() {
 		ubuntu)
 			if [[ $version == 22.04 ]]; then
 				case ${select,,} in
-					cli) ;;
+					cli) params="${version}" cli;;
 					desktop)
-						params=$desktop
+						params="${version} desktop ${desktop}"
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2391,7 +2459,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params=$window 
+						params="${version} window ${window}" 
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2483,9 +2551,9 @@ function distroConfig() {
 				esac
 			elif [[ $version == 20.03 ]]; then
 				case ${select,,} in
-					cli) ;;
+					cli) params="${version} cli" ;;
 					desktop)
-						params=$desktop
+						params="${version} desktop ${desktop}"
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2627,7 +2695,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params=$window
+						params="${version} window ${window}"
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2719,9 +2787,9 @@ function distroConfig() {
 				esac
 			elif [[ $version == 18.04 ]]; then
 				case ${select,,} in
-					cli) ;;
+					cli) params="${version} cli" ;;
 					desktop)
-						params=$desktop
+						params="${version} desktop ${desktop}"
 						case ${desktop,,} in
 							xfce)
 								local rinku=(
@@ -2819,7 +2887,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params=$window
+						params="${version} window ${window}"
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2893,14 +2961,16 @@ function distroConfig() {
 	esac
 	if [[ ! -f $termux/files/usr/bin/$binary ]]; then
 		puts "$termux/files/usr/bin/$binary: None"
-		distroBinary $distro $binary $launch $folder $source
+		case ${select,,} in
+			desktop) distroBinary $distro $binary $launch $folder $source $select $desktop ;;
+			window) distroBinary $distro $binary $launch $folder $source $select $window ;;
+			*) distroBinary $distro $binary $launch $folder $source $select ;;
+		esac
 	fi
 	if [[ ! -f $source/$launch ]]; then
 		puts "$source/$launch: None"
 		distroLauncher $distro $launch $source
 	fi
-	exit
-	logo
 	echo "$(stdio stdout $distro installed)"
 	if [[ $version != "" ]]; then
 		command="$distro $version $params"
@@ -3212,7 +3282,7 @@ function distroInstall() {
 }
 
 # Handle building distro launcher executable.
-# distroBinary [distro-name] [launch] [source]
+# distroLauncher [distro-name] [launch] [source]
 function distroLauncher() {
 	pass
 }
