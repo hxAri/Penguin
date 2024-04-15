@@ -1196,7 +1196,7 @@ exit 0
 			else
 				echo "$(stdout $distro chmod+x $termux/files/usr/bin/${binary})"
 				chmod +x $termux/files/usr/bin/$binary
-
+				
 				echo "$(stdout $distro rewrite $termux/files/usr/bin/${binary})"
 				bash $termux/files/usr/bin/$binary
 			fi
@@ -2376,10 +2376,10 @@ function distroConfig() {
 						
 						echo "$(stdio stdout $distro desktop setup)"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
-
+						
 						echo "$(stdio stdout $distro makedir /:var/tmp)"
 						mkdir -p $source/$folder/var/tmp
-
+						
 						echo "$(stdio stdout $distro removing /:usr/local/bin/\*)"
 						rm -rf $source/$folder/usr/local/bin/*
 						
@@ -2393,7 +2393,7 @@ function distroConfig() {
 						
 						echo "$(stdio stdout $distro downloading /:root/${desktop}.sh)"
 						wget -q --tries=20 $rinku/${desktop}22.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${desktop}.sh
-
+						
 						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 						chmod +x $source/$folder/root/${desktop}.sh
 						
@@ -2427,13 +2427,13 @@ function distroConfig() {
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
 							    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncviewer-start)"
 							    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
-
+							    
 							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncviewer-start)"
 							    chmod +x /usr/local/bin/vncserver-start
 							    
 							    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncviewer-stop)"
 							    wget --tries=20 $rinku/vncserver-stop -O /usr/local/bin/vncserver-stop
-
+							    
 							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncviewer-stop)"
 							    chmod +x /usr/local/bin/vncserver-stop
 							fi
@@ -2467,7 +2467,7 @@ function distroConfig() {
 						
 						echo "$(stdio stdout $distro window setup)"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
-
+						
 						echo "$(stdio stdout $distro makedir /:var/tmp)"
 						mkdir -p $source/$folder/var/tmp
 						if [[ $? -ne 0 ]]; then
@@ -2479,7 +2479,7 @@ function distroConfig() {
 								exit 1
 							fi
 						fi
-
+						
 						echo "$(stdio stdout $distro removing /:usr/local/bin/\*)"
 						rm -rf $source/$folder/usr/local/bin/*
 						if [[ $? -ne 0 ]]; then
@@ -2562,7 +2562,7 @@ function distroConfig() {
 						
 						echo "$(stdio stdout $distro desktop setup)"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
-
+						
 						echo "$(stdio stdout $distro makedir /:var/tmp)"
 						mkdir -p $source/$folder/var/tmp
 						if [[ $? -ne 0 ]]; then
@@ -2574,7 +2574,7 @@ function distroConfig() {
 								exit 1
 							fi
 						fi
-
+						
 						echo "$(stdio stdout $distro removing /:usr/local/bin/\*)"
 						rm -rf $source/$folder/usr/local/bin/*
 						if [[ $? -ne 0 ]]; then
@@ -2623,14 +2623,14 @@ function distroConfig() {
 						else
 							echo "$(stdio stdout $distro creating /:root/.profile)"
 							cat $source/$folder/root/.profile.1 >> $source/$folder/root/.profile
-
+							
 							echo "$(stdio stdout $distro chmod+x /:root/.profile)"
 							chmod +x $source/$folder/root/.profile
-
+							
 							echo "$(stdio stdout $distro removing /:root/.profile.1)"
 							rm -rf $source/$folder/root/.profile.1
 						fi
-
+						
 						echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 						rm -rf $source/$folder/root/.bash_profile
 						
@@ -2663,7 +2663,7 @@ function distroConfig() {
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
 							    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncserver-start)"
 							    wget --tries=20 $rinku/vncserver-start -O /usr/local/bin/vncserver-start
-
+							    
 							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-start)"
 							    chmod +x /usr/local/bin/vncserver-start
 							    
@@ -2700,7 +2700,7 @@ function distroConfig() {
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
 						)
-
+						
 						echo "$(stdio stdout $distro window setup)"
 						echo "APT::Acquire::Retries \"3\";" > $source/$folder/etc/apt/apt.conf.d/80-retries
 						
@@ -2750,7 +2750,7 @@ function distroConfig() {
 							echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
 							chmod +x $source/$folder/root/${window}.sh
 						fi
-
+						
 						echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 						cat <<- EOF > $source/$folder/root/.bash_profile
 							#!/usr/bin/env bash
@@ -2833,7 +2833,7 @@ function distroConfig() {
 							echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 							chmod +x $source/$folder/root/${desktop}.sh
 						fi
-
+						
 						echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 						rm -rf $source/$folder/root/.bash_profile
 						
@@ -2855,13 +2855,13 @@ function distroConfig() {
 							if [[ ! -f /usr/local/bin/vncserver-start ]]; then
 								echo -e "$(stdio stdout $distro downloading /usr/bin/local/vncserver-start)"
 							    wget --tries=20 ${rinku[0]}/vncserver-start -O /usr/local/bin/vncserver-start
-
+							    
 							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-start)"
 							    chmod +x /usr/local/bin/vncserver-start
 							    
 							    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncserver-stop)"
 							    wget --tries=20 ${rinku[0]}/vncserver-stop -O /usr/local/bin/vncserver-stop
-
+							    
 							    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-stop)"
 							    chmod +x /usr/local/bin/vncserver-stop
 							fi
@@ -2921,7 +2921,7 @@ function distroConfig() {
 							apt update -y && apt install wget sudo nano screenfetch -y && clear
 							
 							if [[ ! -f /root/${window}.sh ]]; then
-								echo -e "$(stdio stdout $distro downloading ${window}.sh)"
+							    echo -e "$(stdio stdout $distro downloading ${window}.sh)"
 							    wget --tries=20 ${rinku[2]}/${window}.sh -O /root/${window}.sh
 							fi
 							bash /root/${window}.sh
@@ -2942,7 +2942,7 @@ function distroConfig() {
 							clear && screenfetch -A "Ubuntu" && echo
 							sleep 2.4
 						EOF
-
+						
 						echo "$(stdio stderr $distro chmod+x /:root/.bash_profile)"
 						chmod +x $source/$folder/root/.bash_profile
 					;;
@@ -3248,22 +3248,22 @@ function distroInputAction() {
 
 # Handle distro install.
 function distroInstall() {
-
+	
 	# Distro Install Source Destination.
 	local source=
 	local exists=
-
+	
 	# Distro RootFS name based on version number.
 	local rootfs=
-
+	
 	# Distro Archive download url.
 	local archive=
 	local archurl=
 	local archname=
-
+	
 	# Make directory of image for downloaded distro archive.
 	mkdir -p $images/$distro
-
+	
 	if [[ $distro == "" ]]; then
 		echo -e "$(stdio stderr distro required)\n"
 		exit 1
