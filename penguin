@@ -37,6 +37,9 @@ author_email="hxari@proton.me"
 # Application version.
 pversion=2.0.0
 
+# Target basename of directory.
+directory=$(basename $0)
+
 # Application repository.
 github=https://github.com/hxAri/$appname
 issues=https://github.com/hxAri/$appname/issues
@@ -118,27 +121,8 @@ declare -A windows=(
 # Square bracket with interpunch.
 sint="[·]"
 
-# Dependency requirements.
-dependencies=(
-	cat
-	curl
-	cut
-	proot
-	tar
-	wget
-)
-
 # Current user previlleges
 whoami=$(whoami)
-
-
-# For compatibility system.
-if [[ ! $(command -v puts) ]]; then
-	function puts() {
-		echo -e "\x1b[0m$@"
-	}
-fi
-
 
 # Handle disto action.
 # distro [distro-name]
@@ -3056,7 +3040,7 @@ function distroExtract() {
 		echo -e "$(stdio stderr unknown mode $select)\n"
 		exit 1
 	fi
-
+	
 	inputRemove=
 	if [[ -d "$source/$folder" ]]; then
 		puts "  > [a] << Remove previous installation [Y/n]"
@@ -3087,7 +3071,7 @@ function distroExtract() {
 			archive=${images}/${distro}/${rootfs}
 		fi
 		echo -e "$(stdio stdout $distro extract $rootfs)"
-		proot --link2symlink tar -xf $archive --exclude=dev -C ${paths[fs]} ||:
+		proot --link2symlink tar -xfv  $archive --exclude=dev -C ${paths[fs]} ||:
 		if [[ $? -ne 0 ]] || [[ ! -d ${paths[fs]} ]]; then
 			echo -e "$(stdio stderr $distro extract $rootfs)\n"
 			exit 1
@@ -3113,17 +3097,17 @@ function distroExtract() {
 # Handle readline distro input Action.
 # distroInputAction [distro] [action] [version]
 function distroInputAction() {
-
+	
 	local inputAction=
 	local inputSelect=
 	local inputWindow=
 	local inputDesktop=
 	local inputVersion=
-
+	
 	# Handle readline distro input selection mode.
 	# distroInputSelect [distro]
 	function distroInputSelect() {
-
+		
 		# Handle readline distro input desktop environment.
 		# distroInputDesktopEnv [distro]
 		function distroInputDesktopEnv() {
@@ -3162,7 +3146,7 @@ function distroInputAction() {
 				esac
 			done
 		}
-
+		
 		# Handle readline distro input window manager.
 		# distroInputWindowManager [distro]
 		function distroInputWindowManager() {
@@ -3202,7 +3186,7 @@ function distroInputAction() {
 			select=${inputSelect,,}
 		done
 	}
-
+	
 	# Handle readline distro input selection mode.
 	# distroInputImport [distro]
 	function distroInputImport() {
@@ -3307,7 +3291,14 @@ function distroInstall() {
 # Handle building distro launcher executable.
 # distroLauncher [distro-name] [launch] [source]
 function distroLauncher() {
-	pass
+	local arguments=()
+	local distro=$1
+	local launch=$2
+	local source=$3
+	
+	echo "$(stdout $distro setup launcher)"
+	echo "$(stdout $distro setup launcher success)"
+	echo "$(stderr $distro setup launcher failed)"
 }
 
 # Handle distro remove installation.
@@ -3403,40 +3394,50 @@ function main() {
 	local inputAnswer=
 	local inputInstall=
 	local inputQuest=
-	for dependency in ${dependencies[@]}; do
-		if [[ ! $(command -v $dependency) ]]; then
-			logo
-			echo "$(stdio stderr required installed $dependency)"
-			while [[ $inputAsk == "" ]]; do
-				readline "main" "install" "Y"
-				if [[ ${inputInstall,,} == "y" ]]; then
-					if [[ $(command -v tsu) ]]; then
-						tsu pkg install $dependency
-						if [[ $? -ne 0 ]]; then
-							echo -e "$(stdio stderr main tsu error)\n"
-							exit 1
+	local dependencies="${directory}/dependencies"
+	if [[ -f $dependencies ]]; then
+		IFS=$'\n' read -d '' -r -a lines < $dependencies
+		for i in ${!lines[@]}; do
+			dependency="${lines[${i}]}"
+			if [[ ! $(command -v $dependency) ]]; then
+				logo
+				echo -e "$(stdio stderr required installed $dependency)"
+				while [[ $inputAsk == "" ]]; do
+					readline "main" "install" "Y"
+					if [[ ${inputInstall,,} == "y" ]]; then
+						if [[ $(command -v tsu) ]]; then
+							tsu pkg install $dependency
+							if [[ $? -ne 0 ]]; then
+								echo -e "$(stdio stderr main tsu error)\n"
+								exit 1
+							fi
+						elif [[ $(command -v sudo) ]]; then
+							sudo apt install $dependency
+							if [[ $? -ne 0 ]]; then
+								echo -e "$(stdio stderr main sudo error)\n"
+								exit 1
+							fi
+						else
+							pkg install $dependency
+							if [[ $? -ne 0 ]]; then
+								echo -e "$(stdio stderr main failed install)\n"
+								exit 1
+							fi
 						fi
-					elif [[ $(command -v sudo) ]]; then
-						sudo apt install $dependency
-						if [[ $? -ne 0 ]]; then
-							echo -e "$(stdio stderr main sudo error)\n"
-							exit 1
-						fi
+						break
 					else
-						pkg install $dependency
-						if [[ $? -ne 0 ]]; then
-							echo -e "$(stdio stderr main failed install)\n"
-							exit 1
-						fi
+						echo -e "$(stdio stderr main aborted)\n"
+						exit 1
 					fi
-					break
-				else
-					echo -e "$(stdio stderr main aborted)\n"
-					exit 1
-				fi
-			done
-		fi
-	done
+				done
+			fi
+		done
+	else
+		logo
+		echo -e "$(stdio stderr none $dependencies)"
+		echo -e
+		exit 1
+	fi
 	if [[ ! -d $termux ]]; then
 		if [[ ! -d $inputAnswer ]]; then
 			logo
@@ -3684,6 +3685,27 @@ function vncViewerSetup() {
 	done
 	sleep 2.4
 }
+
+# For compatibility system.
+if [[ ! $(command -v puts) ]]; then
+	function puts() {
+		echo -e "\x1b[0m$@"
+	}
+fi
+
+# Change current working directory.
+cd $(dirname $0)
+
+# Iterate down a (possible) chain of symlinks.
+while [ -L "$directory" ]
+do
+	directory=$(readlink $directory)
+	cd $(dirname $directory)
+	directory=$(basename $directory)
+done
+
+# Update target basename directory.
+directory=$(pwd)
 
 # Executing main program.
 main
