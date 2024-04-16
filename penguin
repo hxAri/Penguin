@@ -133,7 +133,7 @@ whoami=$(whoami)
 
 
 # For compatibility system.
-if ! which puts >/dev/null; then
+if [[ ! $(command -v puts) ]]; then
 	function puts() {
 		echo -e "\x1b[0m$@"
 	}
@@ -143,10 +143,10 @@ fi
 # Handle disto action.
 # distro [distro-name]
 function distro() {
-
+	
 	# Set distro by parameter.
 	local distro=${1,,}
-
+	
 	# Handle Alpine Distro Actions.
 	function alpineDistro() {
 		
@@ -167,10 +167,10 @@ function distro() {
 		
 		# Default Alpine Environment for install.
 		local desktop=XFCE
-
+		
 		# Default Alpine Window Manager.
 		local window=Awesome
-
+		
 		# Default Alpine Version for install.
 		# local version=3.10.3
 		
@@ -202,7 +202,7 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
-
+	
 	# Handle Arch Distro Actions.
 	function archDistro() {
 		
@@ -220,7 +220,7 @@ function distro() {
 		# Default Arch Executable.
 		local binary=arch
 		local launch=arch-start
-
+		
 		# Default Arch Environment for install.
 		local desktop=XFCE
 		
@@ -229,7 +229,7 @@ function distro() {
 		
 		# Default Ubuntu Version for install.
 		# local version=2021.07.01
-
+		
 		logo
 		echo -e "$(stdio stdout distro arch)"
 		puts "  $sint Distro Arch Linux"
@@ -263,7 +263,7 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
-
+	
 	# Handle Debian Distro Actions.
 	function debianDistro() {
 		
@@ -284,13 +284,13 @@ function distro() {
 		
 		# Default Debian Environment for install.
 		local desktop=XFCE
-
+		
 		# Default Debian Window Manager.
 		local window=Awesome
-
+		
 		# Default Debian Version for install.
 		# local version=10.00
-
+		
 		logo
 		echo -e "$(stdio stdout distro debian)"
 		puts "  $sint Distro Debian"
@@ -325,7 +325,7 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
-
+	
 	# Handle Fedora Distro Actions.
 	function fedoraDistro() {
 		
@@ -335,7 +335,7 @@ function distro() {
 		# Default Import is always empty.
 		# Because we don't know where source destination.
 		local import=
-
+		
 		# Identify if distro is parta.
 		local onpart=true
 		
@@ -352,10 +352,10 @@ function distro() {
 		
 		# Default Fedora Window Manager.
 		local window=Awesome
-
+		
 		# Default Fedora Version for install.
 		# local version=33
-
+		
 		logo
 		echo -e "$(stdio stdout distro fedora)"
 		puts "  $sint Distro Fedora"
@@ -390,7 +390,7 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
-
+	
 	# Handle Kali Distro Actions.
 	function kaliDistro() {
 		
@@ -408,13 +408,13 @@ function distro() {
 		# Default Kali Executable.
 		local binary=kali
 		local launch=kali-start
-
+		
 		# Default Kali Environment for install.
 		local desktop=XFCE
 		
 		# Default Kali Window Manager.
 		local window=Awesome
-
+		
 		# Default Kali Version for install.
 		# local version=21.2
 		
@@ -452,7 +452,7 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
-
+	
 	# Handle Manjaro Distro Actions.
 	function manjaroDistro() {
 		
@@ -462,7 +462,7 @@ function distro() {
 		# Default Import is always empty.
 		# Because we don't know where source destination.
 		local import=
-
+		
 		# Identify if distro is parta.
 		local onpart=true
 		
@@ -479,10 +479,10 @@ function distro() {
 		
 		# Default Manjaro Window Manager.
 		local window=Awesome
-
+		
 		# Default Manjaro Version for install.
 		# local version=21
-
+		
 		logo
 		echo "$(stdio stdout manjaro)"
 		puts "  $sint Distro Manjaro"
@@ -518,20 +518,20 @@ function distro() {
 			import|install) distroInstall ;;
 		esac
 	}
-
+	
 	# Handle Nethunter Distro Actions.
 	function nethunterDistro() {
 		penguin
 	}
-
+	
 	# Handle Parrot Distro Actions.
 	function parrotDistro() {
 		penguin
 	}
-
+	
 	# Handle Ubuntu Distro Actions.
 	function ubuntuDistro() {
-
+		
 		# Default Ubuntu Mode for install.
 		local select=cli
 		
@@ -618,7 +618,7 @@ function distro() {
 		puts "      [3] Remove"
 		puts "      [4] Cancel"
 	}
-
+	
 	if [[ $1 != "" ]]; then
 		case ${1,,} in
 			alpine) alpineDistro ;;
@@ -916,9 +916,10 @@ function distroBinary() {
 		exit 1
 	else
 		echo "$(stdout $distro creating $termux/files/usr/bin/${binary})"
-		cat -v <<- EOF > $termux/files/usr/bin/${binary}
+		cat -v <<- EOF > "$termux/files/usr/bin/${binary}"
 			#!/usr/bin/env bash
 
+# Re-write binary file.
 echo -e "#!/usr/bin/env bash
 
 # Distro name.
@@ -932,6 +933,18 @@ version=${version}
 
 desktop=${desktop,,}
 window=${window,,}
+
+# Argument passeds.
+arguments=()
+i=1
+for argument in \\\${@}; do
+    case \\\$i in
+        1|2|3)
+        ;;
+        *) arguments+=( \\"\\\$argument\\" )
+    esac
+    i=$((i+1))
+done
 
 # Resolve ${distro^} source version.
 if [[ \\\$version != \\"\\" ]]; then
@@ -1176,13 +1189,15 @@ else
     fi
 fi
 
-bash \\\$source/$launch
-" > $termux/files/usr/bin/$binary
+bash \\\$source/$launch" > $termux/files/usr/bin/$binary
+
+# Allow file executable mode.
 chmod +x $termux/files/usr/bin/$binary
+
 exit 0
 		EOF
-		exit
-		if which termux-fix-shebang; then
+		
+		if [[ $(command -v termux-fix-shebang) ]]; then
 			echo "$(stdout $distro fixing shebang)"
 			termux-fix-shebang $termux/files/usr/bin/$binary
 			if [[ $? -ne 0 ]]; then
@@ -1201,11 +1216,21 @@ exit 0
 				bash $termux/files/usr/bin/$binary
 			fi
 		else
-			echo "$(stdout $distro command termux-fix-shebang)"
-			exit 1
+			echo "$(stderr $distro command termux-fix-shebang)"
+			puts "  termux-fix-shebang: command not found"
 		fi
 	fi
-	exit
+	
+	echo "$(stdout $distro chmod+x $termux/files/usr/bin/${binary})"
+	chmod +x $termux/files/usr/bin/${binary}
+	echo "$(stdout $distro executing $termux/files/usr/bin/${binary})"
+	bash $termux/files/usr/bin/${binary}
+	if [[ $? -eq 0 ]]; then
+		echo "$(stdout $distro setup success)"
+	else
+		echo "$(stderr $distro setup failed)"
+		exit 1
+	fi
 }
 
 # Handle fix distro configuration.
@@ -2365,9 +2390,9 @@ function distroConfig() {
 		ubuntu)
 			if [[ $version == 22.04 ]]; then
 				case ${select,,} in
-					cli) params="${version}" cli;;
+					cli) cli;;
 					desktop)
-						params="${version} desktop ${desktop}"
+						params="desktop ${desktop}"
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2459,7 +2484,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params="${version} window ${window}" 
+						params="window ${window}" 
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2551,9 +2576,9 @@ function distroConfig() {
 				esac
 			elif [[ $version == 20.03 ]]; then
 				case ${select,,} in
-					cli) params="${version} cli" ;;
+					cli) params="cli" ;;
 					desktop)
-						params="${version} desktop ${desktop}"
+						params="desktop ${desktop}"
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2695,7 +2720,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params="${version} window ${window}"
+						params="window ${window}"
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2787,9 +2812,9 @@ function distroConfig() {
 				esac
 			elif [[ $version == 18.04 ]]; then
 				case ${select,,} in
-					cli) params="${version} cli" ;;
+					cli) params="cli" ;;
 					desktop)
-						params="${version} desktop ${desktop}"
+						params="desktop ${desktop}"
 						case ${desktop,,} in
 							xfce)
 								local rinku=(
@@ -2887,7 +2912,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params="${version} window ${window}"
+						params="window ${window}"
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2960,7 +2985,6 @@ function distroConfig() {
 		;;
 	esac
 	if [[ ! -f $termux/files/usr/bin/$binary ]]; then
-		puts "$termux/files/usr/bin/$binary: None"
 		case ${select,,} in
 			desktop) distroBinary $distro $binary $launch $folder $source $select $desktop ;;
 			window) distroBinary $distro $binary $launch $folder $source $select $window ;;
@@ -2968,10 +2992,9 @@ function distroConfig() {
 		esac
 	fi
 	if [[ ! -f $source/$launch ]]; then
-		puts "$source/$launch: None"
 		distroLauncher $distro $launch $source
 	fi
-	echo "$(stdio stdout $distro installed)"
+	echo "$(stdio stdout $distro install success)"
 	if [[ $version != "" ]]; then
 		command="$distro $version $params"
 		echo "$(stdio stdout $distro command)" $(puts $distro $version $params)
@@ -3381,19 +3404,19 @@ function main() {
 	local inputInstall=
 	local inputQuest=
 	for dependency in ${dependencies[@]}; do
-		if ! which $dependency >/dev/null; then
+		if [[ ! $(command -v $dependency) ]]; then
 			logo
 			echo "$(stdio stderr required installed $dependency)"
 			while [[ $inputAsk == "" ]]; do
 				readline "main" "install" "Y"
 				if [[ ${inputInstall,,} == "y" ]]; then
-					if which tsu >/dev/null; then
+					if [[ $(command -v tsu) ]]; then
 						tsu pkg install $dependency
 						if [[ $? -ne 0 ]]; then
 							echo -e "$(stdio stderr main tsu error)\n"
 							exit 1
 						fi
-					elif which sudo >/dev/null; then
+					elif [[ $(command -v sudo) ]]; then
 						sudo apt install $dependency
 						if [[ $? -ne 0 ]]; then
 							echo -e "$(stdio stderr main sudo error)\n"
