@@ -3306,7 +3306,9 @@ function distroLauncher() {
 	local prootRegularQ=()
 	
 	# Set the initial working directory to *path*.
-	local prootRegularW=()
+	local prootRegularW=(
+		"/root"
+	)
 	
 	# PRoot Extension options.
 	
@@ -3323,27 +3325,73 @@ function distroLauncher() {
 	echo "$(stdout $distro setup launcher)"
 	case ${distro,,} in
 		alpine)
+			prootRegularB=(
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		arch)
+			prootRegularB=(
+				"/sys"
+				"/data"
+				"/dev"
+				"/dev/urandom:/dev/random"
+				"/proc"
+				"/proc/self/fd/2:/dev/stderr"
+				"/proc/self/fd/1:/dev/stdout"
+				"/proc/self/fd/0:/dev/stdin"
+				"/proc/self/fd:/dev/fd"
+				"${source}/${distro,,}-fs/proc/fakethings/stat:/proc/stat"
+				"${source}/${distro,,}-fs/proc/fakethings/vmstat:/proc/vmstat"
+				"${source}/${distro,,}-fs/proc/fakethings/version:/proc/version"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		debian)
+			prootRegularB=(
+				"/data"
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		fedora)
+			prootRegularB=(
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		kali)
+			prootRegularB=(
+				"/data"
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		manjaro)
+			prootRegularB=(
+				"/data"
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		nethunter)
 		;;
 		parrot)
+			prootRegularB=(
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		ubuntu)
 			case ${version,,} in
-				22.04)
-					path="/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+				22.04|20.03)
 					prootRegularB=(
-						"/sdcard"
 						"/sys"
 						"/data"
 						"/dev"
@@ -3358,17 +3406,23 @@ function distroLauncher() {
 						"${source}/${distro,,}-fs/proc/fakethings/vmstat:/proc/vmstat"
 						"${source}/${distro,,}-fs/proc/fakethings/version:/proc/version"
 					)
-					prootRegularW=(
-						"/root"
-					)
 				;;
-				20.03)
 				;;
 				18.04)
+					prootRegularB=(
+						"/dev"
+						"/proc"
+						"${source}/${distro,,}-fs/root:/dev/shm"
+					)
 				;;
 			esac
 		;;
 		void)
+			prootRegularB=(
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/root:/dev/shm"
+			)
 		;;
 		*) ;;
 	esac
@@ -3415,11 +3469,11 @@ function distroLauncher() {
 		
 		# PRoot command line parameters.
 		parameters=()
-		parameters=( "--kill-on-exit" )
+		parameters+=( "--kill-on-exit" )
 		parameters+=( "--link2symlink" )
 		
 		# Tells PRoot to simulate a root user which expected to
-		# be always available in Linux distributions.
+		# be always available in Linux distribut/root:/dev/shmions.
 		parameters+=( "-0" )
 		
 		# Hide files and directories starting with '.proot.' .
