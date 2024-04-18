@@ -927,7 +927,7 @@ function distroBinary() {
 			        ;;
 			        *) arguments+=( \\"\\\$argument\\" ) ;;
 			    esac
-			    i=$((i+1))
+			    i=\\\$((i+1))
 			done
 			
 			# Resolve ${distro^} source version.
@@ -3294,10 +3294,31 @@ function distroInstall() {
 # distroLauncher [distro-name] [launch] [source]
 function distroLauncher() {
 	
+	# PRoot Regular options.
+	
+	# Make the content of *path* accessible in the guest rootfs.
+	local prootRegularB=()
+	
+	# Use *path* as the new guest root file-system, default is /.
+	local prootRegularR=()
+	
+	# Make the content of *path* accessible in the guest rootfs.
+	local prootRegularQ=()
+	
+	# Set the initial working directory to *path*.
+	local prootRegularW=()
+	
+	# PRoot Extension options.
+	
+	local prootExtensionK=()
+	local prootExtensionI=()
+	
 	local parameters=()
 	local distro=$1
 	local launch=$2
 	local source=$3
+	local path="/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+	local home="/root"
 	
 	echo "$(stdout $distro setup launcher)"
 	case ${distro,,} in
@@ -3320,6 +3341,26 @@ function distroLauncher() {
 		ubuntu)
 			case ${version,,} in
 				22.04)
+					path="/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
+					prootRegularB=(
+						"/sdcard"
+						"/sys"
+						"/data"
+						"/dev"
+						"/dev/urandom:/dev/random"
+						"/proc"
+						"/proc/self/fd/2:/dev/stderr"
+						"/proc/self/fd/1:/dev/stdout"
+						"/proc/self/fd/0:/dev/stdin"
+						"/proc/self/fd:/dev/fd"
+						"${source}/${distro,,}-fs/root:/dev/shm"
+						"${source}/${distro,,}-fs/proc/fakethings/stat:/proc/stat"
+						"${source}/${distro,,}-fs/proc/fakethings/vmstat:/proc/vmstat"
+						"${source}/${distro,,}-fs/proc/fakethings/version:/proc/version"
+					)
+					prootRegularW=(
+						"/root"
+					)
 				;;
 				20.03)
 				;;
@@ -3331,10 +3372,25 @@ function distroLauncher() {
 		;;
 		*) ;;
 	esac
-	for i in ${!parameters[@]}; do
+	for i in ${!prootRegularB[@]}; do
+		prootRegularB[$i]="-b ${prootRegularB[$i]}"
 	done
-	puts ${parameters[@]}
-	exit
+	for i in ${!prootRegularR[@]}; do
+		prootRegularR[$i]="-r ${prootRegularR[$i]}"
+	done
+	for i in ${!prootRegularQ[@]}; do
+		prootRegularQ[$i]="-q ${prootRegularQ[$i]}"
+	done
+	for i in ${!prootRegularW[@]}; do
+		prootRegularW[$i]="-w ${prootRegularW[$i]}"
+	done
+	for i in ${!prootExtensionK[@]}; do
+		prootExtensionK[$i]="-k ${prootExtensionK[$i]}"
+	done
+	for i in ${!prootExtensionI[@]}; do
+		prootExtensionI[$i]="-i ${prootExtensionI[$i]}"
+	done
+	
 	echo "$(stdout $distro creating $source/${launch,,})"
 	cat -v <<- EOF > "$source/${launch,,}"
 		#!/usr/bin/env bash
@@ -3342,19 +3398,32 @@ function distroLauncher() {
 		# Change current working directory.
 		cd \$(dirname \$0)
 		
+		pulseaudio -k >>/dev/null 2>&1
+		pulseaudio --start >>/dev/null 2>&1
+		
 		# Avoid termux-exec, execve() conflicts with PRoot.
 		unset LD_PRELOAD
 		
 		# Args passed.
 		arguments="\$@"
 		
+		if [[ -n "\$(ls -A $source/${distro,,}-binds)" ]]; then
+		    for f in $source/${distro,,}-binds/* ;do
+		        . \$f
+		    done
+		fi
+		
 		# PRoot command line parameters.
 		parameters=()
+		parameters=( "--kill-on-exit" )
 		parameters+=( "--link2symlink" )
 		
 		# Tells PRoot to simulate a root user which expected to
 		# be always available in Linux distributions.
 		parameters+=( "-0" )
+		
+		# Hide files and directories starting with '.proot.' .
+		parameters+=( "-H" )
 		
 		# Option to specify the rootfs where Linux distribution was installed.
 		parameters+=( "-r $source/${distro,,}-fs" )
@@ -3367,19 +3436,39 @@ function distroLauncher() {
 		# internal storage (/sdcard) directly to root (/).
 		# parameters+=( "-b /sdcard" )
 		
-		...
+		# Make the content of *path* accessible in the guest rootfs.
+		parameters+=( "${prootRegularB[@]}" )
+		
+		# Use *path* as the new guest root file-system, default is /.
+		parameters+=( "${prootRegularR[@]}" )
+		
+		# Make the content of *path* accessible in the guest rootfs.
+		parameters+=( "${prootRegularQ[@]}" )
+		
+		# Set the initial working directory to *path*.
+		parameters+=( "${prootRegularW[@]}" )
+		
+		# Make current kernel appear as kernel release *string*.
+		parameters+=( "${prootExtensionK[@]}" )
+		
+		# Make current user and group appear as *string* "uid:gid".
+		parameters+=( "${prootExtensionI}" )
 		
 		# A program that should be executed inside the rootfs
+		parameters+=( "/usr/bin/env -i" )
+		parameters+=( "MOZ_FAKE_NO_SANDBOX=1" )
+		parameters+=( "HOME=$home" )
+		parameters+=( "PATH=$path" )
+		parameters+=( "TERM=\$TERM" )
+		parameters+=( "LANG=en_US.UTF-8" )
+		parameters+=( "LC_ALL=C" )
+		parameters+=( "LANGUAGE=en_US" )
+		
+		# Shell login.
 		parameters+=( "/bin/bash" )
 		parameters+=( "--login" )
 		
-		if [[ -n "\$(ls -A $source/${distro,,}-binds)" ]]; then
-		    for f in $source/${distro,,}-binds/* ;do
-		        . \$f
-		    done
-		fi
-		
-		if [[ -z "\$1" ]];then
+		if [[ -z "\$1" ]]; then
 		    exec proot \${parameters[@]}
 		else
 		    proot \${parameters[@]} -c "\$arguments"
@@ -3391,8 +3480,8 @@ function distroLauncher() {
 		echo "$(stdout $distro setup success)"
 	else
 		echo "$(stderr $distro setup failed)"
+		exit 1
 	fi
-	exit
 }
 
 # Handle distro remove installation.
