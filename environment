@@ -1,1 +1,1 @@
-development
+production
