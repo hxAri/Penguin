@@ -15,6 +15,7 @@
 		- [Window manager](#window-manager)
 	- [Dependency](#dependency)
 	- [Environment](#environment)
+			- [Warning](#warning)
 	- [Installation](#installation)
 	- [Sources](#sources)
 	- [Support](#support)
@@ -136,15 +137,18 @@ List of currently available or supported Linux Window Manager **[Penguin](https:
 * Openbox
 
 ## Dependency
-Does Penguin require additional dependencies? Yeah, but not much. All the required dependencies are all in a file called dependencies, you can read them with your favorite `cat` in the Terminal Emulator.
+Does **[Penguin](https://github.com/hxAri/Penguin)** require additional dependencies? Yeah, but not much. All the required dependencies are all in a file called **dependencies**, you can read them with your favorite `cat` in the Terminal Emulator.
 
 ## Environment
-If Penguin uses the Shell as a programming language, does it require virtualization such as a Virtual Environment in the Python language? It can be yes or no, the environment here is intended to be a different situation because Penguin is typed on a Laptop/PC so the **development** environment means that you will never install it, just create a system file folder like `{distro}-fs`
+If **[Penguin](https://github.com/hxAri/Penguin)** uses the Shell as a programming language, does it require virtualization such as a Virtual Environment in the Python language? It can be yes or no, the environment here is intended to be a different situation because **[Penguin](https://github.com/hxAri/Penguin)** is typed on a Laptop/PC so the **development** environment means that you will never install it, just create a system file folder like `{distro}-fs`
 
-Meanwhile, the **production** environment is where you actually run it on your Termux and, you will actually install it.
+Meanwhile, the **production** environment is where you actually run it on your Termux and, you will actually install it. If you want to change the **[Penguin](https://github.com/hxAri/Penguin)** environment you just need to change the contents of the **environment** file to the environment you want (**production** is set to default)
+
+#### Warning
+If you set it to development and run it in Termux it will probably cause permission errors
 
 ## Installation
-How to install Penguin? You don't need to bother with that problem, just clone or download the source code from this repository.
+How to install **[Penguin](https://github.com/hxAri/Penguin)**? You don't need to bother with that problem, just clone or download the source code from this repository.
 ```sh
 git clone https://github.com/hxAri/Penguin
 ```
@@ -152,7 +156,7 @@ Let's change give the penguin executable permission
 ```sh
 chmod +x Penguin/penguin
 ```
-Now you can run the Penguin like this
+Now you can run the **[Penguin](https://github.com/hxAri/Penguin)** like this
 ```sh
 bash Penguin/penguin
 ```
@@ -167,7 +171,7 @@ Penguin/penguin
 Next, please choose the distro you want to install yourself, and follow the instructions given, Have Nice Live!
 
 ## Sources
-To source the Root File System for the Penguin Linux Distro, it uses sources from various GitHub repositories, including:
+To source the Root File System for the **[Penguin](https://github.com/hxAri/Penguin)** Linux Distro, it uses sources from various GitHub repositories, including:
 * **[Andronix](https://github.com/AndronixApp/AndronixOrigin)**
 
 ## Support
