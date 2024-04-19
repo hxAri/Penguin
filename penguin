@@ -27,6 +27,12 @@
 #
 
 
+admin=
+admins=(
+	"sudo"
+	"tsu"
+)
+
 # Application name.
 appname=Penguin
 
@@ -55,7 +61,13 @@ images=$install/.rootfs
 
 # Termux architecture.
 architect=$(dpkg --print-architecture)
-architect=aarch64
+
+# Default aplication environment.
+# The development mode help you to issolate the installation.
+environment=production
+
+# Get current group name.
+group=$(id -Gn | cut -d " " -f 1)
 
 declare -A architects=(
 	[alpine-3.10]=
@@ -141,6 +153,9 @@ function distro() {
 		# Because we don't know where source destination.
 		local import=
 		
+		# Identify if distro is parta.
+		local onpart=
+		
 		# Default Alpine Directory.
 		local target=$install/alpine
 		local folder=alpine-fs
@@ -196,6 +211,9 @@ function distro() {
 		# Default Import is always empty.
 		# Because we don't know where source destination.
 		local import=
+		
+		# Identify if distro is parta.
+		local onpart=
 		
 		# Default Arch Directory.
 		local target=$install/arch
@@ -257,6 +275,9 @@ function distro() {
 		# Default Import is always empty.
 		# Because we don't know where source destination.
 		local import=
+		
+		# Identify if distro is parta.
+		local onpart=
 		
 		# Default Debian Directory.
 		local target=$install/debian
@@ -384,6 +405,9 @@ function distro() {
 		# Default Import is always empty.
 		# Because we don't know where source destination.
 		local import=
+		
+		# Identify if distro is parta.
+		local onpart=
 		
 		# Default Kali Directory.
 		local target=$install/kali
@@ -523,6 +547,9 @@ function distro() {
 		# Because we don't know where source destination.
 		local import=
 		
+		# Identify if distro is parta.
+		local onpart=
+		
 		# Default Ubuntu Directory.
 		local target=$install/ubuntu
 		local folder=ubuntu-fs
@@ -580,6 +607,33 @@ function distro() {
 	# Handle Void Distro Actions.
 	function voidDistro() {
 		
+		# Default Void Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+		
+		# Identify if distro is parta.
+		local onpart=
+		
+		# Default Void Directory.
+		local target=$install/void
+		local folder=void-fs
+		
+		# Default Void Executable.
+		local binary=void
+		local launch=void-start
+		
+		# Default Void Environment for install.
+		local desktop=XFCE
+		
+		# Default Void Window Manager.
+		local window=Awesome
+		
+		# Default Void Version for install.
+		# local version=
+		
 		logo
 		echo "$(stdio stdout void)"
 		puts "  $sint Distro Void"
@@ -601,6 +655,18 @@ function distro() {
 		puts "      [2] Import"
 		puts "      [3] Remove"
 		puts "      [4] Cancel"
+		distroInputAction "void" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove)
+				case ${select,,} in
+					cli) distroRemove "void" $binary "cli" ;;
+					desktop) distroRemove "void" $binary "desktop" $desktop ;;
+					window) distroRemove "void" $binary "window" $window ;;
+				esac
+			;;
+			import|install) distroInstall ;;
+		esac
 	}
 	
 	if [[ $1 != "" ]]; then
@@ -685,8 +751,8 @@ function distroArchive() {
 						exit 1
 					;;
 				esac
-					rootfs="debian-rootfs-${archname}.tar.gz"
-					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Debian/${archname}/debian-rootfs-${archname}.tar.xz?raw=true"
+				rootfs="debian-rootfs-${archname}.tar.gz"
+				archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Debian/${archname}/debian-rootfs-${archname}.tar.xz?raw=true"
 			;;
 			fedora)
 				if [[ $version != "" && $version != "33" ]]; then
@@ -708,9 +774,9 @@ function distroArchive() {
 						exit 1
 						;;
 					esac
-					rootfs=rootfs="fedora-rootfs-${archname}.tar.gz"
 					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Fedora/${archname}/fedora-rootfs-${archname}.tar.xz?raw=true"
 				fi
+				rootfs=rootfs="fedora-rootfs-${archname}.tar.xz"
 			;;
 			kali)
 				if [[ $version != "" && $version != "21.2" ]]; then
@@ -729,12 +795,12 @@ function distroArchive() {
 						exit 1
 					;;
 				esac
-				rootfs="kali-rootfs-${archname}.tar.xz"
 				if [[ $archname == "arm64" ]]; then
 					archurl="https://github.com/AndronixApp/AndronixOrigin/releases/download/kali-arm64-tarball/kali-rootfs-arm64.tar.xz"
 				else
 					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Kali/${archname}/kali-rootfs-${archname}.tar.xz?raw=true"
 				fi
+				rootfs="kali-rootfs-${archname}.tar.xz"
 			;;
 			manjaro)
 				if [[ $version != "" && $version != "21" ]]; then
@@ -746,6 +812,7 @@ function distroArchive() {
 					[partab]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partab"
 					[partac]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partac"
 				)
+				rootfs=rootfs="manjaro-rootfs-${archname}.tar.xz"
 			;;
 			nethunter) ;;
 			parrot) ;;
@@ -791,14 +858,29 @@ function distroArchive() {
 					exit 1
 				fi
 			;;
-			void) ;;
+			void)
+				case ${architect,,} in
+					aarch64) archname="arm64" ;;
+					arm) archname="armhf" ;;
+					amd64) archname="amd64" ;;
+					x86_64) archname="amd64" ;;	
+					i*86) archname="i386" ;;
+					x86) archname="i386" ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+				rootfs="void-rootfs-${archname}.tar.xz"
+				archurl="https://github.com/AndronixApp/AndronixOrigin/blob/master/Rootfs/Void/${archname}/void_${archname}.tar.xz?raw=true"
+			;;
 			*)
 				echo -e "$(stdio stderr unknown distro $distro)\n"
 				exit 1
 			;;
 		esac
 		if [[ ! -f ${images}/${distro}/${rootfs} ]]; then
-			if [[ $onpart ]]; then
+			if [[ $onpart == "true" ]]; then
 				for part in ${!archurl[@]}; do
 					if [[ ! -f ${images}/${distro}/${distro}.${part} ]]; then
 						echo -e "$(stdio stdout downloading ${distro}.${part})"
@@ -3000,9 +3082,22 @@ function distroConfig() {
 }
 
 # Handle fix distro extraction.
+# distroExtract [distro]
 function distroExtract() {
+	local excludes=(
+		"data"
+		"dev"
+	)
+	local extension=
 	local inputRemove=
 	local inputSkip=
+	local inputPreservePermissions=
+	local preservePermissions=
+	local inputExcludeMore=
+	local inputExcludePath=
+	local inputExclude=
+	local inputFlags=
+	local options=xfv
 	if [[ $select == "desktop" ]]; then
 		source+=/desktop/${desktop,,}
 		if [[ ${desktops[$distro]} != "" ]]; then
@@ -3042,7 +3137,6 @@ function distroExtract() {
 		echo -e "$(stdio stderr unknown mode $select)\n"
 		exit 1
 	fi
-	
 	inputRemove=
 	if [[ -d "$source/$folder" ]]; then
 		puts "  > [a] << Remove previous installation [Y/n]"
@@ -3061,7 +3155,7 @@ function distroExtract() {
 	)
 	if [[ ! -d ${paths[fs]} ]]; then
 		for path in ${!paths[@]}; do
-			echo "$(stdio stdout $distro makedir $path)"
+			echo "$(stdio stdout $distro makedir ${paths[$path]})"
 			mkdir -p ${paths[$path]}
 			if [[ $? -ne 0 ]] || [[ ! -d ${paths[$path]} ]]; then
 				echo -e "$(stdio stderr $distro makedir $path)\n"
@@ -3072,14 +3166,62 @@ function distroExtract() {
 		if [[ ! -f $archive ]]; then
 			archive=${images}/${distro}/${rootfs}
 		fi
+		puts "  > [a] << tar: preserve permissions extraction"
+		while [[ "$inputPreservePermissions" == "" ]]; do
+			readline "tar" "preservePermissions" "Y"
+			case "$inputPreservePermissions" in
+				y|Y)
+					preservePermissions="--preserve-permissions"
+					break
+				;;
+				n|N) ;;
+				*) inputPreservePermissions= ;;
+			esac
+		done
+		puts "  > [a] << tar: add exclude paths for extraction"
+		while [[ "$inputExcludePath" == "" ]]; do
+			readline "tar" "excludePath" "Y"
+			case "$inputExcludePath" in
+				y|Y)
+					while true; do
+						readline "tar" "exclude"
+						excludes+=( "$inputExclude" )
+						inputExcludeMore=
+						while [[ "$inputExcludeMore" == "" ]]; do
+							readline "tar" "excludeMore" "Y"
+							case "$inputExcludeMore" in
+								y|Y) ;;
+								n|N) ;;
+								*) inputExcludeMore= ;;
+							esac
+						done
+						if [[ ${inputExcludeMore,,} == "n" ]]; then
+							break
+						fi
+					done
+					break
+				;;
+				n|N) ;;
+				*) inputExcludePath= ;;
+			esac
+		done
 		echo -e "$(stdio stdout $distro extract $rootfs)"
-		proot --link2symlink tar -xfv  $archive --exclude=dev -C ${paths[fs]} ||:
+		extension=$(basename -- $archive)
+		extension=${extension##*.}
+		if [[ ${extension,,} == "xz" ]]; then
+			options=xzfv
+		fi
+		for i in ${!excludes[@]}; do
+			excludes[$i]="--exclude=\"${excludes[$i]}\""
+		done
+		if [[ $environment ]]; then
+			proot --link2symlink tar ${preservePermissions} -${options} ${archive} ${excludes[@]} -C ${paths[fs]} ||:
+		fi
 		if [[ $? -ne 0 ]] || [[ ! -d ${paths[fs]} ]]; then
 			echo -e "$(stdio stderr $distro extract $rootfs)\n"
 			exit 1
 		fi
 	fi
-	
 	inputRemove=
 	puts "  > [a] << Remove image rootfs [Y/n]"
 	readline "rootfs" "remove" "Y"
@@ -3641,28 +3783,18 @@ function main() {
 				while [[ $inputAsk == "" ]]; do
 					readline "main" "install" "Y"
 					if [[ ${inputInstall,,} == "y" ]]; then
-						if [[ $(command -v tsu) ]]; then
-							tsu pkg install $dependency
-							if [[ $? -ne 0 ]]; then
-								echo -e "$(stdio stderr main tsu error)\n"
-								exit 1
-							fi
-						elif [[ $(command -v sudo) ]]; then
-							sudo apt install $dependency
-							if [[ $? -ne 0 ]]; then
-								echo -e "$(stdio stderr main sudo error)\n"
-								exit 1
-							fi
+						if [[ $admin != "" ]]; then
+							$admin apt install $dependency -y
 						else
-							pkg install $dependency
-							if [[ $? -ne 0 ]]; then
-								echo -e "$(stdio stderr main failed install)\n"
-								exit 1
-							fi
+							apt install $dependency
+						fi
+						if [[ $? -ne 0 ]]; then
+							echo -e "$(stdio stderr failed install $dependency)\n"
+							exit 1
 						fi
 						break
 					else
-						echo -e "$(stdio stderr main aborted)\n"
+						echo -e "$(stdio stderr aborted install $dependency)\n"
 						exit 1
 					fi
 				done
@@ -3674,6 +3806,59 @@ function main() {
 		echo -e
 		exit 1
 	fi
+	if [[ -f "${directory}/environment" ]]; then
+		environment=$(cat "${directory}/environment")
+	fi
+	case "${environment,,}" in
+		development)
+			logo
+			architect=aarch64
+			if [[ ! -d "${directory}/termux" ]]; then
+				echo -e "$(stdio stdout makedir ${directory}/termux/files/usr/bin)"
+				mkdir -p "${directory}/termux/files/usr/bin"
+				echo -e "$(stdio stdout makedir ${directory}/termux/linux)"
+				mkdir -p "${directory}/termux/linux"
+			fi
+			if [[ ! -d /data/data ]]; then
+				echo -e "$(stdio stdout makedir /data/data)"
+				$admin mkdir -p /data/data
+			fi
+			if [[ ! -s /data/data/com.termux ]]; then
+				echo -e "$(stdio stdout symlink ${directory}/termux)"
+				$admin ln -s ${directory}/termux -t /data/data
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr main symlink error)\n"
+					exit 1
+				fi
+				echo -e "$(stdio stdout rename /data/data/termux /data/data/com.termux)"
+				$admin mv /data/data/termux /data/data/com.termux
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr main rename error)\n"
+					exit 1
+				fi
+				echo -e "$(stdio stdout chmod /data/data/com.termux 755)"
+				$admin chmod 755 -R /data/data
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr main chmod error)\n"
+					exit 1
+				fi
+				echo -e "$(stdio stdout chown /data/data/com.termux $whoami)"
+				$admin chown -R $whoami /data/data
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr main chown error)\n"
+					exit 1
+				fi
+				echo -e "$(stdio stdout chgrp /data/data/com.termux $group)"
+				$admin chgrp -R $group /data/data
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr main chgrp error)\n"
+					exit 1
+				fi
+			fi
+		;;
+		production) ;;
+		*) ;;
+	esac
 	if [[ ! -d $termux ]]; then
 		if [[ ! -d $inputAnswer ]]; then
 			logo
@@ -3928,6 +4113,14 @@ if [[ ! $(command -v puts) ]]; then
 		echo -e "\x1b[0m$@"
 	}
 fi
+
+# Fix admin command e.g sudo, tsu, etc
+for i in ${admins[@]}; do
+	if [[ $(command -v $i) ]]; then
+		admin=$i
+		break
+	fi
+done
 
 # Change current working directory.
 cd $(dirname $0)

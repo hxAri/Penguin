@@ -1,4 +1,7 @@
 
+# Idk
+ignored/**
+
 # Avoid some sensitif file
 termux/
 termux/*
