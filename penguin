@@ -3063,17 +3063,27 @@ function distroConfig() {
 		distroLauncher $distro $launch $source
 	fi
 	echo "$(stdio stdout $distro install success)"
-	if [[ $version != "" ]]; then
-		command="$distro $version $params"
-		echo "$(stdio stdout $distro command)" $(puts $distro $version $params)
-	else
-		echo "$(stdio stdout $distro command)" $(puts $distro $params)
-		command="$distro $params"
-	fi
-	readline $distro "run" "Y"
-	if [[ $inputRun == "Y" ]]; then
-		logo
-		$command
+	if [[ ${environment} == "production" ]]; then
+		if [[ $version != "" ]]; then
+			command="$distro $version $params"
+			echo "$(stdio stdout $distro command)" $(puts $distro $version $params)
+		else
+			echo "$(stdio stdout $distro command)" $(puts $distro $params)
+			command="$distro $params"
+		fi
+		while [[ $inputRun == "" ]]; do
+			readline $distro "run" "Y"
+			case ${inputRun,,} in
+				y|n) break ;;
+				*) inputRun= ;;
+			esac
+		done
+		if [[ ${inputRun,,} == "y" ]]; then
+			logo
+			$command
+		else
+			penguin
+		fi
 	else
 		echo -e "$(stdin main)\c"
 		read inputMain
@@ -3214,12 +3224,12 @@ function distroExtract() {
 		for i in ${!excludes[@]}; do
 			excludes[$i]="--exclude=\"${excludes[$i]}\""
 		done
-		if [[ $environment ]]; then
+		if [[ ${environment,,} == "production" ]]; then
 			proot --link2symlink tar ${preservePermissions} -${options} ${archive} ${excludes[@]} -C ${paths[fs]} ||:
-		fi
-		if [[ $? -ne 0 ]] || [[ ! -d ${paths[fs]} ]]; then
-			echo -e "$(stdio stderr $distro extract $rootfs)\n"
-			exit 1
+			if [[ $? -ne 0 ]] || [[ ! -d ${paths[fs]} ]]; then
+				echo -e "$(stdio stderr $distro extract $rootfs)\n"
+				exit 1
+			fi
 		fi
 	fi
 	inputRemove=
@@ -3686,48 +3696,52 @@ function distroRemove() {
 	local pathname=
 	if [[ $3 == "cli" ]]; then
 		if [[ $5 != "" ]]; then
-			pathname=$source/$5/cli
+			pathname=$target/$5/cli
 		else
-			pathname=$source/cli
+			pathname=$target/cli
 		fi
 	elif [[ $3 == "desktop" ]]; then
 		if [[ $5 != "" ]]; then
-			pathname=$source/$5/desktop/${4,,}
+			pathname=$target/$5/desktop/${4,,}
 		else
-			pathname=$source/desktop/${4,,}
+			pathname=$target/desktop/${4,,}
 		fi
 	elif [[ $3 == "window" ]]; then
 		if [[ $5 != "" ]]; then
-			pathname=$source/$5/window/${4,,}
+			pathname=$target/$5/window/${4,,}
 		else
-			pathname=$source/window/${4,,}
+			pathname=$target/window/${4,,}
 		fi
 	else
 		echo -e "$(stdio stderr mode unknown $3)\n"
 		exit 1
 	fi
 	logo
-	echo "$(stdio stdout remove ${1^})"
-	puts "  $sint Deletion of ${1^}"
-	puts "  [?] Do you want to delete the binary executable [Y/n]"
-	puts 
-	readline $1 "ask" "Y"
-	if [[ ${inputAsk,,} == "y" ]]; then
-		if [[ -f $termux/files/usr/bin/$2 ]]; then
+	if [[ -f $termux/files/usr/bin/$2 ]]; then
+		echo "$(stdio stdout remove ${1^})"
+		puts "  $sint Deletion of ${1^}"
+		puts "  [?] Do you want to delete the binary executable [Y/n]"
+		puts 
+		readline $1 "ask" "Y"
+		if [[ ${inputAsk,,} == "y" ]]; then
 			rm $termux/files/usr/bin/$2
 			if [[ $? -eq 0 ]]; then
 				echo "$(stdio stdout removed $termux/files/usr/bin/$2)"
 			else
 				echo "$(stdio stderr failed remove $termux/files/usr/bin/$2)"
 			fi
-		else
-			echo "$(stdio stderr none $termux/files/usr/bin/$2)"
 		fi
 	fi
 	if [[ -d $pathname ]]; then
 		rm -rf $pathname
 		if [[ $? -eq 0 ]]; then
 			echo "$(stdio stdout removed $pathname)"
+			if [[ ! $(ls -A $target ) ]]; then
+				rm -rf $target
+				echo "$(stdio stdout removed $target)"
+			else
+				echo "$(stdio stderr failed remove $target)"
+			fi
 		else
 			echo "$(stdio stderr failed remove $pathname)"
 		fi
@@ -3736,6 +3750,7 @@ function distroRemove() {
 	fi
 	stdin $1 "back"
 	read inputBack
+	penguin
 }
 
 # Display application logo.
