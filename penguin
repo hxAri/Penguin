@@ -3857,7 +3857,11 @@ function main() {
 			fi
 		;;
 		production) ;;
-		*) ;;
+		*)
+			logo
+			echo -e "$(stdio stderr main unknown environment)\n"
+			exit 1
+		;;
 	esac
 	if [[ ! -d $termux ]]; then
 		if [[ ! -d $inputAnswer ]]; then
