@@ -3743,14 +3743,13 @@ function distroRemove() {
 		fi
 	fi
 	if [[ -d $pathname ]]; then
+		echo "$(stdio stdout removing $pathname)"
 		rm -rf $pathname
 		if [[ $? -eq 0 ]]; then
-			echo "$(stdio stdout removing $pathname)"
+			echo "$(stdio stdout removed $pathname)"
 			if [[ ! $(ls -A $source ) ]]; then
 				rm -rf $source
 				echo "$(stdio stdout removed $source)"
-			else
-				echo "$(stdio stderr failed remove $source)"
 			fi
 		else
 			echo "$(stdio stderr failed remove $pathname)"
