@@ -3108,7 +3108,7 @@ function distroExtract() {
 	local inputExcludePath=
 	local inputExclude=
 	local inputFlags=
-	local options=xfv
+	local options=xvf
 	if [[ $select == "desktop" ]]; then
 		source+=/desktop/${desktop,,}
 		if [[ ${desktops[$distro]} != "" ]]; then
@@ -3222,13 +3222,13 @@ function distroExtract() {
 		extension=$(basename -- $archive)
 		extension=${extension##*.}
 		if [[ ${extension,,} == "xz" ]]; then
-			options=xzfv
+			options=xzvf
 		fi
 		for i in ${!excludes[@]}; do
 			excludes[$i]="--exclude=\"${excludes[$i]}\""
 		done
 		if [[ ${environment,,} == "production" ]]; then
-			echo -e "proot --link2symlink tar ${preservePermissions} -${options} ${archive} ${excludes[@]} -C ${paths[fs]} ||:"
+			proot --link2symlink tar ${preservePermissions} -${options} ${archive} ${excludes[@]} -C ${paths[fs]} ||:
 			if [[ $? -ne 0 ]] || [[ ! -d ${paths[fs]} ]]; then
 				echo -e "$(stdio stderr $distro extract $rootfs)\n"
 				exit 1
