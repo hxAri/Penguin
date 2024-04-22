@@ -2456,11 +2456,12 @@ function distroConfig() {
 		parrot)
 		;;
 		ubuntu)
+			params=${select,,}
 			if [[ $version == 22.04 ]]; then
 				case ${select,,} in
-					cli) cli;;
+					cli) ;;
 					desktop)
-						params="desktop ${desktop}"
+						params+=${desktop,,}
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2552,7 +2553,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params="window ${window}" 
+						params+=${window,,}
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2644,9 +2645,9 @@ function distroConfig() {
 				esac
 			elif [[ $version == 20.03 ]]; then
 				case ${select,,} in
-					cli) params="cli" ;;
+					cli) ;;
 					desktop)
-						params="desktop ${desktop}"
+						params+=${desktop,,}
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2788,7 +2789,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params="window ${window}"
+						params+=${window,,}
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2880,9 +2881,9 @@ function distroConfig() {
 				esac
 			elif [[ $version == 18.04 ]]; then
 				case ${select,,} in
-					cli) params="cli" ;;
+					cli) ;;
 					desktop)
-						params="desktop ${desktop}"
+						params+=${desktop,,}
 						case ${desktop,,} in
 							xfce)
 								local rinku=(
@@ -2980,7 +2981,7 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params="window ${window}"
+						params+=${window,,}
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -3194,7 +3195,9 @@ function distroExtract() {
 			case "$inputExcludePath" in
 				y|Y)
 					while true; do
-						readline "tar" "exclude"
+						while [[ "$inputExclude" == "" ]]; do
+							readline "tar" "exclude"
+						done
 						excludes+=( "$inputExclude" )
 						inputExcludeMore=
 						while [[ "$inputExcludeMore" == "" ]]; do
