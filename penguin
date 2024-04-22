@@ -3228,7 +3228,7 @@ function distroExtract() {
 			excludes[$i]="--exclude=\"${excludes[$i]}\""
 		done
 		if [[ ${environment,,} == "production" ]]; then
-			proot --link2symlink tar ${preservePermissions} -${options} ${archive} ${excludes[@]} -C ${paths[fs]} ||:
+			echo -e "proot --link2symlink tar ${preservePermissions} -${options} ${archive} ${excludes[@]} -C ${paths[fs]} ||:"
 			if [[ $? -ne 0 ]] || [[ ! -d ${paths[fs]} ]]; then
 				echo -e "$(stdio stderr $distro extract $rootfs)\n"
 				exit 1
