@@ -3239,6 +3239,7 @@ function distroExtract() {
 	puts "  > [a] << Remove image rootfs [Y/n]"
 	readline "rootfs" "remove" "Y"
 	if [[ ${inputRemove,,} == "y" ]]; then
+		echo -e "$(stdio stdout $distro removing ${archive})"
 		rm "${archive}"
 		if [[ $? -ne 0 ]]; then
 			echo -e "$(stdio stderr $distro remove $rootfs)\n"
@@ -3697,23 +3698,29 @@ function distroLauncher() {
 function distroRemove() {
 	local inputAsk=
 	local pathname=
+	local source=
+	if [[ $version != "" ]]; then
+		source=$target/$version
+	else
+		source=$target
+	fi
 	if [[ $3 == "cli" ]]; then
 		if [[ $5 != "" ]]; then
-			pathname=$target/$5/cli
+			pathname=$source/$5/cli
 		else
-			pathname=$target/cli
+			pathname=$source/cli
 		fi
 	elif [[ $3 == "desktop" ]]; then
 		if [[ $5 != "" ]]; then
-			pathname=$target/$5/desktop/${4,,}
+			pathname=$source/$5/desktop/${4,,}
 		else
-			pathname=$target/desktop/${4,,}
+			pathname=$source/desktop/${4,,}
 		fi
 	elif [[ $3 == "window" ]]; then
 		if [[ $5 != "" ]]; then
-			pathname=$target/$5/window/${4,,}
+			pathname=$source/$5/window/${4,,}
 		else
-			pathname=$target/window/${4,,}
+			pathname=$source/window/${4,,}
 		fi
 	else
 		echo -e "$(stdio stderr mode unknown $3)\n"
@@ -3722,7 +3729,7 @@ function distroRemove() {
 	logo
 	if [[ -f $termux/files/usr/bin/$2 ]]; then
 		echo "$(stdio stdout remove ${1^})"
-		puts "  $sint Deletion of ${1^}"
+		puts "  $sint Deletion of ${1^} $version"
 		puts "  [?] Do you want to delete the binary executable [Y/n]"
 		puts 
 		readline $1 "ask" "Y"
