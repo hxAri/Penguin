@@ -3471,16 +3471,31 @@ function distroLauncher() {
 	local prootExtensionK=()
 	local prootExtensionI=()
 	
+	
+	parameters+=( "PATH=$path" )
+	parameters+=( "TERM=\$TERM" )
+	parameters+=( "LANG=$lang" )
+	parameters+=( "LC_ALL=$lcall" )
+	parameters+=( "LANGUAGE=$language" )
+	
 	local parameters=()
 	local distro=$1
 	local launch=$2
 	local source=$3
 	local path="/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
 	local home="/root"
+	local lang=
+	local lcall=
+	local language=
+	local mozFakeSanbox=
 	
 	echo "$(stdout $distro setup launcher)"
 	case ${distro,,} in
 		alpine)
+			path="/bin:/usr/bin:/sbin:/usr/sbin"
+			lang="LANG=en_US.UTF-8"
+			lcall="LC_ALL=C"
+			language="LANGUAGE=en_US"
 			prootRegularB=(
 				"/dev"
 				"/proc"
@@ -3488,6 +3503,8 @@ function distroLauncher() {
 			)
 		;;
 		arch)
+			lang="LANG=C.UTF-8"
+			mozFakeSanbox="MOZ_FAKE_NO_SANDBOX=1"
 			prootRegularB=(
 				"/sys"
 				"/data"
@@ -3505,6 +3522,7 @@ function distroLauncher() {
 			)
 		;;
 		debian)
+			lang="LANG=C.UTF-8"
 			prootRegularB=(
 				"/data"
 				"/dev"
@@ -3513,6 +3531,7 @@ function distroLauncher() {
 			)
 		;;
 		fedora)
+			lang="LANG=C.UTF-8"
 			prootRegularB=(
 				"/dev"
 				"/proc"
@@ -3520,6 +3539,7 @@ function distroLauncher() {
 			)
 		;;
 		kali)
+			lang="LANG=C.UTF-8"
 			prootRegularB=(
 				"/data"
 				"/dev"
@@ -3528,6 +3548,9 @@ function distroLauncher() {
 			)
 		;;
 		manjaro)
+			lang="LANG=en_US.UTF-8"
+			lcall="LC_ALL=C"
+			language="LANGUAGE=en_US"
 			prootRegularB=(
 				"/data"
 				"/dev"
@@ -3538,6 +3561,7 @@ function distroLauncher() {
 		nethunter)
 		;;
 		parrot)
+			lang="LANG=C.UTF-8"
 			prootRegularB=(
 				"/dev"
 				"/proc"
@@ -3545,8 +3569,10 @@ function distroLauncher() {
 			)
 		;;
 		ubuntu)
+			lang="LANG=C.UTF-8"
 			case ${version,,} in
 				22.04|20.03)
+					mozFakeSanbox="MOZ_FAKE_NO_SANDBOX=1"
 					prootRegularB=(
 						"/sys"
 						"/data"
@@ -3573,6 +3599,7 @@ function distroLauncher() {
 			esac
 		;;
 		void)
+			lang="LANG=C.UTF-8"
 			prootRegularB=(
 				"/dev"
 				"/proc"
@@ -3665,13 +3692,13 @@ function distroLauncher() {
 		
 		# A program that should be executed inside the rootfs
 		parameters+=( "/usr/bin/env -i" )
-		parameters+=( "MOZ_FAKE_NO_SANDBOX=1" )
 		parameters+=( "HOME=$home" )
 		parameters+=( "PATH=$path" )
 		parameters+=( "TERM=\$TERM" )
-		parameters+=( "LANG=en_US.UTF-8" )
-		parameters+=( "LC_ALL=C" )
-		parameters+=( "LANGUAGE=en_US" )
+		parameters+=( "$lang" )
+		parameters+=( "$lcall" )
+		parameters+=( "$language" )
+		parameters+=( "$mozFakeSanbox" )
 		
 		# Shell login.
 		parameters+=( "/bin/bash" )
