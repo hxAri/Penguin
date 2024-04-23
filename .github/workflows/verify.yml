@@ -13,12 +13,12 @@ jobs:
                shell: bash
         steps:
         -   name: "Version"
-            working-directory: ${GITHUB_WORKSPACE}
+            working-directory: ${{ github.workspace }}
             run: bash ./penguin --version
         -   name: "Dependency"
-            working-directory: ${GITHUB_WORKSPACE}
+            working-directory: ${{ github.workspace }}
             run: bash ./penguin --dependency
         -   name: "Environment"
-            working-directory: ${GITHUB_WORKSPACE}
+            working-directory: ${{ github.workspace }}
             run: bash ./penguin --environment
     
