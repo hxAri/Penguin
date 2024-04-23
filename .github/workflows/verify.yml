@@ -10,9 +10,9 @@ jobs:
                shell: bash
         steps:
         -   name: "Version"
-            run: bash penguin --version
+            run: bash Penguin/penguin --version
         -   name: "Dependency"
-            run: bash penguin --dependency
+            run: bash Penguin/penguin --dependency
         -   name: "Environment"
-            run: bash penguin --environment
+            run: bash Penguin/penguin --environment
     
