@@ -12,6 +12,8 @@ jobs:
             run:
                shell: bash
         steps:
+        -   name: "Ls"
+            run: ls ${GITHUB_WORKSPACE}
         -   name: "Version"
             run: bash ${GITHUB_WORKSPACE}/penguin --version
         -   name: "Dependency"
