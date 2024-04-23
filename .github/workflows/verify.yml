@@ -2,6 +2,9 @@
 name: "Verify"
 on: "push"
 
+permissions:
+    contents: read
+
 jobs:
     checking:
         runs-on: ubuntu-latest
@@ -10,9 +13,9 @@ jobs:
                shell: bash
         steps:
         -   name: "Version"
-            run: bash Penguin/penguin --version
+            run: bash ${GITHUB_WORKSPACE}/penguin --version
         -   name: "Dependency"
-            run: bash Penguin/penguin --dependency
+            run: bash ${GITHUB_WORKSPACE}/penguin --dependency
         -   name: "Environment"
-            run: bash Penguin/penguin --environment
+            run: bash ${GITHUB_WORKSPACE}/penguin --environment
     
