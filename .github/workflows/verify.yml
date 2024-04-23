@@ -12,12 +12,13 @@ jobs:
             run:
                shell: bash
         steps:
-        -   name: "Ls"
-            run: ls ${GITHUB_WORKSPACE}
         -   name: "Version"
-            run: bash ${GITHUB_WORKSPACE}/../penguin --version
+            working-directory: ${GITHUB_WORKSPACE}
+            run: bash ./penguin --version
         -   name: "Dependency"
-            run: bash ${GITHUB_WORKSPACE}/penguin --dependency
+            working-directory: ${GITHUB_WORKSPACE}
+            run: bash ./penguin --dependency
         -   name: "Environment"
-            run: bash ${GITHUB_WORKSPACE}/penguin --environment
+            working-directory: ${GITHUB_WORKSPACE}
+            run: bash ./penguin --environment
     
