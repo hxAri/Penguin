@@ -3471,13 +3471,6 @@ function distroLauncher() {
 	local prootExtensionK=()
 	local prootExtensionI=()
 	
-	
-	parameters+=( "PATH=$path" )
-	parameters+=( "TERM=\$TERM" )
-	parameters+=( "LANG=$lang" )
-	parameters+=( "LC_ALL=$lcall" )
-	parameters+=( "LANGUAGE=$language" )
-	
 	local parameters=()
 	local distro=$1
 	local launch=$2
