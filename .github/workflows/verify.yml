@@ -15,7 +15,7 @@ jobs:
         -   name: "Ls"
             run: ls ${GITHUB_WORKSPACE}
         -   name: "Version"
-            run: bash ${GITHUB_WORKSPACE}/penguin --version
+            run: bash ${GITHUB_WORKSPACE}/../penguin --version
         -   name: "Dependency"
             run: bash ${GITHUB_WORKSPACE}/penguin --dependency
         -   name: "Environment"
