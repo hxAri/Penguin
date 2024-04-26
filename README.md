@@ -5,21 +5,22 @@
 
 ## Table of Contents
 - [Penguin](#penguin)
-	- [Table of Contents](#table-of-contents)
-	- [Abouts](#abouts)
-	- [Features](#features)
-		- [Binary Execution](#binary-execution)
-		- [Command Line Interface](#command-line-interface)
-		- [Linux Distros](#linux-distros)
-		- [Desktop Environment](#desktop-environment)
-		- [Window manager](#window-manager)
-	- [Dependency](#dependency)
-	- [Environment](#environment)
-			- [Warning](#warning)
-	- [Installation](#installation)
-	- [Sources](#sources)
-	- [Support](#support)
-	- [Licence](#licence)
+  - [Table of Contents](#table-of-contents)
+  - [Abouts](#abouts)
+  - [Features](#features)
+    - [Binary Execution](#binary-execution)
+    - [Command Line Interface](#command-line-interface)
+    - [Linux Distros](#linux-distros)
+    - [Desktop Environment](#desktop-environment)
+    - [Window manager](#window-manager)
+  - [Dependency](#dependency)
+  - [Environment](#environment)
+      - [Warning](#warning)
+  - [Installation](#installation)
+  - [Usagement](#usagement)
+  - [Sources](#sources)
+  - [Support](#support)
+  - [Licence](#licence)
 
 ## Abouts
 **[Penguin](https://github.com/hxAri/Penguin)** is a Command Line Tool to simplify the installation of Linux Distros to the Android Operating System using Termux as a Shell environment. **[Penguin](https://github.com/hxAri/Penguin)** also supports more than 6 Linux Distros [see](#linux-distros), as well as several Desktop Environments [see](#desktop-environment) and also Window Manager [view](#window-manager).
@@ -169,6 +170,41 @@ Or this
 Penguin/penguin
 ```
 Next, please choose the distro you want to install yourself, and follow the instructions given, Have Nice Live!
+
+## Usagement
+When the Linux distro you installed has been successfully installed you can easily run it with just one line of code, see below for an example of running it in the Termux command line:
+```sh
+# (distro) (mode<cli|desktop<lxde|lxqt|mate|xfce>|window<awesome|openbox|i3>>)
+```
+Debian distro cli mode:
+```sh
+debian cli
+```
+Debian distro desktop environment mode:
+```sh
+debian desktop xfce
+```
+Debian distro window manager mode:
+```sh
+debian window awesome
+```
+And below is the usage for distros that have more than one version, such as Ubuntu:
+```sh
+# (distro) (version) (mode<cli|desktop<lxde|lxqt|mate|xfce>|window<awesome|openbox|i3>>)
+```
+Ubuntu distro cli mode:
+```sh
+ubuntu 22.04 cli
+```
+Ubuntu distro desktop environment mode:
+```sh
+ubuntu 22.04 desktop xfce
+```
+Ubuntu distro window manager mode:
+```sh
+ubuntu 22.04 window awesome
+```
+
 
 ## Sources
 To source the Root File System for the **[Penguin](https://github.com/hxAri/Penguin)** Linux Distro, it uses sources from various GitHub repositories, including:
