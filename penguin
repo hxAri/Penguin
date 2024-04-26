@@ -4080,22 +4080,22 @@ function stdin() {
 function stdio() {
 	prints=
 	prefix="\x1b[1;32m"
-	if [[ $1 != "" ]]; then
+	if [[ "$1" != "" ]]; then
 		if [[ ${1,,} == "stderr" ]]; then
 			prefix="\x1b[1;31m"
 		fi
 		prints="${prefix}$1"
-		if [[ $2 != "" ]]; then
+		if [[ "$2" != "" ]]; then
 			prints+="\x1b[1;38;5;70m<"
 			prints+="\x1b[1;38;5;112m$2"
 			prints+="\x1b[1;38;5;70m>"
-			if [[ $3 != "" ]]; then
+			if [[ "$3" != "" ]]; then
 				prints="${prefix}$1"
 				prints+="\x1b[1;38;5;70m<"
 				prints+="\x1b[1;38;5;112m$2"
 				prints+="\x1b[1;38;5;70m<"
 				prints+="\x1b[1;38;5;190m$3"
-				if [[ $4 != "" ]]; then
+				if [[ "$4" != "" ]]; then
 					prints+="\x1b[1;38;5;214m:"
 					prints+="\x1b[1;38;5;70m="
 					prints+="\x1b[1;38;5;120m$4"
@@ -4184,8 +4184,131 @@ done
 # Update target basename directory.
 directory=$(pwd)
 
-# Executing main program.
-main
+# Check if the penguin has command line argument passed.
+# If not execute the main program.
+if [[ "$1" != "" ]]; then
+	
+	# @author Robert Siemar
+	# @source https://stackoverflow.com/a/29754866
+	# Please refer to source, for more information about it.
+	
+	# More safety, by turning some bugs into errors.
+	# Without `errexit` you don’t need ! and can replace
+	# ${PIPESTATUS[0]} with a simple $?, but I prefer safety.
+	set -o errexit -o pipefail -o noclobber -o nounset
+	
+	# -allow a command to fail with !’s side effect on errexit
+	# -use return value from ${PIPESTATUS[0]}, because ! hosed $?
+	! getopt --test > /dev/null
+	
+	if [[ ${PIPESTATUS[0]} -eq 4 ]]; then
+		
+		# option --output/-o requires 1 argument
+		LONGOPTS=dependency,environment,version,help
+		OPTIONS=devh
+		
+		# -regarding ! and PIPESTATUS see above
+		# -temporarily store output to be able to check for errors
+		# -activate quoting/enhanced mode (e.g. by writing out “--options”)
+		# -pass arguments only via   -- "$@"   to separate them correctly
+		! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+		
+		#  Whether if the getopt has complained about wrong arguments to stdout.
+		if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+			puts ""
+			exit 2
+		fi
+		
+		# read getopt’s output this way to handle the quoting right:
+		eval set -- "$PARSED"
+		
+		d=n e=n v=n h=n
+		
+		# Now enjoy the options in order and nicely split until we see --
+		while true; do
+			case "$1" in
+				-d|--dependency)
+					dependencies="${directory}/dependencies"
+					if [[ -f "$dependencies" ]]; then
+						set +e
+						IFS=$'\n' read -d '' -r -a lines < $dependencies
+						for i in ${!lines[@]}; do
+							dependency="${lines[${i}]}"
+							if [[ $(command -v $dependency) ]]; then
+								echo -e "$(stdio stdout installed dependency $dependency '')"
+							else
+								echo -e "$(stdio stderr required dependency $dependency '')"
+							fi
+						done
+						set -e
+					else
+						logo
+						echo -e "$(stdio stderr none $dependencies '' '')"
+						exit 311
+					fi
+					shift
+				;;
+				-e|--environment)
+					if [[ -f "${directory}/environment" ]]; then
+						environment=$(cat "${directory}/environment")
+					fi
+					case "${environment,,}" in
+						development|production)
+							if [[ ${environment} == "development" ]]; then
+								echo "$(stdio stderr environment $environment '')"
+								puts "  > [i] << development: please change into production mode"
+								exit 321
+							fi
+							puts "$environment"
+						;;
+						*)
+							echo "$(stdio stderr environment $environment '')"
+							exit 32
+						;;
+					esac
+					shift
+					e=y
+				;;
+				-v|--version)
+					v=y
+					puts "$pversion"
+					shift
+				;;
+				-h|--help)
+					h=y
+					logo
+					echo "$(stdio stdout penguin '')"
+					puts "  $sint $appname v$pversion"
+					puts "  [i] Arch ${architect^}"
+					puts "  [i] Whoami $whoami"
+					puts "  [i] Author $author"
+					puts "  [i] E-Mail $author_email"
+					puts "  [i] Github $github"
+					puts "  [!] Issues $issues"
+					puts "  [i] Usages [-o|option]"
+					puts "      -d|--dependency     Show all dependency requirements"
+					puts "      -e|--environment    Show current penguin environment"
+					puts "      -v|--version        Show current penguin version"
+					puts "      -h|--help           Show this help"
+					echo ""
+					shift
+				;;
+				--)
+					shift
+					break
+				;;
+				*)
+					echo "$1: invalid or unknow option"
+					exit 3
+				;;
+			esac
+		done
+		exit 0
+	fi
+	
+else
+	main
+fi
 exit
 
 function stdio() {
