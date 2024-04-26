@@ -2,25 +2,14 @@
 name: "Verify"
 on: "push"
 
-permissions:
-    contents: read
-
 jobs:
-    checking:
+    verify:
         runs-on: ubuntu-latest
         defaults:
             run:
                shell: bash
         steps:
-        -   name: "Ls"
-            run: ls ${{ github.workspace }}
-        -   name: "Version"
-            working-directory: ${{ github.workspace }}
-            run: bash ./penguin --version
-        -   name: "Dependency"
-            working-directory: ${{ github.workspace }}
-            run: bash ./penguin --dependency
-        -   name: "Environment"
-            working-directory: ${{ github.workspace }}
-            run: bash ./penguin --environment
+        -   shell: bash
+            name: "Bash Version"
+            run: bash --version
     
