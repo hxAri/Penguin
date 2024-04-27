@@ -1302,11 +1302,27 @@ function distroBinary() {
 # Handle fix distro configuration.
 # distroConfig [distro-name]
 function distroConfig() {
-	local command=
-	local distro=$1
-	local params=
 	local inputRun=
 	local inputSkip=
+	local command=
+	local distro=$1
+	local params=()
+	if [[ "$version" != "" ]]; then
+		params+=( $version )
+	fi
+	case ${select,,} in
+		cli)
+			params+=( "cli" )
+		;;
+		desktop)
+			params+=( "desktop" )
+			params+=( "${desktop,,}" )
+		;;
+		window)
+			params+=( "window" )
+			params+=( "${window,,}" )
+		;;
+	esac
 	case ${distro,,} in
 		alpine)
 			
@@ -1341,7 +1357,6 @@ function distroConfig() {
 			sed -i "s/bin\/sh/bin\/bash/g" $source/$launch
 			
 			if [[ ${select,,} == "desktop" ]]; then
-				params=$desktop
 				echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 				rm -rf $source/$folder/root/.bash_profile
 				if [[ $? -ne 0 ]]; then
@@ -1447,7 +1462,6 @@ function distroConfig() {
 					EOF
 				;;
 				desktop)
-					params=$desktop
 					case ${desktop,,} in
 						xfce)
 							local rinku=(
@@ -1545,7 +1559,6 @@ function distroConfig() {
 					EOF
 				;;
 				window)
-					params=$window
 					declare -A rinku=(
 						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman"
 						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/Pacman"
@@ -1616,7 +1629,6 @@ function distroConfig() {
 			case ${select,,} in
 				cli) ;;
 				desktop)
-					params=$desktop
 					case ${desktop,,} in
 						xfce)
 							local rinku=(
@@ -1723,7 +1735,6 @@ function distroConfig() {
 					chmod +x $target/$folder/root/.bash_profile
 				;;
 				window)
-					params=$window
 					declare -A rinku=(
 						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -1815,7 +1826,6 @@ function distroConfig() {
 			case ${select,,} in
 				cli) ;;
 				desktop)
-					params=$desktop
 					case ${desktop,,} in
 						xfce)
 							local rinku=(
@@ -1909,7 +1919,6 @@ function distroConfig() {
 					chmod +x $source/$folder/root/.bash_profile
 				;;
 				window)
-					params=$window
 					declare -A rinku=(
 						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/DNF"
 						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/DNF"
@@ -2021,7 +2030,6 @@ function distroConfig() {
 					EOF
 				;;
 				desktop)
-					params=$desktop
 					case ${desktop,,} in
 						xfce)
 							local rinku=(
@@ -2118,7 +2126,6 @@ function distroConfig() {
 					EOF
 				;;
 				window)
-					params=$window
 					declare -A rinku=(
 						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2251,7 +2258,6 @@ function distroConfig() {
 					EOF
 				;;
 				desktop)
-					params=$desktop
 					case ${desktop,,} in
 						xfce)
 							local rinku=(
@@ -2391,7 +2397,6 @@ function distroConfig() {
 					EOF
 				;;
 				window)
-					params=$window
 					declare -A rinku=(
 						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Pacman/Manjaro"
 						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/Pacman"
@@ -2456,12 +2461,10 @@ function distroConfig() {
 		parrot)
 		;;
 		ubuntu)
-			params=${select,,}
 			if [[ $version == 22.04 ]]; then
 				case ${select,,} in
 					cli) ;;
 					desktop)
-						params+=${desktop,,}
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2553,7 +2556,6 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params+=${window,,}
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2647,7 +2649,6 @@ function distroConfig() {
 				case ${select,,} in
 					cli) ;;
 					desktop)
-						params+=${desktop,,}
 						case ${desktop,,} in
 							xfce) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/XFCE4" ;;
 							lxqt) local rinku="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT/LXQT" ;;
@@ -2789,7 +2790,6 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params+=${window,,}
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -2883,7 +2883,6 @@ function distroConfig() {
 				case ${select,,} in
 					cli) ;;
 					desktop)
-						params+=${desktop,,}
 						case ${desktop,,} in
 							xfce)
 								local rinku=(
@@ -2981,7 +2980,6 @@ function distroConfig() {
 						chmod +x $source/$folder/root/.bash_profile
 					;;
 					window)
-						params+=${window,,}
 						declare -A rinku=(
 							[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/APT"
 							[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/APT"
@@ -3065,13 +3063,8 @@ function distroConfig() {
 	fi
 	echo "$(stdio stdout $distro install success)"
 	if [[ ${environment} == "production" ]]; then
-		if [[ $version != "" ]]; then
-			command="$distro $version $params"
-			echo "$(stdio stdout $distro command)" $(puts $distro $version $params)
-		else
-			echo "$(stdio stdout $distro command)" $(puts $distro $params)
-			command="$distro $params"
-		fi
+		echo "$(stdio stdout $distro command)" $(puts $distro ${params[@]})
+		command="$distro ${params[@]}"
 		while [[ $inputRun == "" ]]; do
 			readline $distro "run" "Y"
 			case ${inputRun,,} in
@@ -3565,6 +3558,8 @@ function distroLauncher() {
 			lang="LANG=C.UTF-8"
 			case ${version,,} in
 				22.04|20.03)
+					lcall="LC_ALL=en_US.UTF-8"
+					language="LANGUAGE=en_US"
 					mozFakeSanbox="MOZ_FAKE_NO_SANDBOX=1"
 					prootRegularB=(
 						"/sys"
@@ -3719,49 +3714,22 @@ function distroRemove() {
 	local inputAsk=
 	local pathname=
 	local source=
-	if [[ $version != "" ]]; then
+	local version=$5
+	if [[ "$version" != "" ]]; then
 		source=$target/$version
 	else
 		source=$target
 	fi
-	if [[ $3 == "cli" ]]; then
-		if [[ $5 != "" ]]; then
-			pathname=$source/$5/cli
-		else
-			pathname=$source/cli
-		fi
-	elif [[ $3 == "desktop" ]]; then
-		if [[ $5 != "" ]]; then
-			pathname=$source/$5/desktop/${4,,}
-		else
-			pathname=$source/desktop/${4,,}
-		fi
-	elif [[ $3 == "window" ]]; then
-		if [[ $5 != "" ]]; then
-			pathname=$source/$5/window/${4,,}
-		else
-			pathname=$source/window/${4,,}
-		fi
-	else
-		echo -e "$(stdio stderr mode unknown $3)\n"
-		exit 1
-	fi
+	case ${3,,} in
+		cli) pathname=$source/cli ;;
+		desktop) pathname=$source/desktop/${4,,} ;;
+		window) pathname=$source/window/${4,,} ;;
+		*)
+			echo -e "$(stdio stderr mode unknown $3)\n"
+			exit 1
+		;;
+	esac
 	logo
-	if [[ -f $termux/files/usr/bin/$2 ]]; then
-		echo "$(stdio stdout remove ${1^})"
-		puts "  $sint Deletion of ${1^} $version"
-		puts "  [?] Do you want to delete the binary executable [Y/n]"
-		puts 
-		readline $1 "ask" "Y"
-		if [[ ${inputAsk,,} == "y" ]]; then
-			rm $termux/files/usr/bin/$2
-			if [[ $? -eq 0 ]]; then
-				echo "$(stdio stdout removed $termux/files/usr/bin/$2)"
-			else
-				echo "$(stdio stderr failed remove $termux/files/usr/bin/$2)"
-			fi
-		fi
-	fi
 	if [[ -d $pathname ]]; then
 		echo "$(stdio stdout removing $pathname)"
 		rm -rf $pathname
@@ -3770,6 +3738,27 @@ function distroRemove() {
 			if [[ ! $(ls -A $source ) ]]; then
 				rm -rf $source
 				echo "$(stdio stdout removed $source)"
+				stdin $distro "next"
+				if [[ $? -eq 0 ]]; then
+					logo
+					if [[ -f $termux/files/usr/bin/$2 ]]; then
+						echo "$(stdio stdout remove ${1^})"
+						puts "  $sint Deletion of ${1^} $version"
+						puts "  [?] Do you want to delete the binary executable [Y/n]"
+						puts 
+						readline $1 "ask" "Y"
+						if [[ ${inputAsk,,} == "y" ]]; then
+							rm $termux/files/usr/bin/$2
+							if [[ $? -eq 0 ]]; then
+								echo "$(stdio stdout removed $termux/files/usr/bin/$2)"
+							else
+								echo "$(stdio stderr failed remove $termux/files/usr/bin/$2)"
+							fi
+						fi
+					fi
+				else
+					echo "$(stdio stderr failed remove $pathname)"
+				fi
 			fi
 		else
 			echo "$(stdio stderr failed remove $pathname)"
@@ -3777,7 +3766,7 @@ function distroRemove() {
 	else
 		echo "$(stdio stderr none $pathname)"
 	fi
-	stdin $1 "back"
+	stdin $distro "back"
 	read inputBack
 	penguin
 }
