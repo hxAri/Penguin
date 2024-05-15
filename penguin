@@ -776,7 +776,11 @@ function distroArchive() {
 					esac
 					archurl="https://github.com/Techriz/AndronixOrigin/blob/master/Rootfs/Fedora/${archname}/fedora-rootfs-${archname}.tar.xz?raw=true"
 				fi
-				rootfs=rootfs="fedora-rootfs-${archname}.tar.xz"
+				if [[ $archname != "" ]]; then
+					rootfs="fedora-rootfs-${archname}.tar.xz"
+				else
+					rootfs="fedora-rootfs.tar.xz"
+				fi
 			;;
 			kali)
 				if [[ $version != "" && $version != "21.2" ]]; then
@@ -812,10 +816,12 @@ function distroArchive() {
 					[partab]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partab"
 					[partac]="https://github.com/AndronixApp/AndronixOrigin/raw/master/Rootfs/Manjaro/manjaro.partac"
 				)
-				rootfs=rootfs="manjaro-rootfs-${archname}.tar.xz"
+				rootfs="manjaro-rootfs.tar.xz"
 			;;
-			nethunter) ;;
-			parrot) ;;
+			nethunter)
+			;;
+			parrot)
+			;;
 			ubuntu)
 				archname="arm64"
 				if [[ $version == 22.04 ]]; then
@@ -892,19 +898,19 @@ function distroArchive() {
 					fi
 				done
 				echo "$(stdio stdout building $distro $rootfs)"
-				cat ${images}/${distro}/${distro}.parta* > $images/$rootfs
+				cat ${images}/${distro}/${distro}.parta* > ${images}/${distro}/${rootfs}
 				if [[ $? -ne 0 ]]; then
 					echo -e "$(stdio stderr building $distro $rootfs)\n"
 					exit 1
 				fi
 				for part in ${!archurl[@]}; do
 					inputRemove=
-					readline "remove" ${distro}/${distro}.${part} "Y"
+					readline ${distro}.${part} "remove" "Y"
 					if [[ ${inputRemove,,} == "y" ]]; then
 						rm ${images}/${distro}/${distro}.${part}
 						if [[ $? -ne 0 ]]; then
 							echo -e "$(stdio stderr remove ${distro}/${distro}.${part})\n"
-							readline "remove" "skip" "Y"
+							readline "skip" "remove" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
 								echo -e "$(stdio stderr remove aborted)\n"
 								exit 1
@@ -1334,7 +1340,7 @@ function distroConfig() {
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr remove $folder/etc/resolv.conf)"
 				inputRemove=
-				readline "remove" "skip" "Y"
+				readline "skip" "remove" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr remove aborted)\n"
 					exit 1
@@ -1362,7 +1368,7 @@ function distroConfig() {
 				if [[ $? -ne 0 ]]; then
 					echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
 					inputRemove=
-					readline "remove" "skip" "Y"
+					readline "skip" "remove" "Y"
 					if [[ ${inputSkip,,} == "n" ]]; then
 						echo -e "$(stdio stderr $distro remove aborted)\n"
 						exit 1
@@ -1437,7 +1443,7 @@ function distroConfig() {
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
 				inputSkip=
-				readline "remove" "skip" "Y"
+				readline "skip" "remove" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr $distro remove aborted)\n"
 					exit 1
@@ -1673,7 +1679,7 @@ function distroConfig() {
 					if [[ $? -ne 0 ]]; then
 						echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
 						inputRemove=
-						readline "remove" "skip" "Y"
+						readline "skip" "remove" "Y"
 						if [[ ${inputSkip,,} == "n" ]]; then
 							echo -e "$(stdio stderr $distro remove aborted)\n"
 							exit 1
@@ -1763,7 +1769,7 @@ function distroConfig() {
 					if [[ $? -ne 0 ]]; then
 						echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
 						inputRemove=
-						readline "remove" "skip" "Y"
+						readline "skip" "remove" "Y"
 						if [[ ${inputSkip,,} == "n" ]]; then
 							echo -e "$(stdio stderr $distro remove aborted)\n"
 							exit 1
@@ -2201,7 +2207,7 @@ function distroConfig() {
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr $distro remove /:root/.bash_profile)"
 				inputSkip=
-				readline "remove" "skip" "Y"
+				readline "skip" "remove" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr $distro remove aborted)\n"
 					exit 1
@@ -2213,7 +2219,7 @@ function distroConfig() {
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr $distro remove /:etc.resolve.conf)"
 				inputSkip=
-				readline "remove" "skip" "Y"
+				readline "skip" "remove" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr $distro remove aborted)\n"
 					exit 1
@@ -2581,7 +2587,7 @@ function distroConfig() {
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro remove /:usr/local/bin/\*)"
 							inputSkip=
-							readline "remove" "skip" "Y"
+							readline "skip" "remove" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
 								echo -e "$(stdio stderr $distro remove aborted)\n"
 								exit 1
@@ -2675,7 +2681,7 @@ function distroConfig() {
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro remove /:usr/local/bin/\*)"
 							inputSkip=
-							readline "remove" "skip" "Y"
+							readline "skip" "remove" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
 								echo -e "$(stdio stderr $distro remove aborted)\n"
 								exit 1
@@ -2815,7 +2821,7 @@ function distroConfig() {
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro remove /:usr/local/bin/\*)"
 							inputSkip=
-							readline "remove" "skip" "Y"
+							readline "skip" "remove" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
 								echo -e "$(stdio stderr $distro remove aborted)\n"
 								exit 1
@@ -3215,7 +3221,7 @@ function distroExtract() {
 		extension=$(basename -- $archive)
 		extension=${extension##*.}
 		if [[ ${extension,,} == "xz" ]]; then
-			options=xzvf
+			options=Jxvf
 		fi
 		for i in ${!excludes[@]}; do
 			excludes[$i]="--exclude=\"${excludes[$i]}\""
@@ -3236,7 +3242,7 @@ function distroExtract() {
 		rm "${archive}"
 		if [[ $? -ne 0 ]]; then
 			echo -e "$(stdio stderr $distro remove $rootfs)\n"
-			readline "remove" "skip" "Y"
+			readline "skip" "remove" "Y"
 			if [[ ${inputSkip,,} == "n" ]]; then
 				echo -e "$(stdio stderr $distro remove aborted)\n"
 				exit 1
@@ -4009,16 +4015,26 @@ function penguin() {
 # readline [prefix] [label] [default]
 function readline() {
 	stdin $@
-	if [[ $1 != "" ]]; then
-		if [[ $2 != "" ]]; then
+	if [[ "$1" != "" ]]; then
+		if [[ "$2" != "" ]]; then
 			read input
-			if [[ $3 != "" ]]; then
+			if [[ "$3" != "" ]]; then
 				if [[ $input == "" ]]; then
-					input=$3
+					input="$3"
 				fi
 			fi
 			if [[ $input != "" ]]; then
-				eval "input${2^}=\"$input\""
+				if [[ $environment == "production" ]]; then
+					eval "input${2^}=\"$input\"" >> /dev/null 2>&1
+				else
+					eval "input${2^}=\"$input\""
+				fi
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stderr assign input stream)"
+					echo -e "  $(puts error when assign the input stream value into variable)"
+					echo -e "  $(puts please activate development mode for debug it)\n"
+					exit 1
+				fi
 				echo -e "\x20\x20\c"
 				echo -e "\x1b[1;32mstdin\c"
 				echo -e "\x1b[1;38;5;70m<\c"
