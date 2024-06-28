@@ -3051,7 +3051,117 @@ function distroConfig() {
 			fi
 			sleep 2.4
 		;;
-		void) ;;
+		void)
+				
+			echo "$(stdio stdout $distro removing /:etc/resolv.conf)"
+			rm -rf $source/$folder/etc/resolv.conf
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr remove $folder/etc/resolv.conf)"
+				inputRemove=
+				readline "skip" "remove" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr remove aborted)\n"
+					exit 1
+				fi
+			fi
+			
+			echo "$(stdio stdout $distro creating /:etc/resolf.conf)"
+			echo -e "nameserver 8.8.8.8\nnameserver 8.8.4.4\nnameserver 192.168.1.1\nnameserver 127.0.0.1" > $source/$folder/etc/resolv.conf
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr create $folder/etc/resolv.conf)"
+				inputRemove=
+				readline "skip" "create" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr create aborted)\n"
+					exit 1
+				fi
+			fi
+			
+			case ${select,,} in
+				cli)
+				;;
+				desktop)
+					case ${desktop^^} in
+						LXDE)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/XBPS/LXDE"
+								"lxde_de.sh"
+							)
+						;;
+						LXQT)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/XBPS/LXQT"
+								"lxqt_de.sh"
+							)
+						;;
+						XFCE)
+							local rinku=(
+								"https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/XBPS/XFCE4"
+								"xfce4_de.sh"
+							)
+						;;
+					esac
+					
+					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+					rm -rf $source/$folder/root/.bash_profile
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Installing required packages.
+						xbps-install -u xbps -y
+						xbps-install -Su -y > /dev/null 
+						xbps-install -S ${desktop,,} tigervnc wget sudo -y 
+						
+						clear
+						
+						if [[ ! -f ~/${desktop}.sh ]]; then
+							echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
+						    wget --tries=20 ${rinku[0]}/${rinku[1]}.sh -O ~/${desktop}.sh
+						fi
+						bash ~/${desktop}.sh
+						clear
+						
+						if [[ ! -f /usr/local/bin/vncserver-start ]]; then
+							echo -e "$(stdio stdout $distro downloading /usr/bin/local/vncserver-start)"
+						    wget --tries=20 ${rinku[2]}/vncserver-start -O /usr/local/bin/vncserver-start
+						    
+						    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-start)"
+						    chmod +x /usr/local/bin/vncserver-start
+						    
+						    echo -e "$(stdio stdout $distro downloading /usr/local/bin/vncserver-stop)"
+						    wget --tries=20 ${rinku[2]}/vncserver-stop -O /usr/local/bin/vncserver-stop
+						    
+						    echo -e "$(stdio stdout $distro chmod+x /usr/local/bin/vncserver-stop)"
+						    chmod +x /usr/local/bin/vncserver-stop
+						fi
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+						    xbps-install -S lxde tigervnc wget -y  > /dev/null
+						fi
+						clear
+						
+						echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
+						rm -rf ~/${desktop}.sh
+						
+						echo -e "$(stdio stdout $distro removing .bash_profile)"
+						rm -rf ~/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Ubuntu" && echo
+						sleep 2.4
+					EOF
+					
+					echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+					chmod +x $source/$folder/root/.bash_profile
+				;;
+				window)
+					# ....
+				;;
+			esac
+		;;
 		*)
 			echo -e "$(stdio stderr unknown distro $distro)\n"
 			exit 1
