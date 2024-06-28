@@ -3112,7 +3112,7 @@ function distroConfig() {
 						# Installing required packages.
 						xbps-install -u xbps -y
 						xbps-install -Su -y > /dev/null 
-						xbps-install -S ${desktop,,} tigervnc wget sudo -y 
+						xbps-install -S ${desktop,,} tigervnc wget screenfetch sudo -y 
 						
 						clear
 						
@@ -3150,7 +3150,7 @@ function distroConfig() {
 						rm -rf ~/.bash_profile
 						
 						# Displaying screenfetch.
-						clear && screenfetch -A "Ubuntu" && echo
+						clear && screenfetch -A "Void" && echo
 						sleep 2.4
 					EOF
 					
@@ -3158,9 +3158,67 @@ function distroConfig() {
 					chmod +x $source/$folder/root/.bash_profile
 				;;
 				window)
-					# ....
+					
+					declare -A rinku=(
+						[1]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/XBPS"
+						[2]="https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/WM/XBPS"
+					)
+					
+					echo "$(stdio stdout $distro downloading /:root/${window}.sh)"
+					wget -q --tries=20 ${rinku[2]}/${window}.sh --show-progress --progress=bar:force:noscroll -O $source/$folder/root/${window}.sh
+					if [[ $? -ne 0 ]]; then
+						echo "$(stdio stderr $distro download /:root/${window}.sh)"
+						inputSkip=
+						readline "download" "skip" "Y"
+						if [[ ${inputSkip,,} == "n" ]]; then
+							echo -e "$(stdio stderr $distro download aborted)\n"
+							exit 1
+						fi
+					else
+						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
+						chmod +x $source/$folder/root/${window}.sh
+					fi
+					
+					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
+					rm -rf $source/$folder/root/.bash_profile
+					
+					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+					cat <<- EOF > $source/$folder/root/.bash_profile
+						#!/usr/bin/env bash
+						
+						# Installing required packages.
+						xbps-install -u xbps -y
+						xbps-install -Su -y > /dev/null
+						xbps-install -S lxde tigervnc wget screenfetch sudo -y
+						
+						if [[ ! -f ~/${window}.sh ]]; then
+						    echo -e "$(stdio stdout $distro downloading ${window}.sh)"
+						    wget --tries=20 ${rinku[2]}/${window}.sh -O ~/${window}.sh
+						fi
+						bash ~/${window}.sh
+						clear
+						
+						if [[ ! -f /usr/bin/vncserver ]]; then
+						    xbps-install -S ${window,,} tigervnc wget -y  > /dev/null
+						fi
+						clear
+						
+						echo -e "$(stdio stout $distro removing ${window}.sh)"
+						rm -rf ~/${window}.sh
+						
+						echo -e "$(stdio stout $distro removing .bash_profile)"
+						rm -rf ~/.bash_profile
+						
+						# Displaying screenfetch.
+						clear && screenfetch -A "Void" && echo
+						sleep 2.4
+					EOF
+					
+					echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+					chmod +x $source/$folder/root/.bash_profile
 				;;
 			esac
+			sleep 2.4
 		;;
 		*)
 			echo -e "$(stdio stderr unknown distro $distro)\n"
