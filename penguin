@@ -529,7 +529,58 @@ function distro() {
 	
 	# Handle Nethunter Distro Actions.
 	function nethunterDistro() {
-		penguin
+		
+		# Implementing from https://kali.org/nethunter
+		# @source https://www.kali.org/docs/nethunter/nethunter-rootless/
+		
+		# Default Kali Nethunter Mode for install.
+		local select=cli
+		
+		# Default Import is always empty.
+		# Because we don't know where source destination.
+		local import=
+		
+		# Identify if distro is parta.
+		local onpart=
+		
+		# Default Kali Nethunter Directory.
+		local target=$install/nethunter
+		local folder=nethunter-fs
+		
+		# Default Kali Nethunter Executable.
+		local binary=nethunter
+		local launch=nethunter-start
+		
+		# Default Kali Nethunter Environment for install.
+		local desktop=
+		
+		# Default Kali Nethunter Window Manager for install.
+		local window=
+		
+		# Default Kali Nethunter Version for install.
+		# local version=2024022001
+		
+		logo
+		echo -e "$(stdio stdout distro "Kali-Nethunter")"
+		puts "  $sint Distro Kali-Nethunter"
+		puts "  $sint Developer Offensive Security"
+		puts "  $sint Available Versions"
+		puts "      [+] Kali-Nethunter v2024022001"
+		puts "  $sint Available Install"
+		puts "      [+] Kali-Nethunter Full Edition"
+		puts "      [+] Kali-Nethunter Nano Edition"
+		puts "      [+] Kali-Nethunter Minimal Edition"
+		puts "  $sint Actions"
+		puts "      [1] Install"
+		puts "      [2] Import"
+		puts "      [3] Remove"
+		puts "      [4] Cancel"
+		distroInputAction "nethunter" "install" $version
+		case $action in
+			cancel) penguin ;;
+			remove) distroRemove "nethunter" $binary $select $version ;;
+			import|install) distroInstall ;;
+		esac
 	}
 	
 	# Handle Parrot Distro Actions.
@@ -696,6 +747,12 @@ function distro() {
 # distroArchive [distro-name]
 function distroArchive() {
 	local distro=$1
+	local signurl=
+	local signature=
+	local frealname= # for check the file integrity the rootfs must be have samefilename with signature
+	local inputSkip=
+	local inputRemove=
+	local inputVerify=
 	if [[ ! -f $import ]]; then
 		case ${distro,,} in
 			alpine)
@@ -819,6 +876,28 @@ function distroArchive() {
 				rootfs="manjaro-rootfs.tar.xz"
 			;;
 			nethunter)
+				if [[ $version != "" && $version != "2024022001" ]]; then
+					echo -e "$(stdio stderr distro $distro $version)\n"
+					exit 1
+				fi
+				if [[ ${environment,,} == "production" ]]; then
+					local architect="$(getprop ro.product.cpu.abi)"
+				else
+					local architect="arm64-v8a"
+				fi
+				case ${architect,,} in
+					arm64-v8a) archname=arm64 ;;
+					armeabi|armeabi-v7a) archname=armhf ;;
+					*)
+						echo -e "$(stdio stderr $distro $version $architect)\n"
+						exit 1
+					;;
+				esac
+				rootfs="nethunter-rootfs-${archname}-${select,,}.tar.xz"
+				frealname="kalifs-${archname}-${select,,}.tar.xz"
+				archurl="https://kali.download/nethunter-images/current/rootfs/${frealname}"
+				signature="nethunter-rootfs-${archname}-${select,,}.sha512sum"
+				signurl="https://kali.download/nethunter-images/current/rootfs/kalifs-${archname}-${select,,}.sha512sum"
 			;;
 			parrot)
 			;;
@@ -909,26 +988,60 @@ function distroArchive() {
 					if [[ ${inputRemove,,} == "y" ]]; then
 						rm ${images}/${distro}/${distro}.${part}
 						if [[ $? -ne 0 ]]; then
-							echo -e "$(stdio stderr remove ${distro}/${distro}.${part})\n"
-							readline "skip" "remove" "Y"
+							echo -e "$(stdio stderr remove $distro ${distro}/${distro}.${part})\n"
+							readline "remove" "skip" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
-								echo -e "$(stdio stderr remove aborted)\n"
+								echo -e "$(stdio stderr remove $distro aborted)\n"
 								exit 1
 							fi
 						fi
 					fi
 				done
 			else
-				echo -e "$(stdio stdout downloading $rootfs)"
+				echo -e "$(stdio stdout downloading $distro $rootfs)"
 				wget -qO- --tries=20 "$archurl" --show-progress --progress=bar:force:noscroll -O "${images}/${distro}/${rootfs}"
 				if [[ $? -ne 0 ]]; then
-					echo -e "$(stdio stderr download distro ${images}/${distro}/${rootfs})\n"
+					echo -e "$(stdio stderr download $distro ${images}/${distro}/${rootfs})\n"
 					exit 1
 				fi
 			fi
 		fi
 	else
 		rootfs=$import
+	fi
+	if [[ $import == "" ]] && [[ "$signature" != "" ]] && [[ "$signurl" != "" ]]; then
+		readline "integrity" "verify" "Y"
+		if [[ "${inputVerify^^}" == "Y" ]]; then
+			if [[ "$frealname" != "" ]]; then
+				if [[ ! -f "${images}/${distro}/${signature}" ]]; then
+					echo -e "$(stdio stdout downloading $distro $signature)"
+					wget -qO- --tries=20 "$signurl" --show-progress --progress=bar:force:noscroll -O "${images}/${distro}/${signature}"
+					if [[ $? -ne 0 ]]; then
+						echo -e "$(stdio stderr download $distro ${images}/${distro}/${signature})\n"
+						exit 1
+					fi
+				fi
+				echo -e "$(stdio stdout verifying $distro integrity)"
+				mv "${images}/${distro}/${rootfs}" "$frealname"
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr moving $distro $rootfs)\n"
+					exit 1
+				fi
+				sha512sum -c "${images}/${distro}/${signature}" --status --strict --ignore-missing
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr verify $distro $rootfs)\n"
+					exit 1
+				fi
+				mv "$frealname" "${images}/${distro}/${rootfs}"
+				if [[ $? -ne 0 ]]; then
+					echo -e "$(stdio stderr moving $distro $frealname)\n"
+					exit 1
+				fi
+			else
+				echo -e "$(stdio stderr verify $distro $rootfs)"
+				puts "  > [e] << the original name of the file is required, skipped"
+			fi
+		fi
 	fi
 }
 
@@ -1336,7 +1449,7 @@ function distroConfig() {
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr remove $folder/etc/resolv.conf)"
 				inputRemove=
-				readline "skip" "remove" "Y"
+				readline "remove" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr remove aborted)\n"
 					exit 1
@@ -1348,7 +1461,7 @@ function distroConfig() {
 			
 			echo "$(stdio stdout $distro updating)"
 			bash $source/$launch apk update
-
+			
 			echo "$(stdio stdout $distro installing bash)"
 			bash $source/$launch apk add --no-cache bash
 			
@@ -1362,9 +1475,9 @@ function distroConfig() {
 				echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 				rm -rf $source/$folder/root/.bash_profile
 				if [[ $? -ne 0 ]]; then
-					echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
+					echo "$(stdio stderr $distro remove $folder/root/.bash_profile)"
 					inputRemove=
-					readline "skip" "remove" "Y"
+					readline "remove" "skip" "Y"
 					if [[ ${inputSkip,,} == "n" ]]; then
 						echo -e "$(stdio stderr $distro remove aborted)\n"
 						exit 1
@@ -1433,19 +1546,19 @@ function distroConfig() {
 					distroProcStat $source/$folder
 				fi
 			fi
-
+			
 			echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 			rm -rf $source/$folder/root/.bash_profile
 			if [[ $? -ne 0 ]]; then
-				echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
+				echo "$(stdio stderr $distro remove $folder/root/.bash_profile)"
 				inputSkip=
-				readline "skip" "remove" "Y"
+				readline "remove" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr $distro remove aborted)\n"
 					exit 1
 				fi
 			fi
-
+			
 			case ${select,,} in
 				cli)
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
@@ -1581,7 +1694,7 @@ function distroConfig() {
 						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
 						chmod +x $source/$folder/root/${window}.sh
 					fi
-
+					
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -1669,13 +1782,13 @@ function distroConfig() {
 						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 						chmod +x $source/$folder/root/${desktop}.sh
 					fi
-
+					
 					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 					rm -rf $source/$folder/root/.bash_profile
 					if [[ $? -ne 0 ]]; then
-						echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
+						echo "$(stdio stderr $distro remove $folder/root/.bash_profile)"
 						inputRemove=
-						readline "skip" "remove" "Y"
+						readline "remove" "skip" "Y"
 						if [[ ${inputSkip,,} == "n" ]]; then
 							echo -e "$(stdio stderr $distro remove aborted)\n"
 							exit 1
@@ -1724,7 +1837,7 @@ function distroConfig() {
 						
 						echo -e "$(stdio stdout $distro removing ${desktop}.sh)"
 						rm -rf /root/${desktop}.sh
-
+						
 						echo -e "$(stdio stdout $distro removing .bash_profile)"
 						rm -rf /root/.bash_profile
 						
@@ -1759,19 +1872,19 @@ function distroConfig() {
 						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
 						chmod +x $source/$folder/root/${window}.sh
 					fi
-
+					
 					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 					rm -rf $source/$folder/root/.bash_profile
 					if [[ $? -ne 0 ]]; then
-						echo "$(stdio stderr $distro remove $folder/:root/.bash_profile)"
+						echo "$(stdio stderr $distro remove $folder/root/.bash_profile)"
 						inputRemove=
-						readline "skip" "remove" "Y"
+						readline "remove" "skip" "Y"
 						if [[ ${inputSkip,,} == "n" ]]; then
 							echo -e "$(stdio stderr $distro remove aborted)\n"
 							exit 1
 						fi
 					fi
-
+					
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -1864,7 +1977,7 @@ function distroConfig() {
 						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 						chmod +x $source/$folder/root/${desktop}.sh
 					fi
-
+					
 					echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 					rm -rf $source/$folder/root/.bash_profile
 					
@@ -1875,7 +1988,7 @@ function distroConfig() {
 						# Installing required packages.
 						yum install wget screenfetch -y
 						clear
-
+						
 						if [[ ! -f /root/${desktop}.sh ]]; then
 							echo -e "$(stdio stdout $distro downloading ${desktop}.sh)"
 							wget -qO- --tries=20 ${rinku[0]}/${rinku[1]} --show-progress --progress=bar:force:noscroll -O /root/${desktop}.sh
@@ -1941,7 +2054,7 @@ function distroConfig() {
 						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
 						chmod +x $source/$folder/root/${window}.sh
 					fi
-
+					
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -1982,7 +2095,7 @@ function distroConfig() {
 			sleep 2.4
 		;;
 		kali)
-
+			
 			echo "$(stdio stdout $distro patching mirrorlist)"
 			echo "deb [trusted=yes] http://http.kali.org/kali kali-rolling penguin contrib non-free" > $source/$folder/etc/apt/sources.list
 			
@@ -2016,7 +2129,7 @@ function distroConfig() {
 				echo "$(stdio stdout $distro chmod+x /:root/.bash_logout)"
 				chmod +x $source/$folder/root/.bash_logout
 			fi
-
+			
 			case ${select,,} in
 				cli)
 					echo "$(stdio stdout $distro craeting /:root/.bash_profile)"
@@ -2070,7 +2183,7 @@ function distroConfig() {
 						echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 						chmod +x $source/$folder/root/${desktop}.sh
 					fi
-
+					
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -2147,7 +2260,7 @@ function distroConfig() {
 							exit 1
 						fi
 					fi
-
+					
 					echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
 					chmod +x $source/$folder/root/${window}.sh
 					
@@ -2197,25 +2310,25 @@ function distroConfig() {
 			sleep 2.4
 		;;
 		manjaro)
-
+			
 			echo "$(stdio stdout $distro removing /:root/.bash_profile)"
 			rm -rf $source/$folder/root/.bash_profile
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr $distro remove /:root/.bash_profile)"
 				inputSkip=
-				readline "skip" "remove" "Y"
+				readline "remove" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr $distro remove aborted)\n"
 					exit 1
 				fi
 			fi
-
+			
 			echo "$(stdio stdout $distro removing /:etc/resolv.conf)"
 			rm -rf $target/$folder/etc/resolv.conf
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr $distro remove /:etc.resolve.conf)"
 				inputSkip=
-				readline "skip" "remove" "Y"
+				readline "remove" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr $distro remove aborted)\n"
 					exit 1
@@ -2245,7 +2358,7 @@ function distroConfig() {
 				## Last Sync :
 				Server = https://mirrors.dotsrc.org/manjaro-arm/stable/$repo/$arch
 			EOL
-
+			
 			case ${select,,} in
 				cli)
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
@@ -2336,7 +2449,7 @@ function distroConfig() {
 							exit 1
 						fi
 					fi
-
+					
 					echo "$(stdio stdout $distro chmod+x /:root/${desktop}.sh)"
 					chmod +x $source/$folder/root/${desktop}.sh
 					
@@ -2419,7 +2532,7 @@ function distroConfig() {
 						echo "$(stdio stdout $distro chmod+x /:root/${window}.sh)"
 						chmod +x $source/$folder/root/${window}.sh
 					fi
-
+					
 					echo "$(stdio stdout $distro creating /:root/.bash_profile)"
 					cat <<- EOF > $source/$folder/root/.bash_profile
 						#!/usr/bin/env bash
@@ -2459,6 +2572,51 @@ function distroConfig() {
 			sleep 2.4
 		;;
 		nethunter)
+			
+			echo "$(stdio stdout $distro removing /:etc/resolv.conf)"
+			rm -rf $source/$folder/etc/resolv.conf
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr remove $folder/etc/resolv.conf)"
+				inputRemove=
+				readline "remove" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr remove aborted)\n"
+					exit 1
+				fi
+			fi
+			
+			echo "$(stdio stdout $distro creating /:etc/resolf.conf)"
+			echo -e "nameserver 9.9.9.9\nnameserver 149.112.112.112" > $source/$folder/etc/resolv.conf
+			if [[ $? -ne 0 ]]; then
+				echo "$(stdio stderr create $folder/etc/resolv.conf)"
+				inputRemove=
+				readline "create" "skip" "Y"
+				if [[ ${inputSkip,,} == "n" ]]; then
+					echo -e "$(stdio stderr create aborted)\n"
+					exit 1
+				fi
+			fi
+						
+			echo "$(stdio stdout $distro fixing sudo)"
+			echo "$(stdio stdout $distro chmod+s /:usr/bin/sudo)"
+			chmod +s $source/$folder/usr/bin/sudo
+			
+			echo "$(stdio stdout $distro chmod+s /:usr/bin/su)"
+			chmod +s $source/$folder/usr/bin/su
+			
+			echo "$(stdio stdout $distro creating /:etc/sudoers.d/kali)"
+			echo "kali    ALL=(ALL:ALL) ALL" > $source/$folder/etc/sudoers.d/kali
+			
+			# @source https://bugzilla.redhat.com/show_bug.cgi?id=1773148
+			echo "$(stdio stdout $distro creating /:etc/sudo.conf)"
+			echo "Set disable_coredump false" > $source/$folder/etc/sudo.conf
+			
+			echo "$(stdio stdout $distro creating /:root/.bash_profile)"
+			sed -i "/if/,/fi/d" $source/$folder/root/.bash_profile
+			
+			echo "$(stdio stdout $distro chmod+x /:root/.bash_profile)"
+			chmod +x $source/$folder/root/.bash_profile
+			sleep 2.4
 		;;
 		parrot)
 		;;
@@ -2583,7 +2741,7 @@ function distroConfig() {
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro remove /:usr/local/bin/\*)"
 							inputSkip=
-							readline "skip" "remove" "Y"
+							readline "remove" "skip" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
 								echo -e "$(stdio stderr $distro remove aborted)\n"
 								exit 1
@@ -2677,7 +2835,7 @@ function distroConfig() {
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro remove /:usr/local/bin/\*)"
 							inputSkip=
-							readline "skip" "remove" "Y"
+							readline "remove" "skip" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
 								echo -e "$(stdio stderr $distro remove aborted)\n"
 								exit 1
@@ -2817,7 +2975,7 @@ function distroConfig() {
 						if [[ $? -ne 0 ]]; then
 							echo "$(stdio stderr $distro remove /:usr/local/bin/\*)"
 							inputSkip=
-							readline "skip" "remove" "Y"
+							readline "remove" "skip" "Y"
 							if [[ ${inputSkip,,} == "n" ]]; then
 								echo -e "$(stdio stderr $distro remove aborted)\n"
 								exit 1
@@ -3054,7 +3212,7 @@ function distroConfig() {
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr remove $folder/etc/resolv.conf)"
 				inputRemove=
-				readline "skip" "remove" "Y"
+				readline "remove" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr remove aborted)\n"
 					exit 1
@@ -3066,7 +3224,7 @@ function distroConfig() {
 			if [[ $? -ne 0 ]]; then
 				echo "$(stdio stderr create $folder/etc/resolv.conf)"
 				inputRemove=
-				readline "skip" "create" "Y"
+				readline "create" "skip" "Y"
 				if [[ ${inputSkip,,} == "n" ]]; then
 					echo -e "$(stdio stderr create aborted)\n"
 					exit 1
@@ -3221,15 +3379,32 @@ function distroConfig() {
 			exit 1
 		;;
 	esac
-	if [[ ! -f $termux/files/usr/bin/$binary ]]; then
-		case ${select,,} in
-			desktop) distroBinary $distro $binary $launch $folder $source $select $desktop ;;
-			window) distroBinary $distro $binary $launch $folder $source $select $window ;;
-			*) distroBinary $distro $binary $launch $folder $source $select ;;
-		esac
-	fi
 	if [[ ! -f $source/$launch ]]; then
 		distroLauncher $distro $launch $source
+	fi
+	if [[ ! -f $termux/files/usr/bin/$binary ]]; then
+		if [[ "${distro,,}" != "nethunter" ]]; then
+			case ${select,,} in
+				desktop) distroBinary $distro $binary $launch $folder $source $select $desktop ;;
+				window) distroBinary $distro $binary $launch $folder $source $select $window ;;
+				*) distroBinary $distro $binary $launch $folder $source $select ;;
+			esac
+		else
+			echo "$(stdio stdout $distro change directory)"
+			cd $termux/files/usr/bin/
+			
+			echo "$(stdio stdout $distro creating symlink)"
+			ln -s $source/$launch
+			
+			echo "$(stdout $distro creating $termux/files/usr/bin/${binary})"
+			mv $launch $binary
+			
+			echo "$(stdout $distro chmod+x $termux/files/usr/bin/${binary})"
+			chmod +x $termux/files/usr/bin/$binary
+			
+			echo "$(stdio stdout $distro change directory)"
+			cd -
+		fi
 	fi
 	echo "$(stdio stdout $distro install success)"
 	if [[ ${environment} == "production" ]]; then
@@ -3272,44 +3447,54 @@ function distroExtract() {
 	local inputExclude=
 	local inputFlags=
 	local options=xvf
-	if [[ $select == "desktop" ]]; then
-		source+=/desktop/${desktop,,}
-		if [[ ${desktops[$distro]} != "" ]]; then
-			case ${desktop,,} in
-				xfce) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 1) ;;
-				lxde) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 2) ;;
-				lxqt) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 3) ;;
-				mate) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 4) ;;
-			esac
-			if [[ $exists == "" ]]; then
-				echo -e "$(stdio stderr $distro $desktop)\n"
+	if [[ "$distro" != "nethunter" ]]; then
+		if [[ $select == "desktop" ]]; then
+			source+=/desktop/${desktop,,}
+			if [[ ${desktops[$distro]} != "" ]]; then
+				case ${desktop,,} in
+					xfce) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 1) ;;
+					lxde) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 2) ;;
+					lxqt) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 3) ;;
+					mate) exists=$(echo -e ${desktops[$distro]} | cut -d ";" -f 4) ;;
+				esac
+				if [[ $exists == "" ]]; then
+					echo -e "$(stdio stderr $distro $desktop)\n"
+					exit 1
+				fi
+			else
+				echo -e "$(stdio stderr $distro $select)\n"
 				exit 1
 			fi
-		else
-			echo -e "$(stdio stderr $distro $select)\n"
-			exit 1
-		fi
-	elif [[ $select == "window" ]]; then
-		source+=/window/${window,,}
-		if [[ ${windows[$distro]} != "" ]]; then
-			case ${window,,} in
-				awesome) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 1) ;;
-				openbox) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 2) ;;
-				i3) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 3) ;;
-			esac
-			if [[ $exists == "" ]]; then
-				echo -e "$(stdio stderr $distro $window)\n"
+		elif [[ $select == "window" ]]; then
+			source+=/window/${window,,}
+			if [[ ${windows[$distro]} != "" ]]; then
+				case ${window,,} in
+					awesome) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 1) ;;
+					openbox) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 2) ;;
+					i3) exists=$(echo -e ${windows[$distro]} | cut -d ";" -f 3) ;;
+				esac
+				if [[ $exists == "" ]]; then
+					echo -e "$(stdio stderr $distro $window)\n"
+					exit 1
+				fi
+			else
+				echo -e "$(stdio stderr $distro $select)\n"
 				exit 1
 			fi
+		elif [[ $select == "cli" ]]; then
+			source+=/cli
 		else
-			echo -e "$(stdio stderr $distro $select)\n"
+			echo -e "$(stdio stderr unknown mode $select)\n"
 			exit 1
 		fi
-	elif [[ $select == "cli" ]]; then
-		source+=/cli
 	else
-		echo -e "$(stdio stderr unknown mode $select)\n"
-		exit 1
+		case ${select,,} in
+			full|nano|minimum) ;;
+			*)
+				echo -e "$(stdio stderr unknown mode $select)\n"
+				exit 1
+			;;
+		esac
 	fi
 	inputRemove=
 	if [[ -d "$source/$folder" ]]; then
@@ -3396,6 +3581,18 @@ function distroExtract() {
 				echo -e "$(stdio stderr $distro extract $rootfs)\n"
 				exit 1
 			fi
+			if [[ "${distro,,}" == "nethunter" ]]; then
+				clear
+				for pathname in ${paths[fs]}/*; do
+					if [[ -d $pathname ]]; then
+						for file in $pathname/*; do
+							echo "$(stdio stdout $distro moving "$(basename $file)->${paths[fs]}")"
+							mv $file ${paths[fs]}
+						done
+						rm -rf $pathname
+					fi
+				done
+			fi
 		fi
 	fi
 	inputRemove=
@@ -3406,7 +3603,7 @@ function distroExtract() {
 		rm "${archive}"
 		if [[ $? -ne 0 ]]; then
 			echo -e "$(stdio stderr $distro remove $rootfs)\n"
-			readline "skip" "remove" "Y"
+			readline "remove" "skip" "Y"
 			if [[ ${inputSkip,,} == "n" ]]; then
 				echo -e "$(stdio stderr $distro remove aborted)\n"
 				exit 1
@@ -3484,26 +3681,37 @@ function distroInputAction() {
 		}
 		
 		while [[ $inputSelect == "" ]]; do
-			readline $1 "select" "cli"
-			inputSelect=${inputSelect,,}
-			case $inputSelect in
-				1|cli) inputSelect=cli ;;
-				2|window)
-					inputSelect=window
-					if [[ ${1,,} != "alpine" ]]; then
-						distroInputWindowManager $1 $3
-						window=$inputWindow
-					else
-						inputSelect=
-					fi
-				;;
-				3|desktop)
-					inputSelect=desktop
-					distroInputDesktopEnv $1 $3
-					desktop=$inputDesktop
-				;;
-				*) inputSelect= ;;
-			esac
+			if [[ ${1,,} == "nethunter" ]]; then
+				readline $1 "select" "full"
+				inputSelect=${inputSelect,,}
+				case $inputSelect in
+					1|full) inputSelect=full ;;
+					2|nano) inputSelect=nano ;;
+					3|minimal) inputSelect=minimal ;;
+					*) inputSelect= ;;
+				esac
+			else
+				readline $1 "select" "cli"
+				inputSelect=${inputSelect,,}
+				case $inputSelect in
+					1|cli) inputSelect=cli ;;
+					2|window)
+						inputSelect=window
+						if [[ ${1,,} != "alpine" ]]; then
+							distroInputWindowManager $1 $3
+							window=$inputWindow
+						else
+							inputSelect=
+						fi
+					;;
+					3|desktop)
+						inputSelect=desktop
+						distroInputDesktopEnv $1 $3
+						desktop=$inputDesktop
+					;;
+					*) inputSelect= ;;
+				esac
+			fi
 			select=${inputSelect,,}
 		done
 	}
@@ -3556,10 +3764,12 @@ function distroInputAction() {
 		esac
 	done
 	if [[ $action != "cancel" ]]; then
-		if [[ ${1,,} == "ubuntu" ]]; then
-			distroInputVersion $1 $3
-			version=$inputVersion
-		fi
+		case ${1,,} in
+			ubuntu)
+				distroInputVersion $1 $3
+				version=$inputVersion
+			;;
+		esac
 		if [[ $action == "import" ]]; then
 			distroInputImport $1
 			import=$inputImport
@@ -3715,6 +3925,14 @@ function distroLauncher() {
 			)
 		;;
 		nethunter)
+			path="/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin"
+			lang="LANG=C.UTF-8"
+			home="\$user"
+			prootRegularB=(
+				"/dev"
+				"/proc"
+				"${source}/${distro,,}-fs/\${home}:/dev/shm"
+			)
 		;;
 		parrot)
 			lang="LANG=C.UTF-8"
@@ -3786,88 +4004,188 @@ function distroLauncher() {
 	done
 	
 	echo "$(stdout $distro creating $source/${launch,,})"
-	cat -v <<- EOF > "$source/${launch,,}"
-		#!/usr/bin/env bash
+	if [[ "$distro" == "nethunter" ]]; then
+		cat -v <<- EOF > "$source/${launch,,}"
+			#!/usr/bin/env bash
+			
+			# Change current working directory.
+			cd \$(dirname \$0)
+			
+			# Avoid termux-exec, execve() conflicts with PRoot.
+			unset LD_PRELOAD
+			
+			# Workaround for Libreoffice, also needs to bind a fake /proc/version
+			if [[ ! -f $source/${distro,,}-fs/root/.version ]]; then
+			    touch $source/${distro,,}-fs/root/.version
+			fi
+			
+			# Default user is "kali".
+			user="kali"
+			home="/home/\$user"
+			start="sudo -u \$user /bin/bash"
+			
+			# NH can be launched as root with the "-r" cmd attribute
+			# Also check if user "kali" exists, if not start as root.
+			if [[ \$(grep -c "\$user" $source/${distro,,}-fs/etc/passwd) -ne 1 ]]; then
+			    user="root"
+			    home="/\$user"
+			    start="/bin/bash --login"
+			fi
+			
+			# Args passed.
+			arguments="\$@"
+			
+			if [[ -n "\$(ls -A $source/${distro,,}-binds)" ]]; then
+			    for f in $source/${distro,,}-binds/* ;do
+			        . \$f
+			    done
+			fi
+			
+			# PRoot command line parameters.
+			parameters=()
+			parameters+=( "--kill-on-exit" )
+			parameters+=( "--link2symlink" )
+			
+			# Tells PRoot to simulate a root user which expected to
+			# be always available in Linux distribut/root:/dev/shmions.
+			parameters+=( "-0" )
+			
+			# Hide files and directories starting with '.proot.' .
+			parameters+=( "-H" )
+			
+			# Option to specify the rootfs where Linux distribution was installed.
+			parameters+=( "-r $source/${distro,,}-fs" )
+			
+			# Uncomment the following line to have
+			# Access to the home directory of termux.
+			# parameters+=( "-b $termux/files/home:/root" )
+			
+			# Uncomment the following line to mount android
+			# internal storage (/sdcard) directly to root (/).
+			# parameters+=( "-b /sdcard" )
+			
+			# Make the content of *path* accessible in the guest rootfs.
+			parameters+=( "${prootRegularB[@]}" )
+			
+			# Use *path* as the new guest root file-system, default is /.
+			parameters+=( "${prootRegularR[@]}" )
+			
+			# Make the content of *path* accessible in the guest rootfs.
+			parameters+=( "${prootRegularQ[@]}" )
+			
+			# Set the initial working directory to *path*.
+			parameters+=( "${prootRegularW[@]}" )
+			
+			# Make current kernel appear as kernel release *string*.
+			parameters+=( "${prootExtensionK[@]}" )
+			
+			# Make current user and group appear as *string* "uid:gid".
+			parameters+=( "${prootExtensionI}" )
+			
+			# A program that should be executed inside the rootfs
+			parameters+=( "/usr/bin/env -i" )
+			parameters+=( "HOME=\$home" )
+			parameters+=( "PATH=$path" )
+			parameters+=( "TERM=\$TERM" )
+			parameters+=( "$lang" )
+			parameters+=( "$lcall" )
+			parameters+=( "$language" )
+			parameters+=( "$mozFakeSanbox" )
+			
+			# Shell login.
+			parameters+=( "\$start" )
+			
+			if [[ "\$#" == "0" ]]; then
+			    exec proot \${parameters[@]}
+			else
+			    proot \${parameters[@]} -c "\$arguments"
+			fi
+		EOF
 		
-		# Change current working directory.
-		cd \$(dirname \$0)
-		
-		pulseaudio -k >>/dev/null 2>&1
-		pulseaudio --start >>/dev/null 2>&1
-		
-		# Avoid termux-exec, execve() conflicts with PRoot.
-		unset LD_PRELOAD
-		
-		# Args passed.
-		arguments="\$@"
-		
-		if [[ -n "\$(ls -A $source/${distro,,}-binds)" ]]; then
-		    for f in $source/${distro,,}-binds/* ;do
-		        . \$f
-		    done
-		fi
-		
-		# PRoot command line parameters.
-		parameters=()
-		parameters+=( "--kill-on-exit" )
-		parameters+=( "--link2symlink" )
-		
-		# Tells PRoot to simulate a root user which expected to
-		# be always available in Linux distribut/root:/dev/shmions.
-		parameters+=( "-0" )
-		
-		# Hide files and directories starting with '.proot.' .
-		parameters+=( "-H" )
-		
-		# Option to specify the rootfs where Linux distribution was installed.
-		parameters+=( "-r $source/${distro,,}-fs" )
-		
-		# Uncomment the following line to have
-		# Access to the home directory of termux.
-		# parameters+=( "-b $termux/files/home:/root" )
-		
-		# Uncomment the following line to mount android
-		# internal storage (/sdcard) directly to root (/).
-		# parameters+=( "-b /sdcard" )
-		
-		# Make the content of *path* accessible in the guest rootfs.
-		parameters+=( "${prootRegularB[@]}" )
-		
-		# Use *path* as the new guest root file-system, default is /.
-		parameters+=( "${prootRegularR[@]}" )
-		
-		# Make the content of *path* accessible in the guest rootfs.
-		parameters+=( "${prootRegularQ[@]}" )
-		
-		# Set the initial working directory to *path*.
-		parameters+=( "${prootRegularW[@]}" )
-		
-		# Make current kernel appear as kernel release *string*.
-		parameters+=( "${prootExtensionK[@]}" )
-		
-		# Make current user and group appear as *string* "uid:gid".
-		parameters+=( "${prootExtensionI}" )
-		
-		# A program that should be executed inside the rootfs
-		parameters+=( "/usr/bin/env -i" )
-		parameters+=( "HOME=$home" )
-		parameters+=( "PATH=$path" )
-		parameters+=( "TERM=\$TERM" )
-		parameters+=( "$lang" )
-		parameters+=( "$lcall" )
-		parameters+=( "$language" )
-		parameters+=( "$mozFakeSanbox" )
-		
-		# Shell login.
-		parameters+=( "/bin/bash" )
-		parameters+=( "--login" )
-		
-		if [[ -z "\$1" ]]; then
-		    exec proot \${parameters[@]}
-		else
-		    proot \${parameters[@]} -c "\$arguments"
-		fi
-	EOF
+	else
+		cat -v <<- EOF > "$source/${launch,,}"
+			#!/usr/bin/env bash
+			
+			# Change current working directory.
+			cd \$(dirname \$0)
+			
+			pulseaudio -k >>/dev/null 2>&1
+			pulseaudio --start >>/dev/null 2>&1
+			
+			# Avoid termux-exec, execve() conflicts with PRoot.
+			unset LD_PRELOAD
+			
+			# Args passed.
+			arguments="\$@"
+			
+			if [[ -n "\$(ls -A $source/${distro,,}-binds)" ]]; then
+			    for f in $source/${distro,,}-binds/* ;do
+			        . \$f
+			    done
+			fi
+			
+			# PRoot command line parameters.
+			parameters=()
+			parameters+=( "--kill-on-exit" )
+			parameters+=( "--link2symlink" )
+			
+			# Tells PRoot to simulate a root user which expected to
+			# be always available in Linux distribut/root:/dev/shmions.
+			parameters+=( "-0" )
+			
+			# Hide files and directories starting with '.proot.' .
+			parameters+=( "-H" )
+			
+			# Option to specify the rootfs where Linux distribution was installed.
+			parameters+=( "-r $source/${distro,,}-fs" )
+			
+			# Uncomment the following line to have
+			# Access to the home directory of termux.
+			# parameters+=( "-b $termux/files/home:/root" )
+			
+			# Uncomment the following line to mount android
+			# internal storage (/sdcard) directly to root (/).
+			# parameters+=( "-b /sdcard" )
+			
+			# Make the content of *path* accessible in the guest rootfs.
+			parameters+=( "${prootRegularB[@]}" )
+			
+			# Use *path* as the new guest root file-system, default is /.
+			parameters+=( "${prootRegularR[@]}" )
+			
+			# Make the content of *path* accessible in the guest rootfs.
+			parameters+=( "${prootRegularQ[@]}" )
+			
+			# Set the initial working directory to *path*.
+			parameters+=( "${prootRegularW[@]}" )
+			
+			# Make current kernel appear as kernel release *string*.
+			parameters+=( "${prootExtensionK[@]}" )
+			
+			# Make current user and group appear as *string* "uid:gid".
+			parameters+=( "${prootExtensionI}" )
+			
+			# A program that should be executed inside the rootfs
+			parameters+=( "/usr/bin/env -i" )
+			parameters+=( "HOME=$home" )
+			parameters+=( "PATH=$path" )
+			parameters+=( "TERM=\$TERM" )
+			parameters+=( "$lang" )
+			parameters+=( "$lcall" )
+			parameters+=( "$language" )
+			parameters+=( "$mozFakeSanbox" )
+			
+			# Shell login.
+			parameters+=( "/bin/bash" )
+			parameters+=( "--login" )
+			
+			if [[ -z "\$1" ]]; then
+			    exec proot \${parameters[@]}
+			else
+			    proot \${parameters[@]} -c "\$arguments"
+			fi
+		EOF
+	fi
 	if [[ $? -eq 0 ]]; then
 		echo "$(stdout $distro chmod+x $source/${launch,,})"
 		chmod +x "$source/${launch,,}"
@@ -3890,15 +4208,25 @@ function distroRemove() {
 	else
 		source=$target
 	fi
-	case ${3,,} in
-		cli) pathname=$source/cli ;;
-		desktop) pathname=$source/desktop/${4,,} ;;
-		window) pathname=$source/window/${4,,} ;;
-		*)
-			echo -e "$(stdio stderr mode unknown $3)\n"
-			exit 1
-		;;
-	esac
+	if [[ "${distro,,}" == "nethunter" ]]; then
+		case ${3,,} in
+			full|nano|minimum) pathname=$source ;;
+			*)
+				echo -e "$(stdio stderr mode unknown $3)\n"
+				exit 1
+			;;
+		esac
+	else
+		case ${3,,} in
+			cli) pathname=$source/cli ;;
+			desktop) pathname=$source/desktop/${4,,} ;;
+			window) pathname=$source/window/${4,,} ;;
+			*)
+				echo -e "$(stdio stderr mode unknown $3)\n"
+				exit 1
+			;;
+		esac
+	fi
 	logo
 	if [[ -d $pathname ]]; then
 		echo "$(stdio stdout removing $pathname)"
@@ -4126,15 +4454,16 @@ function penguin() {
 	puts "  [i] Github $github"
 	puts "  [!] Issues $issues"
 	puts "  [+] Distro"
-	puts "      [1] Alpine"
-	puts "      [2] Arch Linux"
-	puts "      [3] Debian"
-	puts "      [4] Fedora"
-	puts "      [5] Kali Linux"
-	puts "      [6] Manjaro"
-	puts "      [7] Parrot OS"
-	puts "      [8] Ubuntu"
-	puts "      [9] Void"
+	puts "      [01] Alpine"
+	puts "      [02] Arch Linux"
+	puts "      [03] Debian"
+	puts "      [04] Fedora"
+	puts "      [05] Kali Linux"
+	puts "      [06] Manjaro"
+	puts "      [07] Kali Nethunter"
+	puts "      [08] Parrot OS"
+	puts "      [09] Ubuntu"
+	puts "      [10] Void"
 	puts "  [i] For close the program"
 	puts "  [i] CTRL+C"
 	puts
@@ -4149,17 +4478,18 @@ function penguin() {
 				distro $inputDistro;
 				break
 			;;
-			1|2|3|4|5|6|7|8|9)
+			01|1|02|2|03|3|04|4|05|5|06|6|07|7|08|8|09|9|10)
 				case $inputDistro in
-					1) inputDistro=alpine ;;
-					2) inputDistro=arch ;;
-					3) inputDistro=debian ;;
-					4) inputDistro=fedora ;;
-					5) inputDistro=kali ;;
-					6) inputDistro=manjaro ;;
-					7) inputDistro=parrot ;;
-					8) inputDistro=ubuntu ;;
-					9) inputDistro=void ;;
+					01|1) inputDistro=alpine ;;
+					02|2) inputDistro=arch ;;
+					03|3) inputDistro=debian ;;
+					04|4) inputDistro=fedora ;;
+					05|5) inputDistro=kali ;;
+					06|6) inputDistro=manjaro ;;
+					07|7) inputDistro=nethunter ;;
+					08|8) inputDistro=parrot ;;
+					09|9) inputDistro=ubuntu ;;
+					10) inputDistro=void ;;
 				esac
 				distro $inputDistro;
 				break
