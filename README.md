@@ -7,6 +7,7 @@
 - [Penguin](#penguin)
   - [Table of Contents](#table-of-contents)
   - [Abouts](#abouts)
+  - [Notes](#notes)
   - [Features](#features)
     - [Binary Execution](#binary-execution)
     - [Command Line Interface](#command-line-interface)
@@ -26,6 +27,9 @@
 **[Penguin](https://github.com/hxAri/Penguin)** is a Command Line Tool to simplify the installation of Linux Distros to the Android Operating System using Termux as a Shell environment. **[Penguin](https://github.com/hxAri/Penguin)** also supports more than 6 Linux Distros [see](#linux-distros), as well as several Desktop Environments [see](#desktop-environment) and also Window Manager [view](#window-manager).
 
 For problems with graphics rendering you need to know that Termux does not support it however, don't worry about that you can still achieve it with the help of VNC Viewer you can download it via Play Store for free.
+
+## Notes
+Maybe when you install a distro it will be fine until you successfully install it, but some distros may require some additional configuration to run well. But no need to worry about that, because you will still be able to use it.
 
 ## Features
 The **[Penguin](https://github.com/hxAri/Penguin)** features
@@ -92,7 +96,11 @@ List of currently available or supported Linux Distros on **[Penguin](https://gi
   * Versions
     * 21.2
 * **Kali Nethunter**</br>
-  Working</br>
+  * Command Line Interface (CLI)
+  * Editions
+    * Kali Nethunter Full Edition
+    * Kali Nethunter Nano Edition
+    * Kali Nethunter Minimum Edition
 * **Manjaro**
   * Command Line Interface (CLI)
   * Desktop Environment
@@ -105,6 +113,7 @@ List of currently available or supported Linux Distros on **[Penguin](https://gi
     * I3
     * Openbox
   * Versions
+    * 21
 * **Parrot Security OS**</br>
   Working</br>
 * **Ubuntu**
@@ -122,7 +131,17 @@ List of currently available or supported Linux Distros on **[Penguin](https://gi
     * 20.03
     * 18.04
 * **Void** </br>
-  Working
+  * Command Line Interface (CLI)
+  * Desktop Environment
+    * LXDE
+    * LXQT
+    * XFCE
+  * Window Manager
+    * Awesome
+    * I3
+    * Openbox
+  * Versions
+    * Rolling Release
 
 ### Desktop Environment
 List of currently available or supported Desktop Environment on **[Penguin](https://github.com/hxAri/Penguin)**
