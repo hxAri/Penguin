@@ -3564,7 +3564,7 @@ function distroExtract() {
 		fi
 	else
 		case ${select,,} in
-			full|nano|minimum) ;;
+			full|nano|minimal) ;;
 			*)
 				echo -e "$(stdio stderr unknown mode $select)\n"
 				exit 1
@@ -4285,7 +4285,7 @@ function distroRemove() {
 	fi
 	if [[ "${distro,,}" == "nethunter" ]]; then
 		case ${3,,} in
-			full|nano|minimum) pathname=$source ;;
+			full|nano|minimal) pathname=$source ;;
 			*)
 				echo -e "$(stdio stderr mode unknown $3)\n"
 				exit 1
