@@ -1,7 +1,7 @@
 
 # Penguin
 
-![Penguin · Logo](https://raw.githubusercontent.com/hxAri/hxAri/main/public/images/1701208743;6cxkEyg82i.png)
+![Penguin · Logo](https://raw.githubusercontent.com/hxAri/hxAri/main/public/images/project/1701255136;4byi3oSoEEAjE.png)
 
 ## Table of Contents
 - [Penguin](#penguin)
