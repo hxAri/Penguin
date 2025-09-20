@@ -228,6 +228,7 @@ ubuntu 22.04 window awesome
 ## Sources
 To source the Root File System for the **[Penguin](https://github.com/hxAri/Penguin)** Linux Distro, it uses sources from various GitHub repositories, including:
 * **[Andronix](https://github.com/AndronixApp/AndronixOrigin)**
+* **[Kali Official](https://www.kali.org/docs/nethunter/nethunter-rootless)**
 
 ## Support
 Give spirit to the developer, no matter how many donations given will still be accepted<br/>
